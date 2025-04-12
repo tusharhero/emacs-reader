@@ -1,12 +1,12 @@
 ;;; reader.el --- Document Viewer for Emacs  -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2024 Divya Ranjan Pattanaik <divya@subvertising.org>
+;; Copyright (c) 2025 Divya Ranjan Pattanaik <divya@subvertising.org>
 
 ;; Author: Divya Ranjan Pattanaik <divya@subvertising.org>
 ;; Keywords: document reader, mupdf
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.1"))
-;; URL: https://codeberg.org/divyaranjan/reader
+;; URL: https://codeberg.org/divyaranjan/emacs-reader
 
 ;; This file is not part of GNU Emacs.
 
@@ -30,10 +30,11 @@
 
 ;;; Code:
 
-
 (defgroup reader nil
   :group 'external
   :prefix "reader-")
+
+
 
 (provide 'reader.el)
 ;;; reader.el ends here.
