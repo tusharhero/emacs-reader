@@ -1,0 +1,53 @@
+#+TITLE: Reader’s Rendering Functions
+
+* PDF
+We have a struct =PDFState= that represents the state that the current PDF is in, includes the context, page numbers and other data. We initialize this =PDFState= struct manually, thus storing it in heap.
+
+=load_pdf= is a simple function that loads a few things into the =PDFState= struct that will later on get used in rendering, such as the context, document handlers, number of pages and so on.
+
+We also have =load_pages= that loads the current =page_number= that is set in the =PDFState= struct and the ones following and preceding it. Here “loading” simply means doing =fz_load_page=.
+
+=render_page= is the main function that does the rendering. It conducts the following operations in order:
+
+- if the context or doc or page number is invalid, throw an error
+- if the =current_svg_data= has something, then =free= it, and then set it to =NULL=.
+- Then, do =load_pages= on the =page_number= that was provided as argument.
+- Get the bounding box for the page and its dimensions.
+- Create buffers for each page.
+- Create outputs for each page.
+- Create svg device for each page.
+- Run the page through each of the devices.
+- Close and drop the device
+- Close the output to finalize the buffer content
+- Allocate memory for storing the =*_svg_data=
+- Copy the data from the buffers into =*_svg_data=
+- Cleanup
+
+- =emacs_2_c_string= is simply a helper function to convert between Elisp strings and C strings.
+
+- =emacs_load_pdf= takes a pointer to an =emacs_env= which would be an Elisp string to a file path, and then it will do:
+
+- =clean_up_svg_data=: Cleans any previous SVG data.
+
+- =create_buffers=: Create =fz_buffer=
+
+- =create_outputs=: Create =fz_output=
+
+- =drop_all_buffers=: Drops all =fz_buffer=
+
+- =drop_all_outputs=: Drops all =fz_output=
+
+- =drop_all_pages=: Drops all =fz_device=
+
+- =close_all_outputs=: Drops all =fz_output=
+
+- =close_all_devices=: Drops all =fz_device=
+
+- =load_pdf= the file.
+- =render_page= the current page:
+  - convert the =svg_data= into an Emacs string.
+  - Create a new buffer and switch to it.
+  - Do Emacs’ =create_image= on the =svg_string=
+  - Then do =insert-image= to render the SVG in the buffer.
+
+  =emacs_next_page= simply looks at the =current_page_number= in =PDFState= and if there is a next page, it gets the next page’s data and renders it in the buffer, and if it’s the last page, then it just stops. It also always renders the next to next page’s data.
