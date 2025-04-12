@@ -126,99 +126,14 @@ void clean_up_svg_data(PdfState *state) {
   }
 }
 
-// Create output buffers for the page
-bool create_buffers(fz_context *ctx, fz_buffer **curr_buf, fz_buffer **prev_buf,
-                    fz_buffer **next_buf) {
-  fz_try(ctx) {
-    *curr_buf = fz_new_buffer(ctx, 1024);
-    *prev_buf = fz_new_buffer(ctx, 1024);
-    *next_buf = fz_new_buffer(ctx, 1024);
-  }
-
-  fz_catch(ctx) {
-    fprintf(stderr, "Cannot create buffer: %s\n", fz_caught_message(ctx));
-
-    return EXIT_FAILURE;
-  }
-
-  return EXIT_SUCCESS;
-}
-
-// Create Outputs
-bool create_outputs(fz_context *ctx, fz_output **curr_out, fz_output **prev_out,
-                    fz_output **next_out, fz_buffer *curr_buf,
-                    fz_buffer *prev_buf, fz_buffer *next_buf) {
-  fz_try(ctx) {
-    *curr_out = fz_new_output_with_buffer(ctx, curr_buf);
-    *prev_out = fz_new_output_with_buffer(ctx, prev_buf);
-    *next_out = fz_new_output_with_buffer(ctx, next_buf);
-  }
-
-  fz_catch(ctx) {
-    fprintf(stderr, "Cannot create output: %s\n", fz_caught_message(ctx));
-    return EXIT_FAILURE;
-  }
-  return EXIT_SUCCESS;
-}
-
-// Dropping and closing functions
-void drop_all_buffers(fz_context *ctx, fz_buffer *curr, fz_buffer *prev,
-                      fz_buffer *next) {
-  if (curr)
-    fz_drop_buffer(ctx, curr);
-  if (prev)
-    fz_drop_buffer(ctx, prev);
-  if (next)
-    fz_drop_buffer(ctx, next);
-}
-
-void drop_all_outputs(fz_context *ctx, fz_output *curr, fz_output *prev,
-                      fz_output *next) {
-  if (curr)
-    fz_drop_output(ctx, curr);
-  if (prev)
-    fz_drop_output(ctx, prev);
-  if (next)
-    fz_drop_output(ctx, next);
-}
-
-void drop_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
-                      fz_device *next) {
-  if (curr)
-    fz_drop_device(ctx, curr);
-  if (prev)
-    fz_drop_device(ctx, prev);
-  if (next)
-    fz_drop_device(ctx, next);
-}
-
-void drop_all_pages(fz_context *ctx, PdfState *state) {
+// Drop all PDF pages
+void drop_all_pdf_pages(fz_context *ctx, PdfState *state) {
   if (state->prev_page)
     fz_drop_page(ctx, state->prev_page);
   if (state->current_page)
     fz_drop_page(ctx, state->current_page);
   if (state->next_page)
     fz_drop_page(ctx, state->next_page);
-}
-
-void close_all_outputs(fz_context *ctx, fz_output *curr, fz_output *prev,
-                       fz_output *next) {
-  if (curr)
-    fz_close_output(ctx, curr);
-  if (prev)
-    fz_close_output(ctx, prev);
-  if (next)
-    fz_close_output(ctx, next);
-}
-
-void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
-                       fz_device *next) {
-  if (curr)
-    fz_close_device(ctx, curr);
-  if (prev)
-    fz_close_device(ctx, prev);
-  if (next)
-    fz_close_device(ctx, next);
 }
 
 // Rendering the page
@@ -266,7 +181,7 @@ int render_page(PdfState *state, int page_number) {
   if (create_outputs(state->ctx, &curr_out, &prev_out, &next_out, curr_buf,
 		     prev_buf, next_buf) == EXIT_FAILURE) {
     drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_pages(state->ctx, state);
+    drop_all_pdf_pages(state->ctx, state);
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
 
@@ -289,7 +204,7 @@ int render_page(PdfState *state, int page_number) {
     close_all_outputs(state->ctx, curr_out, prev_out, next_out);
     drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
     drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_pages(state->ctx, state);
+    drop_all_pdf_pages(state->ctx, state);
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
     return EXIT_FAILURE;
@@ -308,7 +223,7 @@ int render_page(PdfState *state, int page_number) {
     close_all_outputs(state->ctx, curr_out, prev_out, next_out);
     drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
     drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_pages(state->ctx, state);
+    drop_all_pdf_pages(state->ctx, state);
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
     return EXIT_FAILURE;
@@ -327,7 +242,7 @@ int render_page(PdfState *state, int page_number) {
 
     drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
     drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_pages(state->ctx, state);
+    drop_all_pdf_pages(state->ctx, state);
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
 
@@ -350,7 +265,7 @@ int render_page(PdfState *state, int page_number) {
 
     drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
     drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_pages(state->ctx, state);
+    drop_all_pdf_pages(state->ctx, state);
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
 
@@ -368,35 +283,9 @@ int render_page(PdfState *state, int page_number) {
   // Clean up
   drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
   drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-  drop_all_pages(state->ctx, state);
+  drop_all_pdf_pages(state->ctx, state);
 
   return EXIT_SUCCESS;
-}
-
-bool emacs_2_c_string(emacs_env *env, emacs_value value, char **buffer,
-                      size_t *size) {
-  ptrdiff_t buffer_size;
-  if (!env->copy_string_contents(env, value, NULL, &buffer_size))
-    return false;
-  assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
-  assert(buffer_size > 0);
-  *buffer = malloc((size_t)buffer_size);
-  if (*buffer == NULL) {
-    env->non_local_exit_signal(env, env->intern(env, "memory-full"),
-                               env->intern(env, "nil"));
-    return false;
-  }
-  ptrdiff_t old_buffer_size = buffer_size;
-  if (!env->copy_string_contents(env, value, *buffer, &buffer_size)) {
-    free(*buffer);
-    *buffer = NULL;
-    return false;
-  }
-  assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
-  assert(buffer_size == old_buffer_size);
-  *size = (size_t)(buffer_size - 1);
-
-  return true;
 }
 
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
