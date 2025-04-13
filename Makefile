@@ -14,22 +14,22 @@ EMACS_MODULE_HEADER_DIR ?= /usr/include/
 # accordingly. In Guix one can use substitute*.
 
 # Use pkg-config for MuPDF if available, otherwise manual paths are needed
-MUPDF_CFLAGS ?= $(shell pkg-config --cflags mupdf)
-MUPDF_LIBS   ?= $(shell pkg-config --libs mupdf)
+MUPDF_LIBS  ?= -lmupdf
 
 # Compiler and flags
-CC ?= gcc
-CFLAGS ?= -std=c11 -Wall -Wextra -O2 -g
+CC = gcc
+CFLAGS ?= -Wall -g
+
 # Add Emacs module header path if found/set
 ifdef EMACS_MODULE_HEADER_DIR
   CFLAGS += -I$(EMACS_MODULE_HEADER_DIR)
 endif
-CFLAGS += -fPIC $(MUPDF_CFLAGS)
+CFLAGS += -fPIC
 LDFLAGS ?= -shared
 LDLIBS ?= $(MUPDF_LIBS)
 
 # --- Files ---
-TARGET_MODULE = reader.so
+TARGET_MODULE = render-core.so
 SOURCES = render/render-pdf.c render/helpers.c
 OBJECTS = $(SOURCES:.c=.o)
 
@@ -43,8 +43,6 @@ $(TARGET_MODULE): $(OBJECTS)
 	@echo "Module $(TARGET_MODULE) built successfully."
 	@echo "Ensure Emacs module header path and MuPDF paths were correct."
 	@echo "If EMACS_MODULE_HEADER_DIR was not found/set, compilation might fail."
-	@echo "If pkg-config failed for MuPDF, set MUPDF_CFLAGS and MUPDF_LIBS manually:"
-	@echo "  make MUPDF_CFLAGS='-I/path/to/mupdf/include' MUPDF_LIBS='-L/path/to/mupdf/lib -lmupdf -lmupdf-third'"
 
 %.o: %.c render/helpers.h Makefile
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -64,10 +62,7 @@ ifndef EMACS_MODULE_HEADER_DIR
 	@echo "Warning: EMACS_MODULE_HEADER_DIR is not set. Set it if compilation fails."
 	@echo "         Example: make EMACS_MODULE_HEADER_DIR=/usr/include/emacs"
 endif
-ifeq ($(strip $(MUPDF_CFLAGS)),)
-	@echo "Warning: Could not determine MuPDF CFLAGS (via pkg-config)."
-	@echo "         Set MUPDF_CFLAGS manually if compilation fails."
-endif
+
 ifeq ($(strip $(MUPDF_LIBS)),)
 	@echo "Warning: Could not determine MuPDF LIBS (via pkg-config)."
 	@echo "         Set MUPDF_LIBS manually if compilation fails."
