@@ -1,0 +1,2 @@
+#+TITLE: Emacs Reader
+An all-in-one ebook reader for reading in any format in Emacs. This package intends to take from pdf-tools, nov.el, and doc-view and make them better.
