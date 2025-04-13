@@ -46,10 +46,10 @@
 ;; Load the dynamic module
 (condition-case err
     (progn
-      (unless (module-load render-pdf-module-path)
-        (error "Could not load reader module from %s" render-pdf-module-path)))
+      (unless (module-load reader-module-path)
+        (error "Could not load reader module from %s" reader-module-path)))
   (file-error (warn "reader module not found at %s. Document rendering will not work. Error: %s"
-                    render-pdf-module-path err)))
+                    reader-module-path err)))
 
 ;; User-facing function to open a PDF
 (defun read-pdf (pdf-file)
