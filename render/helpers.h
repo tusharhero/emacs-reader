@@ -22,5 +22,6 @@ void close_all_outputs(fz_context *ctx, fz_output *curr, fz_output *prev,
                        fz_output *next);
 void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
                        fz_device *next);
+void provide(emacs_env *env, const char *value);
 
 #endif

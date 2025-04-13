@@ -118,3 +118,11 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
   if (next)
     fz_close_device(ctx, next);
 }
+
+void provide(emacs_env *env, const char *value) {
+  emacs_value Qvalue = env->intern(env, value);
+  emacs_value Qprovide = env->intern(env, "provide");
+  emacs_value args[] = { Qvalue };
+
+  env->funcall(env, Qprovide, 1, args);
+}
