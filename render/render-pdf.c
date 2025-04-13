@@ -314,11 +314,11 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
 	env->make_string(env, state.current_svg_data, state.current_svg_size);
-      emacs_value buffer_name = env->make_string(env, "*pdf-svg*", 9);
+      emacs_value file_name_string = env->make_string(env, file, strlen(file));
+      emacs_value file_name = env->funcall(env, env->intern(env, "file-name-base"), 1, &file_name_string);
       emacs_value buffer = env->funcall(
-					env, env->intern(env, "generate-new-buffer"), 1, &buffer_name);
+					env, env->intern(env, "generate-new-buffer"), 1, &file_name);
       env->funcall(env, env->intern(env, "switch-to-buffer"), 1, &buffer);
-      /* env->funcall(env, env->intern(env, "parse-svg"), 1, &svg_string); */
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
