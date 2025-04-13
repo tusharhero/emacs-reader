@@ -34,8 +34,9 @@
 (module-load "reader.so")
 
 (defgroup reader nil
-  :group 'external
-  :prefix "reader-")
+  "Group for Reader’s customizations."
+  :prefix "reader-"
+  :group 'custom)
 
 ;; Define the path to your compiled dynamic module.
 ;; You might need to adjust this path based on where you compile the module.
