@@ -1,6 +1,7 @@
 // Helper functions for various purposes.
 #include <assert.h>
 #include <emacs-module.h>
+#include <mupdf/fitz.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdbool.h>

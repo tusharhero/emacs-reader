@@ -2,6 +2,7 @@
 #define HELPERS_H
 
 #include <stddef.h>
+#include <mupdf/fitz.h>
 #include <stdbool.h>
 #include <emacs-module.h>
 
