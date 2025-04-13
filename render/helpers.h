@@ -8,6 +8,9 @@
 bool emacs_2_c_str(emacs_env *env, emacs_value value, char **buffer, size_t *size);
 bool create_buffers(fz_context *ctx, fz_buffer **curr_buf, fz_buffer **prev_buf,
                     fz_buffer **next_buf);
+bool create_outputs(fz_context *ctx, fz_output **curr_out, fz_output **prev_out,
+                    fz_output **next_out, fz_buffer *curr_buf,
+                    fz_buffer *prev_buf, fz_buffer *next_buf);
 void drop_all_buffers(fz_context *ctx, fz_buffer *curr, fz_buffer *prev,
                       fz_buffer *next);
 void drop_all_outputs(fz_context *ctx, fz_output *curr, fz_output *prev,
