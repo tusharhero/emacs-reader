@@ -296,7 +296,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   size_t str_length = 0;
   emacs_value result = env->intern(env, "nil"); // Initialize result to nil
 
-  if (!emacs_2_c_string(env, args[0], &file, &str_length)) {
+  if (!emacs_2_c_str(env, args[0], &file, &str_length)) {
     fprintf(stderr, "Failed to convert Emacs string to C string.\n");
     return env->intern(env, "nil");
   }
