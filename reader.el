@@ -46,17 +46,8 @@ to render the first page and display it in a new buffer."
   (interactive "fFind PDF file: ")
   (unless (fboundp 'load-pdf)
     (error "The 'load-pdf' function from the dynamic module is not available. Was the module loaded correctly?"))
-  (let ((absolute-pdf-path (expand-file-name pdf-file)))
-    ;; Call the C function. It handles creating the buffer and inserting the image.
-    (condition-case err
-        (load-pdf absolute-pdf-path)
-      (error (error "Error loading PDF '%s': %s" absolute-pdf-path err)))
-    ;; Switch to the buffer created by the C code (assumed to be named *pdf-svg*)
-    ;; and enable the major mode.
-    (let ((pdf-buffer (get-buffer "*pdf-svg*")))
-      (when pdf-buffer
-        (with-current-buffer pdf-buffer
-          (read-pdf-mode))))))
+  (load-pdf pdf-file)
+  (read-pdf-mode))
 
 ;; Internal function to go to the next page
 (defun read-pdf--next-page ()
@@ -64,13 +55,8 @@ to render the first page and display it in a new buffer."
   (interactive)
   (unless (fboundp 'next-pdf-page)
     (error "The 'next-pdf-page' function from the dynamic module is not available."))
-  (condition-case err
-      (unless (next-pdf-page)
-        (message "Already at the last page."))
-    (error (error "Error going to next page: %s" err)))
-  ;; Ensure buffer remains read-only after potential updates
-  (with-current-buffer (current-buffer)
-    (setq buffer-read-only t)))
+  (let ((inhibit-read-only t))
+    (next-pdf-page)))
 
 ;; Internal function to go to the previous page
 (defun read-pdf--previous-page ()
@@ -78,13 +64,8 @@ to render the first page and display it in a new buffer."
   (interactive)
   (unless (fboundp 'previous-pdf-page)
     (error "The 'previous-pdf-page' function from the dynamic module is not available."))
-  (condition-case err
-      (unless (previous-pdf-page)
-        (message "Already at the first page."))
-    (error (error "Error going to previous page: %s" err)))
-  ;; Ensure buffer remains read-only after potential updates
-  (with-current-buffer (current-buffer)
-    (setq buffer-read-only t)))
+  (let ((inhibit-read-only t))
+    (previous-pdf-page)))
 
 ;; Define the keymap for read-pdf-mode
 (defvar read-pdf-mode-map
@@ -94,7 +75,7 @@ to render the first page and display it in a new buffer."
     (define-key map (kbd "p") #'read-pdf--previous-page)
     (define-key map (kbd "k") #'read-pdf--previous-page)
     ;; Add other useful bindings if needed, e.g., quit
-    (define-key map (kbd "q") #'kill-this-buffer)
+    (define-key map (kbd "Q") 'kill-this-buffer)
     map)
   "Keymap for read-pdf-mode.")
 
@@ -105,10 +86,7 @@ to render the first page and display it in a new buffer."
 Keybindings:
 \\{read-pdf-mode-map}"
   ;; Make the buffer read-only to prevent editing the SVG image
-  (setq buffer-read-only t)
-  ;; You might want to hide the mode line lighter if it's distracting
-  ;; (setq mode-line-format nil)
-  )
+  (setq-local buffer-read-only t))
 
 (provide 'reader.el)
 ;;; reader.el ends here.
