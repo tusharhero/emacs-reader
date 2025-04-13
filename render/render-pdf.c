@@ -417,6 +417,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value prev_args[2] = {prev_func_symbol, prev_func};
   env->funcall(env, fset, 2, prev_args);
 
+  provide(env, "render-core");
   fprintf(stderr, "Emacs module initialized successfully.\n");
   return 0;
 }

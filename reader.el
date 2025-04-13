@@ -31,25 +31,12 @@
 ;;; Code:
 (require 'image)
 (require 'svg)
-(module-load "reader.so")
+(require 'render-core)
 
 (defgroup reader nil
   "Group for Reader’s customizations."
   :prefix "reader-"
   :group 'custom)
-
-;; Define the path to your compiled dynamic module.
-;; You might need to adjust this path based on where you compile the module.
-(defvar reader-module-path "./reader.so"
-  "Path to the compiled render-pdf dynamic module.")
-
-;; Load the dynamic module
-(condition-case err
-    (progn
-      (unless (module-load reader-module-path)
-        (error "Could not load reader module from %s" reader-module-path)))
-  (file-error (warn "reader module not found at %s. Document rendering will not work. Error: %s"
-                    reader-module-path err)))
 
 ;; User-facing function to open a PDF
 (defun read-pdf (pdf-file)
