@@ -27,7 +27,7 @@ $(LIB_NAME): $(OBJS) $(LIBMUPDF)
 # Rule to build the submodule shared library
 $(LIBMUPDF):
 	git submodule update --init --recursive
-	$(MAKE) -C $(MUPDF_DIR) shared USE_SYSTEM_LIBS=yes USE_SYSTEM_LCMS2=yes
+	$(MAKE) -C $(MUPDF_DIR) shared USE_SYSTEM_LIBS=no USE_SYSTEM_LCMS2=yes
 
 # Rule to compile C source files into object files
 %.o: %.c render/helpers.h
