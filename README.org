@@ -13,6 +13,8 @@ For now, until the package has been published to GNU ELPA, the only way to insta
    #+begin_src sh
 git clone --recursive https://codeberg.org/divyaranjan/emacs-reader.git
    #+end_src
+NOTE: This will take a *long* time, since it’s getting =mupdf= and /all/ of its dependencies.
+
 
 2. Add module directory to Emacs’ =load-path=, do the following in your Emacs session:
    #+begin_src emacs-lisp
