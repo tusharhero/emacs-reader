@@ -421,6 +421,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
 
   last_page_number = state.pagecount + 1;
+  last_page_number = state.pagecount - 2;
 
   if (state.current_page_number > 0) {
     emacs_value prev_svg_string =
