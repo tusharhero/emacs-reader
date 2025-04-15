@@ -67,6 +67,22 @@ to render the first page and display it in a new buffer."
   (let ((inhibit-read-only t))
     (previous-pdf-page)))
 
+(defun read-pdf--first-page ()
+  "Go to the first page of the PDF"
+  (interactive)
+  (unless (fboundp 'first-pdf-page)
+    (error "The 'first-pdf-page' function from the dynamic module is not available."))
+  (let ((inhibit-read-only t))
+    (first-pdf-page)))
+
+(defun read-pdf--last-page ()
+  "Go to the last page of the PDF."
+  (interactive)
+  (unless (fboundp 'last-pdf-page)
+    (error "The 'last-pdf-page' function from the dynamic module is not available."))
+  (let ((inhibit-read-only t))
+    (last-pdf-page)))
+
 ;; Define the keymap for read-pdf-mode
 (defvar read-pdf-mode-map
   (let ((map (make-sparse-keymap)))
