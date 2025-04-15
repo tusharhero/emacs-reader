@@ -90,7 +90,10 @@ to render the first page and display it in a new buffer."
     (define-key map (kbd "j") #'read-pdf--next-page)
     (define-key map (kbd "p") #'read-pdf--previous-page)
     (define-key map (kbd "k") #'read-pdf--previous-page)
-    ;; Add other useful bindings if needed, e.g., quit
+    (define-key map (kbd "g") #'read-pdf--first-page)
+    (define-key map (kbd "<") #'read-pdf--first-page)
+    (define-key map (kbd "G") #'read-pdf--last-page)
+    (define-key map (kbd ">") #'read-pdf--last-page)
     (define-key map (kbd "Q") 'kill-this-buffer)
     map)
   "Keymap for read-pdf-mode.")
