@@ -395,6 +395,8 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
+  state.current_page_number = 0;
+
   if (state.current_page_number > 0) {
     emacs_value prev_svg_string =
       env->make_string(env, state.prev_svg_data, state.prev_svg_size);
@@ -404,7 +406,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     emacs_value image_data =
       env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
-    render_page(&state, 0);
+    render_page(&state, state.current_page_number);
     return env->intern(env, "t");
 
   } else {
@@ -420,7 +422,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  int last_page_number = state.pagecount - 2;
+  state.current_page_number = state.pagecount - 2;
 
   if (state.current_page_number > 0) {
     emacs_value prev_svg_string =
@@ -431,7 +433,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     emacs_value image_data =
       env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
-    render_page(&state, last_page_number);
+    render_page(&state, state.current_page_number);
     return env->intern(env, "t");
 
   } else {
