@@ -420,7 +420,6 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  last_page_number = state.pagecount + 1;
   last_page_number = state.pagecount - 2;
 
   if (state.current_page_number > 0) {
@@ -470,6 +469,20 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 					     env, 0, 0, emacs_prev_page, "Go to the previous PDF page.", NULL);
   emacs_value prev_args[2] = {prev_func_symbol, prev_func};
   env->funcall(env, fset, 2, prev_args);
+
+  // Register first-pdf-page
+  emacs_value first_page_func_symbol = env->intern(env, "first-pdf-page");
+  emacs_value first_page_func = env->make_function(
+						   env, 0, 0, emacs_first_page, "Go to the PDF's first page.", NULL);
+  emacs_value first_page_args[2] = {first_page_func_symbol, first_page_func};
+  env->funcall(env, fset, 2, first_page_args);
+
+  // Register last-pdf-page
+  emacs_value last_page_func_symbol = env->intern(env, "last-pdf-page");
+  emacs_value last_page_func = env->make_function(
+						   env, 0, 0, emacs_last_page, "Go to the PDF's first page.", NULL);
+  emacs_value last_page_args[2] = {last_page_func_symbol, last_page_func};
+  env->funcall(env, fset, 2, last_page_args);
 
   provide(env, "render-core");
   fprintf(stderr, "Emacs module initialized successfully.\n");
