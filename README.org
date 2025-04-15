@@ -1,12 +1,25 @@
 #+TITLE: Emacs Reader
 An all-in-one ebook reader for reading in any format in Emacs. This package intends to take from pdf-tools, nov.el, and doc-view and make them better.
 
+* Dependencies
+Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository until I can maybe talk to package maintainers of =mupdf= and see if things can be resolved.
+
+So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the depencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed.
+
 * Installation
-#+begin_src emacs-lisp
-(use-package reader
-  :vc (:url "https://codeberg.org/divyaranjan/emacs-reader"
-	    :rev :newest)
-  :init
-  (unless (file-exists-p "render-core.so")
-    (async-shell-command "cd ~/.emacs.d/elpa/reader/ && make")))
-#+end_src
+For now, until the package has been published to GNU ELPA, the only way to install and use it is manual. Follow the following steps:
+
+1. Do a recursive clone of the repository:
+   #+begin_src sh
+git clone --recursive https://codeberg.org/divyaranjan/emacs-reader.git
+   #+end_src
+
+2. Add module directory to Emacs’ =load-path=, do the following in your Emacs session:
+   #+begin_src emacs-lisp
+(add-to-list 'load-path /path/to/package/module/)
+   #+end_src
+Note that at the end there should be =module/=.
+
+3. Install dependencies as described above.
+
+4. Simply do =make= and then in your Emacs do =load-file= for =reader.el=.
