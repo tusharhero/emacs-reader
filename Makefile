@@ -22,7 +22,7 @@ all: $(LIB_NAME)
 
 # Build render-core.so, ensure libmupdf.so is built first
 $(LIB_NAME): $(OBJS) $(LIBMUPDF)
-	mkdir module
+	mkdir -p module
 	$(CC) -shared -o $@ $^ $(LDFLAGS) $(RPATHS)
 
 # Rule to build the submodule shared library
