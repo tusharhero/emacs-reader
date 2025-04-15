@@ -119,6 +119,7 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
     fz_close_device(ctx, next);
 }
 
+// C interface for (provide) in Elisp
 void provide(emacs_env *env, const char *value) {
   emacs_value Qvalue = env->intern(env, value);
   emacs_value Qprovide = env->intern(env, "provide");
