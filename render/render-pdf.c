@@ -367,6 +367,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
+  (void)args;
   (void)data;
 
   if (state.current_page_number > 0) {
