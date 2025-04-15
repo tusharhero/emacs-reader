@@ -1,6 +1,6 @@
 # Makefile for Emacs Reader’s dynamic module
 
-SUBMODULE_DIR := $(HOME)/projects/reader/dep
+SUBMODULE_DIR := $(CURDIR)/dep
 MUPDF_DIR := $(SUBMODULE_DIR)/mupdf
 LIBMUPDF := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
 
