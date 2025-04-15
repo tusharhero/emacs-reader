@@ -389,6 +389,58 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+                            void *data) {
+  (void)nargs;
+  (void)args;
+  (void)data;
+
+  if (state.current_page_number > 0) {
+    emacs_value prev_svg_string =
+      env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+    env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
+    emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
+                                 env->intern(env, "t")};
+    emacs_value image_data =
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
+    render_page(&state, 0);
+    return env->intern(env, "t");
+
+  } else {
+    fprintf(stderr, "Already at the first page.\n");
+    return env->intern(env, "nil");
+  }
+  return env->intern(env, "t");
+}
+
+emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+                            void *data) {
+  (void)nargs;
+  (void)args;
+  (void)data;
+
+  last_page_number = state.pagecount + 1;
+
+  if (state.current_page_number > 0) {
+    emacs_value prev_svg_string =
+      env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+    env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
+    emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
+                                 env->intern(env, "t")};
+    emacs_value image_data =
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
+    render_page(&state, last_page_number);
+    return env->intern(env, "t");
+
+  } else {
+    fprintf(stderr, "Already at the first page.\n");
+    return env->intern(env, "nil");
+  }
+  return env->intern(env, "t");
+}
+
 int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment(runtime);
   if (!env) {
