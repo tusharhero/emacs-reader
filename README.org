@@ -16,7 +16,7 @@ git clone --recursive https://codeberg.org/divyaranjan/emacs-reader.git
 
 2. Add module directory to Emacs’ =load-path=, do the following in your Emacs session:
    #+begin_src emacs-lisp
-(add-to-list 'load-path /path/to/package/module/)
+(add-to-list 'load-path "/path/to/package/module/")
    #+end_src
 Note that at the end there should be =module/=.
 
@@ -29,4 +29,4 @@ Note that at the end there should be =module/=.
 * Key Bindings
 - =n= or =j= for going to next page
 - =p= or =k= for going to previous page
-= =Q= for closing the PDF buffer.
+- =Q= for closing the PDF buffer.
