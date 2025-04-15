@@ -25,3 +25,8 @@ Note that at the end there should be =module/=.
 4. Simply do =make= and then in your Emacs do =load-file= for =reader.el=.
 
 5. In Emacs do =M-x read-pdf= and open a PDF file.
+
+* Key Bindings
+- =n= or =j= for going to next page
+- =p= or =k= for going to previous page
+= =Q= for closing the PDF buffer.
