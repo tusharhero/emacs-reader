@@ -316,10 +316,8 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       emacs_value svg_string =
           env->make_string(env, state.current_svg_data, state.current_svg_size);
       emacs_value file_name_string = env->make_string(env, file, strlen(file));
-      emacs_value file_name = env->funcall(
-          env, env->intern(env, "file-name-base"), 1, &file_name_string);
-      emacs_value buffer = env->funcall(
-          env, env->intern(env, "generate-new-buffer"), 1, &file_name);
+      emacs_value buffer =
+	env->funcall(env, env->intern(env, "create-file-buffer"), 1, &file_name_string);
       env->funcall(env, env->intern(env, "switch-to-buffer"), 1, &buffer);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
@@ -383,7 +381,6 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
     render_page(&state, state.prev_page_number);
     return env->intern(env, "t");
-
   } else {
     fprintf(stderr, "Already at the first page.\n");
     return env->intern(env, "nil");
@@ -410,7 +407,6 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
     render_page(&state, state.current_page_number);
     return env->intern(env, "t");
-
   } else {
     fprintf(stderr, "Already at the first page.\n");
     return env->intern(env, "nil");
