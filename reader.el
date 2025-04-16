@@ -46,7 +46,7 @@ to render the first page and display it in a new buffer."
   (interactive "fFind PDF file: ")
   (unless (fboundp 'load-pdf)
     (error "The 'load-pdf' function from the dynamic module is not available. Was the module loaded correctly?"))
-  (load-pdf pdf-file)
+  (load-pdf (expand-file-name pdf-file))
   (read-pdf-mode))
 
 ;; Internal function to go to the next page
