@@ -1,3 +1,4 @@
+#include "helpers.h"
 #include <assert.h>
 #include <emacs-module.h>
 #include <mupdf/fitz.h>
@@ -5,7 +6,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "helpers.h"
 
 int plugin_is_GPL_compatible;
 
@@ -29,26 +29,26 @@ typedef struct {
 } PdfState;
 
 PdfState state = {
-  .ctx = NULL,
-  .doc = NULL,
-  .pagecount = 0,
-  .current_page_number = 0,
-  .next_page_number = 0,
-  .prev_page_number = 0,
-  .current_svg_data = NULL,
-  .current_svg_size = 0,
-  .next_svg_data = NULL,
-  .next_svg_size = 0,
-  .prev_svg_data = NULL,
-  .prev_svg_size = 0,
-  .current_page = NULL,
-  .prev_page = NULL,
-  .next_page = NULL,
-  .page_bbox =
-  {
-    .x0 = 0.0f,
-    .y0 = 0.0f,
-  },
+    .ctx = NULL,
+    .doc = NULL,
+    .pagecount = 0,
+    .current_page_number = 0,
+    .next_page_number = 0,
+    .prev_page_number = 0,
+    .current_svg_data = NULL,
+    .current_svg_size = 0,
+    .next_svg_data = NULL,
+    .next_svg_size = 0,
+    .prev_svg_data = NULL,
+    .prev_svg_size = 0,
+    .current_page = NULL,
+    .prev_page = NULL,
+    .next_page = NULL,
+    .page_bbox =
+        {
+            .x0 = 0.0f,
+            .y0 = 0.0f,
+        },
 };
 
 // Loading a PDF
@@ -99,13 +99,13 @@ int load_pages(PdfState *state, int page_number) {
     if (0 < page_number) {
       state->prev_page_number = page_number - 1;
       state->prev_page =
-	fz_load_page(state->ctx, state->doc, state->prev_page_number);
+          fz_load_page(state->ctx, state->doc, state->prev_page_number);
     }
 
     if (page_number < (state->pagecount - 1)) {
       state->next_page_number = page_number + 1;
       state->next_page =
-	fz_load_page(state->ctx, state->doc, state->next_page_number);
+          fz_load_page(state->ctx, state->doc, state->next_page_number);
     }
   }
   fz_catch(state->ctx) {
@@ -169,7 +169,8 @@ int render_page(PdfState *state, int page_number) {
   float page_height = state->page_bbox.y1 - state->page_bbox.y0;
 
   // Create buffers
-  if (create_buffers(state->ctx, &curr_buf, &prev_buf, &next_buf) == EXIT_FAILURE) {
+  if (create_buffers(state->ctx, &curr_buf, &prev_buf, &next_buf) ==
+      EXIT_FAILURE) {
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
 
@@ -179,7 +180,7 @@ int render_page(PdfState *state, int page_number) {
 
   // Create an output object associated with each of the buffers
   if (create_outputs(state->ctx, &curr_out, &prev_out, &next_out, curr_buf,
-		     prev_buf, next_buf) == EXIT_FAILURE) {
+                     prev_buf, next_buf) == EXIT_FAILURE) {
     drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
     drop_all_pdf_pages(state->ctx, state);
     fz_drop_document(state->ctx, state->doc);
@@ -192,11 +193,11 @@ int render_page(PdfState *state, int page_number) {
   // Create an SVG device
   fz_try(state->ctx) {
     curr_dev =
-      fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
+        fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
     prev_dev =
-      fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
+        fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
     next_dev =
-      fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
+        fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
   }
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot create SVG device: %s\n",
@@ -307,22 +308,23 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     fprintf(stderr, "PDF loaded successfully with %d pages.\n",
             state.pagecount);
     fprintf(
-	    stderr,
-	    "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
-	    state.ctx, state.doc, state.pagecount, state.current_page_number);
+        stderr,
+        "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
+        state.ctx, state.doc, state.pagecount, state.current_page_number);
 
     if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
-	env->make_string(env, state.current_svg_data, state.current_svg_size);
+          env->make_string(env, state.current_svg_data, state.current_svg_size);
       emacs_value file_name_string = env->make_string(env, file, strlen(file));
-      emacs_value file_name = env->funcall(env, env->intern(env, "file-name-base"), 1, &file_name_string);
+      emacs_value file_name = env->funcall(
+          env, env->intern(env, "file-name-base"), 1, &file_name_string);
       emacs_value buffer = env->funcall(
-					env, env->intern(env, "generate-new-buffer"), 1, &file_name);
+          env, env->intern(env, "generate-new-buffer"), 1, &file_name);
       env->funcall(env, env->intern(env, "switch-to-buffer"), 1, &buffer);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
-	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+          env->funcall(env, env->intern(env, "create-image"), 3, image_args);
       env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
@@ -343,12 +345,12 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state.current_page_number < (state.pagecount - 1)) {
     emacs_value next_svg_string =
-      env->make_string(env, state.next_svg_data, state.next_svg_size);
+        env->make_string(env, state.next_svg_data, state.next_svg_size);
     env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
     emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
 
     if (state.current_page_number == (state.pagecount - 2)) {
@@ -372,12 +374,12 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state.current_page_number > 0) {
     emacs_value prev_svg_string =
-      env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+        env->make_string(env, state.prev_svg_data, state.prev_svg_size);
     env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
     render_page(&state, state.prev_page_number);
     return env->intern(env, "t");
@@ -390,7 +392,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 }
 
 emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data) {
+                             void *data) {
   (void)nargs;
   (void)args;
   (void)data;
@@ -399,12 +401,12 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state.current_page_number > 0) {
     emacs_value prev_svg_string =
-      env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+        env->make_string(env, state.prev_svg_data, state.prev_svg_size);
     env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
     render_page(&state, state.current_page_number);
     return env->intern(env, "t");
@@ -424,20 +426,25 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   state.current_page_number = state.pagecount - 2;
 
-  if (state.current_page_number > 0) {
-    emacs_value prev_svg_string =
-      env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+  if (state.current_page_number < (state.pagecount - 1)) {
+    emacs_value next_svg_string =
+        env->make_string(env, state.next_svg_data, state.next_svg_size);
     env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
-    emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
+    emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
-    render_page(&state, state.current_page_number);
-    return env->intern(env, "t");
 
+    if (state.current_page_number == (state.pagecount - 2)) {
+      fprintf(stderr, "Already at the last page.\n");
+      render_page(&state, state.current_page_number);
+    } else {
+      render_page(&state, state.next_page_number);
+    }
+    return env->intern(env, "t");
   } else {
-    fprintf(stderr, "Already at the first page.\n");
+    fprintf(stderr, "Already at the last page.\n");
     return env->intern(env, "nil");
   }
   return env->intern(env, "t");
@@ -454,7 +461,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Register load-pdf
   emacs_value load_func_symbol = env->intern(env, "load-pdf");
   emacs_value load_func =
-    env->make_function(env, 1, 1, emacs_load_pdf, "Loads a PDF file.", NULL);
+      env->make_function(env, 1, 1, emacs_load_pdf, "Loads a PDF file.", NULL);
   emacs_value load_args[2] = {load_func_symbol, load_func};
   env->funcall(env, fset, 2, load_args);
 
@@ -468,21 +475,21 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Register previous-pdf-page
   emacs_value prev_func_symbol = env->intern(env, "previous-pdf-page");
   emacs_value prev_func = env->make_function(
-					     env, 0, 0, emacs_prev_page, "Go to the previous PDF page.", NULL);
+      env, 0, 0, emacs_prev_page, "Go to the previous PDF page.", NULL);
   emacs_value prev_args[2] = {prev_func_symbol, prev_func};
   env->funcall(env, fset, 2, prev_args);
 
   // Register first-pdf-page
   emacs_value first_page_func_symbol = env->intern(env, "first-pdf-page");
   emacs_value first_page_func = env->make_function(
-						   env, 0, 0, emacs_first_page, "Go to the PDF's first page.", NULL);
+      env, 0, 0, emacs_first_page, "Go to the PDF's first page.", NULL);
   emacs_value first_page_args[2] = {first_page_func_symbol, first_page_func};
   env->funcall(env, fset, 2, first_page_args);
 
   // Register last-pdf-page
   emacs_value last_page_func_symbol = env->intern(env, "last-pdf-page");
   emacs_value last_page_func = env->make_function(
-						   env, 0, 0, emacs_last_page, "Go to the PDF's first page.", NULL);
+      env, 0, 0, emacs_last_page, "Go to the PDF's first page.", NULL);
   emacs_value last_page_args[2] = {last_page_func_symbol, last_page_func};
   env->funcall(env, fset, 2, last_page_args);
 
