@@ -1,4 +1,4 @@
-;;; reader.el --- Document Viewer for Emacs  -*- lexical-binding: t; -*-
+;;; reader.el --- Reading Documents in Emacs  -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2025 Divya Ranjan Pattanaik <divya@subvertising.org>
 
@@ -135,5 +135,5 @@ Keybindings:
 ;; Automatically load the mode
 (add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
 
-(provide 'reader.el)
+(provide 'reader)
 ;;; reader.el ends here.

@@ -23,7 +23,7 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 
 3. Install dependencies as described above.
 
-4. Simply do =make= and then in your Emacs do =load-file= for =reader.el=.
+4. Simply do =make= and then in your Emacs do =(require 'reader)=.
 
 5. In Emacs do =M-x read-pdf= and open a PDF file.
 
