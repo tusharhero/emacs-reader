@@ -111,7 +111,7 @@ to render the first page and display it in a new buffer."
     (define-key map (kbd "j") #'read-pdf--next-page)
     (define-key map (kbd "p") #'read-pdf--previous-page)
     (define-key map (kbd "k") #'read-pdf--previous-page)
-    (define-key map (kbd "g") #'read-pdf--first-page)
+    (define-key map (kbd "gg") #'read-pdf--first-page)
     (define-key map (kbd "M-<") #'read-pdf--first-page)
     (define-key map (kbd "G") #'read-pdf--last-page)
     (define-key map (kbd "M->") #'read-pdf--last-page)
@@ -126,7 +126,14 @@ to render the first page and display it in a new buffer."
 Keybindings:
 \\{read-pdf-mode-map}"
   ;; Make the buffer read-only to prevent editing the SVG image
-  (setq-local buffer-read-only t))
+  ;; (read-pdf--reload)
+  (setq-local buffer-read-only t)
+  (setq-local cursor-type nil)
+  (blink-cursor-mode 0)
+  (read-pdf--render-buffer))
+
+;; Automatically load the mode
+(add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
 
 (provide 'reader.el)
 ;;; reader.el ends here.
