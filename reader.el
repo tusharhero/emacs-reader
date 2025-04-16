@@ -83,6 +83,11 @@ to render the first page and display it in a new buffer."
   (let ((inhibit-read-only t))
     (last-pdf-page)))
 
+(defun read-pdf--kill-buffer ()
+  "Kill the buffer with the rendered PDF"
+  (interactive)
+  (kill-buffer (current-buffer)))
+
 ;; Define the keymap for read-pdf-mode
 (defvar read-pdf-mode-map
   (let ((map (make-sparse-keymap)))
@@ -94,7 +99,7 @@ to render the first page and display it in a new buffer."
     (define-key map (kbd "M-<") #'read-pdf--first-page)
     (define-key map (kbd "G") #'read-pdf--last-page)
     (define-key map (kbd "M->") #'read-pdf--last-page)
-    (define-key map (kbd "Q") 'kill-this-buffer)
+    (define-key map (kbd "Q") #'read-pdf--kill-buffer)
     map)
   "Keymap for read-pdf-mode.")
 

@@ -11,7 +11,7 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 
 1. Do a recursive clone of the repository:
    #+begin_src sh
-git clone --recursive https://codeberg.org/divyaranjan/emacs-reader.git
+  git clone --recursive https://codeberg.org/divyaranjan/emacs-reader.git
    #+end_src
    Note: This will take a *long* time, since it’s getting =mupdf= and /all/ of its dependencies.
 
