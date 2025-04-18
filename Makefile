@@ -13,14 +13,14 @@ RPATHS = -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
 SRCS = render/helpers.c render/render-pdf.c
 OBJS = $(SRCS:.c=.o)
 
-LIB_NAME = module/render-core.so
+LIB_NAME = module/render-pdf.so
 
 .PHONY: all clean submodule
 
 # Top-level build target
 all: $(LIB_NAME)
 
-# Build render-core.so, ensure libmupdf.so is built first
+# Build render-pdf.so, ensure libmupdf.so is built first
 $(LIB_NAME): $(OBJS) $(LIBMUPDF)
 	mkdir -p module
 	$(CC) -shared -o $@ $^ $(LDFLAGS) $(RPATHS)

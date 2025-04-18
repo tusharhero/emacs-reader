@@ -31,7 +31,7 @@
 ;;; Code:
 (require 'image)
 (require 'svg)
-(require 'render-core)
+(require 'render-pdf)
 
 (defgroup reader nil
   "Group for Reader’s customizations."
