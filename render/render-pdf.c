@@ -446,16 +446,16 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   state.current_page_number = state.pagecount - 2;
 
-  if (state.current_page_number < (state.pagecount - 1)) {
+  if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
     emacs_value next_svg_string =
         env->make_string(env, state.next_svg_data, state.next_svg_size);
-    env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
     emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
         env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
-
+    emacs_value overlay_put_args[3] = {g_svg_overlay,
+                                       env->intern(env, "display"), image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     if (state.current_page_number == (state.pagecount - 2)) {
       fprintf(stderr, "Already at the last page.\n");
       render_page(&state, state.current_page_number);
