@@ -97,13 +97,6 @@ to render the first page and display it in a new buffer."
 	  (read-pdf-mode))
       (message "No file associated with buffer."))))
 
-(defun read-pdf--reload ()
-  "Reload PDF in current buffer if in `read-pdf-mode`, otherwise activate the mode."
-  (interactive)
-  (if (eq major-mode 'read-pdf-mode)
-      (read-pdf--render-buffer)
-    (read-pdf-mode)))
-
 ;; Define the keymap for read-pdf-mode
 (defvar read-pdf-mode-map
   (let ((map (make-sparse-keymap)))
