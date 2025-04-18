@@ -291,6 +291,23 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
+static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
+                                 emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
+  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
+  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
+                                     (emacs_value[]){start, end});
+
+  if (g_svg_overlay)
+    env->free_global_ref(env, g_svg_overlay);
+  g_svg_overlay = env->make_global_ref(env, overlay);
+
+  return overlay;
+}
+
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
   (void)nargs;
