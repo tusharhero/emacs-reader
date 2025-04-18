@@ -120,12 +120,15 @@ to render the first page and display it in a new buffer."
 
 Keybindings:
 \\{read-pdf-mode-map}"
-  ;; Make the buffer read-only to prevent editing the SVG image
-  ;; (read-pdf--reload)
-  (setq-local buffer-read-only t)
-  (setq-local cursor-type nil)
+  (setq-local buffer-read-only t
+	      global-linum-mode nil
+	      cursor-type nil
+              display-line-numbers-mode nil)
+  (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
-  (read-pdf--render-buffer))
+  ;; Only do this when the buffer has a file associated with it
+  (when buffer-file-name
+    (read-pdf--render-buffer)))
 
 ;; Automatically load the mode
 (add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
