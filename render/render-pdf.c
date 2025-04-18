@@ -447,9 +447,9 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   state.current_page_number = state.pagecount - 2;
 
   if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
-    emacs_value next_svg_string =
+    emacs_value svg_string =
         env->make_string(env, state.next_svg_data, state.next_svg_size);
-    emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
+    emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
         env->funcall(env, env->intern(env, "create-image"), 3, image_args);
