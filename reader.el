@@ -45,7 +45,10 @@ This function calls the C function 'load-pdf' from the dynamic module
 to render the first page and display it in a new buffer."
   (interactive "fFind PDF file: ")
   (unless (fboundp 'load-pdf)
-    (error "The 'load-pdf' function from the dynamic module is not available. Was the module loaded correctly?"))
+    (error "The 'load-pdf' function from the dynamic module is not available."))
+  (switch-to-buffer (create-file-buffer pdf-file))
+  (insert "\n")
+  (init-svg-overlay)
   (load-pdf (expand-file-name pdf-file))
   (read-pdf-mode))
 
