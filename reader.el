@@ -84,6 +84,14 @@ to render the first page and display it in a new buffer."
   (let ((inhibit-read-only t))
     (last-pdf-page)))
 
+(defun read-pdf--goto-page (n)
+  "Go to page number 'n' in the PDF"
+  (interactive "nPage: ")
+  (unless (fboundp 'goto-pdf-page)
+    (error "The 'goto-pdf-page' function from the dynamic module is not available."))
+  (let ((inhibit-read-only t))
+    (goto-pdf-page n)))
+
 (defun read-pdf--kill-buffer ()
   "Kill the buffer with the rendered PDF"
   (interactive)
@@ -110,6 +118,8 @@ to render the first page and display it in a new buffer."
     (define-key map (kbd "M-<") #'read-pdf--first-page)
     (define-key map (kbd "G") #'read-pdf--last-page)
     (define-key map (kbd "M->") #'read-pdf--last-page)
+    (define-key map (kbd "M-g g") #'read-pdf--goto-page)
+    (define-key map (kbd "g n") #'read-pdf--goto-page)
     (define-key map (kbd "Q") #'read-pdf--kill-buffer)
     map)
   "Keymap for read-pdf-mode.")

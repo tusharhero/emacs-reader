@@ -470,6 +470,31 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+                            void *data) {
+  (void)nargs;
+  (void)data;
+  int page_number = env->extract_integer(env, args[0]);
+
+  if (page_number > 1 && page_number < (state.pagecount - 2)) {
+    state.current_page_number = page_number;
+    if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
+      emacs_value svg_string =
+        env->make_string(env, state.current_svg_data, state.current_svg_size);
+      emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
+				   env->intern(env, "t")};
+      emacs_value image_data =
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+      emacs_value overlay_put_args[3] = {g_svg_overlay,
+					 env->intern(env, "display"), image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    } else {
+      fprintf(stderr, "Page number out of bounds");
+    }
+  }
+  return env->intern(env, "t");
+}
+
 int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment(runtime);
   if (!env) {
@@ -521,7 +546,13 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value last_page_args[2] = {last_page_func_symbol, last_page_func};
   env->funcall(env, fset, 2, last_page_args);
 
-  provide(env, "render-core");
+  // Register goto-pdf-page
+  emacs_value goto_page_func_symbol = env->intern(env, "goto-pdf-page");
+  emacs_value goto_page_func = env->make_function(env, 1, 1, emacs_goto_page, "Go to the PDF's first page.", NULL);
+  emacs_value goto_page_args[2] = {goto_page_func_symbol, goto_page_func};
+  env->funcall(env, fset, 2, goto_page_args);
+
+  provide(env, "render-pdf");
   fprintf(stderr, "Emacs module initialized successfully.\n");
   return 0;
 }
