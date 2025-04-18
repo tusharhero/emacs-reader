@@ -52,7 +52,6 @@ to render the first page and display it in a new buffer."
   (load-pdf (expand-file-name pdf-file))
   (read-pdf-mode))
 
-;; Internal function to go to the next page
 (defun read-pdf--next-page ()
   "Go to the next page of the PDF."
   (interactive)
@@ -61,7 +60,6 @@ to render the first page and display it in a new buffer."
   (let ((inhibit-read-only t))
     (next-pdf-page)))
 
-;; Internal function to go to the previous page
 (defun read-pdf--previous-page ()
   "Go to the previous page of the PDF."
   (interactive)
