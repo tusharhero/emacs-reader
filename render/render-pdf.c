@@ -359,12 +359,13 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (state.current_page_number < (state.pagecount - 1)) {
     emacs_value next_svg_string =
         env->make_string(env, state.next_svg_data, state.next_svg_size);
-    env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
     emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
         env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
+    emacs_value overlay_put_args[3] = {g_svg_overlay,
+                                       env->intern(env, "display"), image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
     if (state.current_page_number == (state.pagecount - 2)) {
       fprintf(stderr, "Already at the last page.\n");
@@ -388,12 +389,14 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (state.current_page_number > 0) {
     emacs_value prev_svg_string =
         env->make_string(env, state.prev_svg_data, state.prev_svg_size);
-    env->funcall(env, env->intern(env, "erase-buffer"), 0, NULL);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
         env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
+    emacs_value overlay_put_args[3] = {g_svg_overlay,
+                                       env->intern(env, "display"), image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
     render_page(&state, state.prev_page_number);
     return env->intern(env, "t");
   } else {
