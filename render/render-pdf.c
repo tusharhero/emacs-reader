@@ -51,6 +51,8 @@ static PdfState state = {
         },
 };
 
+static emacs_value g_svg_overlay = NULL;
+
 // Loading a PDF
 int load_pdf(PdfState *state, char *input_file) {
 
