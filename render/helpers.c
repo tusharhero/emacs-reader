@@ -3,35 +3,33 @@
 #include <assert.h>
 #include <emacs-module.h>
 #include <mupdf/fitz.h>
-#include <stdlib.h>
-#include <stddef.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 // Change an Emacs string to a C string
-bool emacs_2_c_str (emacs_env *env, emacs_value value, char **buffer, size_t *size)
-{
+bool emacs_2_c_str(emacs_env *env, emacs_value value, char **buffer,
+                   size_t *size) {
   ptrdiff_t buffer_size;
-  if (!env->copy_string_contents (env, value, NULL, &buffer_size))
+  if (!env->copy_string_contents(env, value, NULL, &buffer_size))
     return false;
-  assert (env->non_local_exit_check (env) == emacs_funcall_exit_return);
-  assert (buffer_size > 0);
-  *buffer = malloc ((size_t) buffer_size);
-  if (*buffer == NULL)
-    {
-      env->non_local_exit_signal (env, env->intern (env, "memory-full"),
-                                  env->intern (env, "nil"));
-      return false;
-    }
+  assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
+  assert(buffer_size > 0);
+  *buffer = malloc((size_t)buffer_size);
+  if (*buffer == NULL) {
+    env->non_local_exit_signal(env, env->intern(env, "memory-full"),
+                               env->intern(env, "nil"));
+    return false;
+  }
   ptrdiff_t old_buffer_size = buffer_size;
-  if (!env->copy_string_contents (env, value, *buffer, &buffer_size))
-    {
-      free (*buffer);
-      *buffer = NULL;
-      return false;
-    }
-  assert (env->non_local_exit_check (env) == emacs_funcall_exit_return);
-  assert (buffer_size == old_buffer_size);
-  *size = (size_t) (buffer_size - 1);
+  if (!env->copy_string_contents(env, value, *buffer, &buffer_size)) {
+    free(*buffer);
+    *buffer = NULL;
+    return false;
+  }
+  assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
+  assert(buffer_size == old_buffer_size);
+  *size = (size_t)(buffer_size - 1);
   return true;
 }
 
@@ -124,7 +122,7 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
 void provide(emacs_env *env, const char *value) {
   emacs_value Qvalue = env->intern(env, value);
   emacs_value Qprovide = env->intern(env, "provide");
-  emacs_value args[] = { Qvalue };
+  emacs_value args[] = {Qvalue};
 
   env->funcall(env, Qprovide, 1, args);
 }
