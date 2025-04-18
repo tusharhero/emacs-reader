@@ -28,7 +28,7 @@ typedef struct {
   fz_rect page_bbox;
 } PdfState;
 
-PdfState state = {
+static PdfState state = {
     .ctx = NULL,
     .doc = NULL,
     .pagecount = 0,
