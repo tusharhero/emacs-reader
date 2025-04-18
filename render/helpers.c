@@ -1,4 +1,5 @@
 // Helper functions for various purposes.
+#include "helpers.h"
 #include <assert.h>
 #include <emacs-module.h>
 #include <mupdf/fitz.h>
