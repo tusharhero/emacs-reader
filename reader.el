@@ -91,11 +91,12 @@ to render the first page and display it in a new buffer."
 
 (defun read-pdf--render-buffer ()
   "Render the file this buffer is associated with."
+  (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (load-pdf file)
-	  (read-pdf-mode))
+	  (init-svg-overlay)
+	  (load-pdf file))
       (message "No file associated with buffer."))))
 
 ;; Define the keymap for read-pdf-mode
