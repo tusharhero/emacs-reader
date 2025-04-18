@@ -291,22 +291,33 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
-                                 emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
-  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
-  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
-                                     (emacs_value[]){start, end});
+/* static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs, */
+/* 				emacs_value *args, void *data) { */
+/*   (void)nargs; */
+/*   (void)data; */
+/*   (void)args; */
 
-  if (g_svg_overlay)
-    env->free_global_ref(env, g_svg_overlay);
-  g_svg_overlay = env->make_global_ref(env, overlay);
+/*   emacs_value selected_window = */
+/*     env->funcall(env, env->intern(env, "selected-window"), 0, NULL); */
+/*   emacs_value start = */
+/*     env->funcall(env, env->intern(env, "window-start"), 1, &selected_window); */
+/*   emacs_value end = */
+/*     env->funcall(env, env->intern(env, "window-end"), 2, (emacs_value[]){selected_window, env->intern(env, "t")}); */
+/*   emacs_value start_plus_end = */
+/*     env->funcall(env, env->intern(env, "+"), 2, (emacs_value[]){start, end}); */
+/*   emacs_value center_pos = */
+/*     env->funcall(env, env->intern(env, "/"), 2, (emacs_value[]){start_plus_end, env->make_integer(env, 2)}); */
+/*   /\* emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL); *\/ */
+/*   /\* emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL); *\/ */
+/*   emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2, */
+/*                                      (emacs_value[]){center_pos, center_pos}); */
 
-  return overlay;
-}
+/*   if (g_svg_overlay) */
+/*     env->free_global_ref(env, g_svg_overlay); */
+/*   g_svg_overlay = env->make_global_ref(env, overlay); */
+
+/*   return overlay; */
+/* } */
 
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
@@ -448,11 +459,11 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
     emacs_value svg_string =
-        env->make_string(env, state.next_svg_data, state.next_svg_size);
+      env->make_string(env, state.next_svg_data, state.next_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     emacs_value overlay_put_args[3] = {g_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
