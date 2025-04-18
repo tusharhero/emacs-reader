@@ -314,7 +314,6 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
   char *file;
   size_t str_length = 0;
-  emacs_value result = env->intern(env, "nil"); // Initialize result to nil
 
   if (!emacs_2_c_str(env, args[0], &file, &str_length)) {
     fprintf(stderr, "Failed to convert Emacs string to C string.\n");
@@ -334,15 +333,12 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
           env->make_string(env, state.current_svg_data, state.current_svg_size);
-      emacs_value file_name_string = env->make_string(env, file, strlen(file));
-      emacs_value buffer =
-	env->funcall(env, env->intern(env, "create-file-buffer"), 1, &file_name_string);
-      env->funcall(env, env->intern(env, "switch-to-buffer"), 1, &buffer);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
           env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-      env->funcall(env, env->intern(env, "insert-image"), 1, &image_data);
+      emacs_value overlay_put_args[3] = {g_svg_overlay, env->intern(env, "display"), image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
     }
@@ -351,7 +347,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   }
 
   free(file);
-  return result;
+  return env->intern(env, "t");
 }
 
 emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
