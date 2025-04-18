@@ -476,7 +476,15 @@ int emacs_module_init(struct emacs_runtime *runtime) {
     fprintf(stderr, "Failed to get Emacs environment.\n");
     return 1;
   }
+
   emacs_value fset = env->intern(env, "fset");
+
+  // Overlay Init
+  emacs_value overlay_symbol = env->intern(env, "init-svg-overlay");
+  emacs_value overlay_func =
+      env->make_function(env, 0, 0, init_overlay, "Loads the overlay", NULL);
+  emacs_value overlay_args[2] = {overlay_symbol, overlay_func};
+  env->funcall(env, fset, 2, overlay_args);
 
   // Register load-pdf
   emacs_value load_func_symbol = env->intern(env, "load-pdf");
