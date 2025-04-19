@@ -89,7 +89,7 @@ to render the first page and display it in a new buffer."
   (interactive "nPage: ")
   (unless (fboundp 'goto-pdf-page)
     (error "The 'goto-pdf-page' function from the dynamic module is not available."))
-  (goto-pdf-page n)
+  (goto-pdf-page (- n 1)) ; MuPDF does 0-indexing
   (force-mode-line-update t))
 
 (defun read-pdf--kill-buffer ()
