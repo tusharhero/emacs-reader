@@ -397,23 +397,38 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  if (state.current_page_number > 0) {
+  if (state.current_page_number < (state.pagecount - 1)) {
     emacs_value prev_svg_string =
-        env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+      env->make_string(env, state.prev_svg_data, state.prev_svg_size);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
+				 env->intern(env, "t")};
+    emacs_value image_data =
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    emacs_value overlay_put_args[3] = {g_svg_overlay,
+				       env->intern(env, "display"), image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
+    if (state.current_page_number > 0) {
+      render_page(&state, state.prev_page_number);
+      return env->intern(env, "t");
+    } else {
+      fprintf(stderr, "Already at the first page.\n");
+      return env->intern(env, "nil");
+    }
+
+  } else {
+    render_page(&state, (state.pagecount - 2));
+    emacs_value current_svg_string =
+      env->make_string(env, state.current_svg_data, state.current_svg_size);
+    emacs_value image_args[3] = {current_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     emacs_value overlay_put_args[3] = {g_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-
-    render_page(&state, state.prev_page_number);
-    return env->intern(env, "t");
-  } else {
-    fprintf(stderr, "Already at the first page.\n");
-    return env->intern(env, "nil");
   }
+
   return env->intern(env, "t");
 }
 
