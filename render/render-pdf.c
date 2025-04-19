@@ -494,7 +494,7 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
   int page_number = env->extract_integer(env, args[0]);
 
-  if (page_number > 1 && page_number < (state.pagecount - 2)) {
+  if (page_number > 1 && page_number < (state.pagecount - 1)) {
     state.current_page_number = page_number;
     if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
