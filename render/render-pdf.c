@@ -570,6 +570,17 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value goto_page_args[2] = {goto_page_func_symbol, goto_page_func};
   env->funcall(env, fset, 2, goto_page_args);
 
+  // Register get-current-pdf-page-number
+  emacs_value get_current_pdf_page_number_symbol =
+      env->intern(env, "get-current-pdf-pagenumber");
+  emacs_value get_current_pdf_page_number_func =
+      env->make_function(env, 0, 0, get_current_page_number,
+                         "Get current page number for the visiting PDF", NULL);
+  emacs_value get_current_pdf_page_number_args[2] = {
+      get_current_pdf_page_number_symbol, get_current_pdf_page_number_func};
+  env->funcall(env, fset, 2, get_current_pdf_page_number_args);
+
+  // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
   fprintf(stderr, "Emacs module initialized successfully.\n");
   return 0;
