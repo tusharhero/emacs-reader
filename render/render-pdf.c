@@ -369,27 +369,25 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  if (state.current_page_number < (state.pagecount - 1)) {
-    emacs_value next_svg_string =
-        env->make_string(env, state.next_svg_data, state.next_svg_size);
-    emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
-                                 env->intern(env, "t")};
-    emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    emacs_value overlay_put_args[3] = {g_svg_overlay,
-                                       env->intern(env, "display"), image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+  emacs_value next_svg_string =
+    env->make_string(env, state.next_svg_data, state.next_svg_size);
+  emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
+			       env->intern(env, "t")};
+  emacs_value image_data =
+    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+  emacs_value overlay_put_args[3] = {g_svg_overlay,
+				     env->intern(env, "display"), image_data};
+  env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-    if (state.current_page_number == (state.pagecount - 2)) {
-      fprintf(stderr, "Already at the last page.\n");
-    } else {
-      render_page(&state, state.next_page_number);
-    }
-    return env->intern(env, "t");
-  } else {
+  if (state.current_page_number < (state.pagecount - 2)) {
+    render_page(&state, state.next_page_number);
+  } else if (state.current_page_number == (state.pagecount - 2)) {
+    // At n-2 it makes sure state’s pages are restructured according to next page but not rendered.
+    load_pages(&state, state.next_page_number);
+  } else if (state.current_page_number == (state.pagecount - 1)) {
     fprintf(stderr, "Already at the last page.\n");
-    return env->intern(env, "nil");
   }
+
   return env->intern(env, "t");
 }
 
