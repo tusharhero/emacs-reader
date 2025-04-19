@@ -457,7 +457,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
-    fprintf(stderr, "Rendering initial page failed.\n");
+    fprintf(stderr, "Failed to render the first page.\n");
   }
 
   state.current_page_number = 0;
