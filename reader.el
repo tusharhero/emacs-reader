@@ -140,6 +140,20 @@ Keybindings:
   (when buffer-file-name
     (read-pdf--render-buffer)))
 
+(defun reader-mode-line ()
+  "Set custom mode-line interface when reading documents."
+  (setq-local mode-line-format
+		(list
+		 "Page: "
+		 '(:eval (number-to-string (+ 1 (get-current-pdf-pagenumber))))
+		 "/"
+		 '(:eval (number-to-string current-pdf-pagecount))
+		 "  "
+		 mode-line-buffer-identification))
+  (force-mode-line-update t))
+
+(add-hook 'read-pdf-mode-hook #'reader-mode-line)
+
 ;; Automatically load the mode
 (add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
 
