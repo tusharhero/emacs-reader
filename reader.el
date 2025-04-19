@@ -57,40 +57,40 @@ to render the first page and display it in a new buffer."
   (interactive)
   (unless (fboundp 'next-pdf-page)
     (error "The 'next-pdf-page' function from the dynamic module is not available."))
-  (let ((inhibit-read-only t))
-    (next-pdf-page)))
+  (next-pdf-page)
+  (force-mode-line-update t))
 
 (defun read-pdf--previous-page ()
   "Go to the previous page of the PDF."
   (interactive)
   (unless (fboundp 'previous-pdf-page)
     (error "The 'previous-pdf-page' function from the dynamic module is not available."))
-  (let ((inhibit-read-only t))
-    (previous-pdf-page)))
+  (previous-pdf-page)
+  (force-mode-line-update t))
 
 (defun read-pdf--first-page ()
   "Go to the first page of the PDF"
   (interactive)
   (unless (fboundp 'first-pdf-page)
     (error "The 'first-pdf-page' function from the dynamic module is not available."))
-  (let ((inhibit-read-only t))
-    (first-pdf-page)))
+  (first-pdf-page)
+  (force-mode-line-update t))
 
 (defun read-pdf--last-page ()
   "Go to the last page of the PDF."
   (interactive)
   (unless (fboundp 'last-pdf-page)
     (error "The 'last-pdf-page' function from the dynamic module is not available."))
-  (let ((inhibit-read-only t))
-    (last-pdf-page)))
+  (last-pdf-page)
+  (force-mode-line-update t))
 
 (defun read-pdf--goto-page (n)
   "Go to page number 'n' in the PDF"
   (interactive "nPage: ")
   (unless (fboundp 'goto-pdf-page)
     (error "The 'goto-pdf-page' function from the dynamic module is not available."))
-  (let ((inhibit-read-only t))
-    (goto-pdf-page n)))
+  (goto-pdf-page n)
+  (force-mode-line-update t))
 
 (defun read-pdf--kill-buffer ()
   "Kill the buffer with the rendered PDF"
