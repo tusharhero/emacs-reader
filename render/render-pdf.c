@@ -150,6 +150,14 @@ void drop_all_pdf_pages(fz_context *ctx, PdfState *state) {
     fz_drop_page(ctx, state->next_page);
 }
 
+// Reset the PdfState
+void reset_pdf_state(PdfState *state) {
+  fprintf(stderr, "Freeing the existing PdfState\n");
+  clean_up_svg_data(state);
+  drop_all_pdf_pages(state->ctx, state);
+  memset(state, 0, sizeof(PdfState));
+}
+
 // Rendering the page
 int render_page(PdfState *state, int page_number) {
   fz_device *prev_dev = NULL;
@@ -340,6 +348,8 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     fprintf(stderr, "Failed to convert Emacs string to C string.\n");
     return env->intern(env, "nil");
   }
+
+  reset_pdf_state(&state);
 
   fprintf(stderr, "Attempting to load: %s\n", file);
 
