@@ -291,6 +291,15 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
+static emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
+                                           emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+
+  return env->make_integer(env, state.current_page_number);
+}
+
 static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
 				emacs_value *args, void *data) {
   (void)nargs;
