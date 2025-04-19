@@ -126,6 +126,18 @@ void clean_up_svg_data(PdfState *state) {
     state->current_svg_data = NULL;
     state->current_svg_size = 0;
   }
+
+  if (state->next_svg_data) {
+    free(state->next_svg_data);
+    state->next_svg_data = NULL;
+    state->next_svg_size = 0;
+  }
+
+  if (state->prev_svg_data) {
+    free(state->prev_svg_data);
+    state->prev_svg_data = NULL;
+    state->prev_svg_size = 0;
+  }
 }
 
 // Drop all PDF pages
