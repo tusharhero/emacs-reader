@@ -240,6 +240,7 @@ int render_page(PdfState *state, int page_number) {
     fz_run_page(state->ctx, state->prev_page, prev_dev, fz_identity, NULL);
     fz_run_page(state->ctx, state->next_page, next_dev, fz_identity, NULL);
   }
+
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot run page: %s\n", fz_caught_message(state->ctx));
     close_all_devices(state->ctx, curr_dev, prev_dev, next_dev);
@@ -423,7 +424,13 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
+  if (state.current_page_number == 0) {
+    fprintf(stderr, "Already at the first page.\n");
+    return env->intern(env, "nil");
+  }
+
   if (state.current_page_number < (state.pagecount - 1)) {
+
     emacs_value prev_svg_string =
         env->make_string(env, state.prev_svg_data, state.prev_svg_size);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
@@ -548,7 +555,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 
   emacs_value fset = env->intern(env, "fset");
 
-  // Overlay Init
+  // Register init-svg-overlay
   emacs_value overlay_symbol = env->intern(env, "init-svg-overlay");
   emacs_value overlay_func =
       env->make_function(env, 0, 0, init_overlay, "Loads the overlay", NULL);
