@@ -326,6 +326,7 @@ static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
   return overlay;
 }
 
+
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
   (void)nargs;
@@ -413,23 +414,25 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
+  PdfState *state = get_pdf_state_ptr(env);
+
   emacs_value next_svg_string =
-      env->make_string(env, state.next_svg_data, state.next_svg_size);
+    env->make_string(env, state->next_svg_data, state->next_svg_size);
   emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                env->intern(env, "t")};
   emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
   emacs_value overlay_put_args[3] = {g_svg_overlay, env->intern(env, "display"),
                                      image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-  if (state.current_page_number < (state.pagecount - 2)) {
-    render_page(&state, state.next_page_number);
-  } else if (state.current_page_number == (state.pagecount - 2)) {
+  if (state->current_page_number < (state->pagecount - 2)) {
+    render_page(state, state->next_page_number);
+  } else if (state->current_page_number == (state->pagecount - 2)) {
     // At n-2 it makes sure state’s pages are restructured according to next
     // page but not rendered.
-    load_pages(&state, state.next_page_number);
-  } else if (state.current_page_number == (state.pagecount - 1)) {
+    load_pages(state, state->next_page_number);
+  } else if (state->current_page_number == (state->pagecount - 1)) {
     fprintf(stderr, "Already at the last page.\n");
   }
 
@@ -442,15 +445,17 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  if (state.current_page_number == 0) {
+  PdfState *state = get_pdf_state_ptr(env);
+
+  if (state->current_page_number == 0) {
     fprintf(stderr, "Already at the first page.\n");
     return env->intern(env, "nil");
   }
 
-  if (state.current_page_number < (state.pagecount - 1)) {
+  if (state->current_page_number < (state->pagecount - 1)) {
 
     emacs_value prev_svg_string =
-        env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+        env->make_string(env, state->prev_svg_data, state->prev_svg_size);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
@@ -459,8 +464,8 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-    if (state.current_page_number > 0) {
-      render_page(&state, state.prev_page_number);
+    if (state->current_page_number > 0) {
+      render_page(state, state->prev_page_number);
       return env->intern(env, "t");
     } else {
       fprintf(stderr, "Already at the first page.\n");
@@ -468,9 +473,9 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     }
 
   } else {
-    render_page(&state, (state.pagecount - 2));
+    render_page(state, (state->pagecount - 2));
     emacs_value current_svg_string =
-        env->make_string(env, state.current_svg_data, state.current_svg_size);
+        env->make_string(env, state->current_svg_data, state->current_svg_size);
     emacs_value image_args[3] = {current_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
