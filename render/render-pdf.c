@@ -29,29 +29,6 @@ typedef struct {
   fz_rect page_bbox;
 } PdfState;
 
-static PdfState state = {
-    .ctx = NULL,
-    .doc = NULL,
-    .pagecount = 0,
-    .current_page_number = 0,
-    .next_page_number = 0,
-    .prev_page_number = 0,
-    .current_svg_data = NULL,
-    .current_svg_size = 0,
-    .next_svg_data = NULL,
-    .next_svg_size = 0,
-    .prev_svg_data = NULL,
-    .prev_svg_size = 0,
-    .current_page = NULL,
-    .prev_page = NULL,
-    .next_page = NULL,
-    .page_bbox =
-        {
-            .x0 = 0.0f,
-            .y0 = 0.0f,
-        },
-};
-
 static emacs_value g_svg_overlay = NULL;
 
 // Loading a PDF
