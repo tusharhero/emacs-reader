@@ -388,6 +388,14 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       emacs_value overlay_put_args[3] = {
           g_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
+      // Create a user pointer and expose it to Emacs in a buffer-local fashion
+      emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
+      emacs_value pdf_state_ptr_sym = env->intern(env, "pdf-state-ptr");
+      env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+		   &pdf_state_ptr_sym);
+      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){pdf_state_ptr_sym, user_ptr});
+
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
     }
