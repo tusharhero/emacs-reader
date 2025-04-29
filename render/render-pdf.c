@@ -338,26 +338,49 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     return env->intern(env, "nil");
   }
 
-  reset_pdf_state(&state);
+  PdfState *state = malloc(sizeof(PdfState));
+  *state = (PdfState){
+    .ctx = NULL,
+    .doc = NULL,
+    .pagecount = 0,
+    .current_page_number = 0,
+    .next_page_number = 0,
+    .prev_page_number = 0,
+    .current_svg_data = NULL,
+    .current_svg_size = 0,
+    .next_svg_data = NULL,
+    .next_svg_size = 0,
+    .prev_svg_data = NULL,
+    .prev_svg_size = 0,
+    .current_page = NULL,
+    .prev_page = NULL,
+    .next_page = NULL,
+    .page_bbox =
+        {
+            .x0 = 0.0f,
+            .y0 = 0.0f,
+        },
+  };
 
+  reset_pdf_state(state);
   fprintf(stderr, "Attempting to load: %s\n", file);
 
-  if (load_pdf(&state, file) == EXIT_SUCCESS) {
+  if (load_pdf(state, file) == EXIT_SUCCESS) {
     fprintf(stderr, "PDF loaded successfully with %d pages.\n",
-            state.pagecount);
+            state->pagecount);
     fprintf(
         stderr,
         "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
-        state.ctx, state.doc, state.pagecount, state.current_page_number);
+        state->ctx, state->doc, state->pagecount, state->current_page_number);
 
     // Exposing the pagecount of the PDF to an Elisp variable
     emacs_value pagecount_args[2] = {env->intern(env, "current-pdf-pagecount"),
-                                     env->make_integer(env, state.pagecount)};
+                                     env->make_integer(env, state->pagecount)};
     env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 
-    if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
+    if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
-          env->make_string(env, state.current_svg_data, state.current_svg_size);
+          env->make_string(env, state->current_svg_data, state->current_svg_size);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
