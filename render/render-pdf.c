@@ -494,17 +494,19 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  if (state.current_page_number == 0) {
+  PdfState *state = get_pdf_state_ptr(env);
+
+  if (state->current_page_number == 0) {
     fprintf(stderr, "Already at the first page.\n");
     return env->intern(env, "nil");
   }
 
   // Can’t set to zero beacuse render_page needs to render previous or next page
-  state.current_page_number = 1;
+  state->current_page_number = 1;
 
-  if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
+  if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
     emacs_value svg_string =
-        env->make_string(env, state.prev_svg_data, state.prev_svg_size);
+        env->make_string(env, state->prev_svg_data, state->prev_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
@@ -516,7 +518,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     fprintf(stderr, "Failed to render the first page.\n");
   }
 
-  state.current_page_number = 0;
+  state->current_page_number = 0;
   return env->intern(env, "t");
 }
 
@@ -526,10 +528,12 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  if (render_page(&state, (state.pagecount - 2)) == EXIT_SUCCESS) {
-    state.current_page_number = (state.pagecount - 1);
+  PdfState *state = get_pdf_state_ptr(env);
+
+  if (render_page(state, (state->pagecount - 2)) == EXIT_SUCCESS) {
+    state->current_page_number = (state->pagecount - 1);
     emacs_value svg_string =
-        env->make_string(env, state.next_svg_data, state.next_svg_size);
+        env->make_string(env, state->next_svg_data, state->next_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
