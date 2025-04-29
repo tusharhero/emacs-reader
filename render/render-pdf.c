@@ -290,13 +290,23 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
+static PdfState *get_pdf_state_ptr(emacs_env *env) {
+  emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
+  emacs_value ptr =
+    env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
+  PdfState *state = env->get_user_ptr(env, ptr);
+
+  return state;
+}
+
 static emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
                                            emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
   (void)args;
 
-  return env->make_integer(env, state.current_page_number);
+  PdfState *state = get_pdf_state_ptr(env);
+  return env->make_integer(env, state->current_page_number);
 }
 
 static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
