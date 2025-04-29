@@ -554,11 +554,13 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
   int page_number = env->extract_integer(env, args[0]);
 
-  if (page_number > 1 && page_number < (state.pagecount - 1)) {
-    state.current_page_number = page_number;
-    if (render_page(&state, state.current_page_number) == EXIT_SUCCESS) {
+  PdfState *state = get_pdf_state_ptr(env);
+
+  if (page_number > 1 && page_number < (state->pagecount - 1)) {
+    state->current_page_number = page_number;
+    if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
-          env->make_string(env, state.current_svg_data, state.current_svg_size);
+          env->make_string(env, state->current_svg_data, state->current_svg_size);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
