@@ -89,6 +89,13 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
   return env->make_integer(env, state->current_page_number);
 }
 
+// Set the rendering status of the buffer to be true
+void set_current_render_status(emacs_env *env) {
+  emacs_value render_status_var = env->intern(env, "page-render-status");
+  env->funcall(env, env->intern(env, "set"), 2,
+               (emacs_value[]){render_status_var, env->intern(env, "t")});
+}
+
 // Exposing the pagecount of the PDF to an Elisp variable
 void set_current_page_number(emacs_env *env, PdfState *state) {
   emacs_value pagecount_args[2] = {env->intern(env, "current-pdf-pagecount"),
@@ -380,6 +387,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         state->ctx, state->doc, state->pagecount, state->current_page_number);
 
     set_current_page_number(env, state);
+    set_current_render_status(env);
 
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
@@ -647,6 +655,21 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 
   // Register the buffer-local page number
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1, (emacs_value[]){env->intern(env, "current-pdf-pagecount")});
+
+  // Register the buffer-local variable to indicate whether a buffer has been
+  // rendered
+  emacs_value page_render_status_sym = env->intern(env, "page-render-status");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+               &page_render_status_sym);
+  env->funcall(
+	       env, env->intern(env, "set"), 2,
+      (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
+  // Ensure that the variable stays buffer-local and doesn’t get overriden
+  env->funcall(env, env->intern(env, "put"), 3,
+               (emacs_value[]){page_render_status_sym,
+                               env->intern(env, "permanent-local"),
+                               env->intern(env, "t")});
+
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
