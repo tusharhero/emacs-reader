@@ -29,7 +29,7 @@ typedef struct {
   fz_rect page_bbox;
 } PdfState;
 
-static emacs_value g_svg_overlay = NULL;
+emacs_value g_svg_overlay = NULL;
 
 // Loading a PDF
 int load_pdf(PdfState *state, char *input_file) {
@@ -290,7 +290,7 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-static PdfState *get_pdf_state_ptr(emacs_env *env) {
+PdfState *get_pdf_state_ptr(emacs_env *env) {
   emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
   emacs_value ptr =
     env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
@@ -299,7 +299,7 @@ static PdfState *get_pdf_state_ptr(emacs_env *env) {
   return state;
 }
 
-static emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
+emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
                                            emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
@@ -309,7 +309,7 @@ static emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
   return env->make_integer(env, state->current_page_number);
 }
 
-static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
+emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
                                 emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
