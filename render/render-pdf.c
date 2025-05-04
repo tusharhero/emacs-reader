@@ -172,13 +172,13 @@ int load_pages(PdfState *state, int page_number) {
     if (0 < page_number) {
       state->prev_page_number = page_number - 1;
       state->prev_page =
-          fz_load_page(state->ctx, state->doc, state->prev_page_number);
+	fz_load_page(state->ctx, state->doc, state->prev_page_number);
     }
 
     if (page_number < (state->pagecount - 1)) {
       state->next_page_number = page_number + 1;
       state->next_page =
-          fz_load_page(state->ctx, state->doc, state->next_page_number);
+	fz_load_page(state->ctx, state->doc, state->next_page_number);
     }
   }
   fz_catch(state->ctx) {
@@ -189,6 +189,7 @@ int load_pages(PdfState *state, int page_number) {
   }
   return 0;
 }
+
 // Rendering the page
 int render_page(PdfState *state, int page_number) {
   fz_device *prev_dev = NULL;
@@ -246,11 +247,11 @@ int render_page(PdfState *state, int page_number) {
   // Create an SVG device
   fz_try(state->ctx) {
     curr_dev =
-        fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
+      fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
     prev_dev =
-        fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
+      fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
     next_dev =
-        fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
+      fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
   }
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot create SVG device: %s\n",
@@ -343,6 +344,7 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
+// Emacs command to load a PDF file and then render it
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
   (void)nargs;
@@ -373,10 +375,10 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     .prev_page = NULL,
     .next_page = NULL,
     .page_bbox =
-        {
-            .x0 = 0.0f,
-            .y0 = 0.0f,
-        },
+    {
+      .x0 = 0.0f,
+      .y0 = 0.0f,
+    },
   };
 
   reset_pdf_state(state);
@@ -386,31 +388,31 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     fprintf(stderr, "PDF loaded successfully with %d pages.\n",
             state->pagecount);
     fprintf(
-        stderr,
-        "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
-        state->ctx, state->doc, state->pagecount, state->current_page_number);
+	    stderr,
+	    "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
+	    state->ctx, state->doc, state->pagecount, state->current_page_number);
 
     set_current_page_number(env, state);
     set_current_render_status(env);
+    init_overlay(env);
+    emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
+
       emacs_value svg_string =
-          env->make_string(env, state->current_svg_data, state->current_svg_size);
+	env->make_string(env, state->current_svg_data, state->current_svg_size);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
-          env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
       emacs_value overlay_put_args[3] = {
-          g_svg_overlay, env->intern(env, "display"), image_data};
+	current_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
       // Create a user pointer and expose it to Emacs in a buffer-local fashion
       emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
       emacs_value pdf_state_ptr_sym = env->intern(env, "pdf-state-ptr");
-      env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-		   &pdf_state_ptr_sym);
       env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){pdf_state_ptr_sym, user_ptr});
-
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
     }
@@ -422,6 +424,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+// Emacs command to render the next page
 emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -430,13 +433,15 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   PdfState *state = get_pdf_state_ptr(env);
 
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+
   emacs_value next_svg_string =
     env->make_string(env, state->next_svg_data, state->next_svg_size);
   emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                env->intern(env, "t")};
   emacs_value image_data =
     env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-  emacs_value overlay_put_args[3] = {g_svg_overlay, env->intern(env, "display"),
+  emacs_value overlay_put_args[3] = {current_svg_overlay, env->intern(env, "display"),
                                      image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
@@ -453,6 +458,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+// Emacs command to render the previous page
 emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -460,6 +466,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
 
   PdfState *state = get_pdf_state_ptr(env);
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == 0) {
     fprintf(stderr, "Already at the first page.\n");
@@ -469,12 +476,12 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (state->current_page_number < (state->pagecount - 1)) {
 
     emacs_value prev_svg_string =
-        env->make_string(env, state->prev_svg_data, state->prev_svg_size);
+      env->make_string(env, state->prev_svg_data, state->prev_svg_size);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    emacs_value overlay_put_args[3] = {g_svg_overlay,
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    emacs_value overlay_put_args[3] = {current_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
@@ -485,23 +492,24 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       fprintf(stderr, "Already at the first page.\n");
       return env->intern(env, "nil");
     }
-
   } else {
     render_page(state, (state->pagecount - 2));
     emacs_value current_svg_string =
-        env->make_string(env, state->current_svg_data, state->current_svg_size);
+      env->make_string(env, state->current_svg_data, state->current_svg_size);
     emacs_value image_args[3] = {current_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    emacs_value overlay_put_args[3] = {g_svg_overlay,
-                                       env->intern(env, "display"), image_data};
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    emacs_value overlay_put_args[3] = {
+      env->intern(env, "current-svg-overlay"),
+      env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   }
 
   return env->intern(env, "t");
 }
 
+// Emacs commad to the first page of the PDF
 emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                              void *data) {
   (void)nargs;
@@ -509,6 +517,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
 
   PdfState *state = get_pdf_state_ptr(env);
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == 0) {
     fprintf(stderr, "Already at the first page.\n");
@@ -520,12 +529,12 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
     emacs_value svg_string =
-        env->make_string(env, state->prev_svg_data, state->prev_svg_size);
+      env->make_string(env, state->prev_svg_data, state->prev_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    emacs_value overlay_put_args[3] = {g_svg_overlay,
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    emacs_value overlay_put_args[3] = {current_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
@@ -536,6 +545,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+// Emacs command to go to the last page of the PDF
 emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -543,16 +553,17 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
 
   PdfState *state = get_pdf_state_ptr(env);
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (render_page(state, (state->pagecount - 2)) == EXIT_SUCCESS) {
     state->current_page_number = (state->pagecount - 1);
     emacs_value svg_string =
-        env->make_string(env, state->next_svg_data, state->next_svg_size);
+      env->make_string(env, state->next_svg_data, state->next_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    emacs_value overlay_put_args[3] = {g_svg_overlay,
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    emacs_value overlay_put_args[3] = {current_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
@@ -562,6 +573,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+// Emacs command to go to a specific page of the PDF
 emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -569,18 +581,19 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   int page_number = env->extract_integer(env, args[0]);
 
   PdfState *state = get_pdf_state_ptr(env);
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (page_number > 1 && page_number < (state->pagecount - 1)) {
     state->current_page_number = page_number;
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
-          env->make_string(env, state->current_svg_data, state->current_svg_size);
+	env->make_string(env, state->current_svg_data, state->current_svg_size);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
-          env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
       emacs_value overlay_put_args[3] = {
-          g_svg_overlay, env->intern(env, "display"), image_data};
+	current_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       fprintf(stderr, "Page number out of bounds");
@@ -598,17 +611,10 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 
   emacs_value fset = env->intern(env, "fset");
 
-  // Register init-svg-overlay
-  emacs_value overlay_symbol = env->intern(env, "init-svg-overlay");
-  emacs_value overlay_func =
-      env->make_function(env, 0, 0, init_overlay, "Loads the overlay", NULL);
-  emacs_value overlay_args[2] = {overlay_symbol, overlay_func};
-  env->funcall(env, fset, 2, overlay_args);
-
   // Register load-pdf
   emacs_value load_func_symbol = env->intern(env, "load-pdf");
   emacs_value load_func =
-      env->make_function(env, 1, 1, emacs_load_pdf, "Loads a PDF file.", NULL);
+    env->make_function(env, 1, 1, emacs_load_pdf, "Loads a PDF file.", NULL);
   emacs_value load_args[2] = {load_func_symbol, load_func};
   env->funcall(env, fset, 2, load_args);
 
@@ -622,39 +628,39 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Register previous-pdf-page
   emacs_value prev_func_symbol = env->intern(env, "previous-pdf-page");
   emacs_value prev_func = env->make_function(
-      env, 0, 0, emacs_prev_page, "Go to the previous PDF page.", NULL);
+					     env, 0, 0, emacs_prev_page, "Go to the previous PDF page.", NULL);
   emacs_value prev_args[2] = {prev_func_symbol, prev_func};
   env->funcall(env, fset, 2, prev_args);
 
   // Register first-pdf-page
   emacs_value first_page_func_symbol = env->intern(env, "first-pdf-page");
   emacs_value first_page_func = env->make_function(
-      env, 0, 0, emacs_first_page, "Go to the PDF's first page.", NULL);
+						   env, 0, 0, emacs_first_page, "Go to the PDF's first page.", NULL);
   emacs_value first_page_args[2] = {first_page_func_symbol, first_page_func};
   env->funcall(env, fset, 2, first_page_args);
 
   // Register last-pdf-page
   emacs_value last_page_func_symbol = env->intern(env, "last-pdf-page");
   emacs_value last_page_func = env->make_function(
-      env, 0, 0, emacs_last_page, "Go to the PDF's first page.", NULL);
+						  env, 0, 0, emacs_last_page, "Go to the PDF's first page.", NULL);
   emacs_value last_page_args[2] = {last_page_func_symbol, last_page_func};
   env->funcall(env, fset, 2, last_page_args);
 
   // Register goto-pdf-page
   emacs_value goto_page_func_symbol = env->intern(env, "goto-pdf-page");
   emacs_value goto_page_func = env->make_function(
-      env, 1, 1, emacs_goto_page, "Go to the PDF's first page.", NULL);
+						  env, 1, 1, emacs_goto_page, "Go to the PDF's first page.", NULL);
   emacs_value goto_page_args[2] = {goto_page_func_symbol, goto_page_func};
   env->funcall(env, fset, 2, goto_page_args);
 
   // Register get-current-pdf-page-number
   emacs_value get_current_pdf_page_number_symbol =
-      env->intern(env, "get-current-pdf-pagenumber");
+    env->intern(env, "get-current-pdf-pagenumber");
   emacs_value get_current_pdf_page_number_func =
-      env->make_function(env, 0, 0, get_current_page_number,
-                         "Get current page number for the visiting PDF", NULL);
+    env->make_function(env, 0, 0, get_current_page_number,
+		       "Get current page number for the visiting PDF", NULL);
   emacs_value get_current_pdf_page_number_args[2] = {
-      get_current_pdf_page_number_symbol, get_current_pdf_page_number_func};
+    get_current_pdf_page_number_symbol, get_current_pdf_page_number_func};
   env->funcall(env, fset, 2, get_current_pdf_page_number_args);
 
   // Register the buffer-local page number
@@ -667,13 +673,26 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                &page_render_status_sym);
   env->funcall(
 	       env, env->intern(env, "set"), 2,
-      (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
+	       (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
   // Ensure that the variable stays buffer-local and doesn’t get overriden
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){page_render_status_sym,
                                env->intern(env, "permanent-local"),
                                env->intern(env, "t")});
 
+  // Register the buffer-local user pointer for PdfState
+  emacs_value pdf_state_ptr_sym = env->intern(env, "pdf-state-ptr");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+	       &pdf_state_ptr_sym);
+  env->funcall(env, env->intern(env, "put"), 3,
+               (emacs_value[]){pdf_state_ptr_sym,
+                               env->intern(env, "permanent-local"),
+                               env->intern(env, "t")});
+
+  // Register the buffer-local svg overlay for the PDF
+  emacs_value svg_overlay_sym = env->intern(env, "current-svg-overlay");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+	       &svg_overlay_sym);
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
