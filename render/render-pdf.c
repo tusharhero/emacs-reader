@@ -68,6 +68,7 @@ void reset_pdf_state(PdfState *state) {
   memset(state, 0, sizeof(PdfState));
 }
 
+// Fetch pointer to PdfState from Emacs Environment to a C pointer
 PdfState *get_pdf_state_ptr(emacs_env *env) {
   emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
   emacs_value ptr =
@@ -77,8 +78,9 @@ PdfState *get_pdf_state_ptr(emacs_env *env) {
   return state;
 }
 
+// Fetches the current page number of the PDF
 emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
-                                           emacs_value *args, void *data) {
+				    emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
   (void)args;
@@ -101,24 +103,28 @@ void set_current_page_number(emacs_env *env, PdfState *state) {
   env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
 
-emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
-                                emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
+// Initializes the overlay and stores it in a buffer-local variable
+void init_overlay(emacs_env *env) {
   emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
   emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
   emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
                                      (emacs_value[]){start, end});
-  if (g_svg_overlay)
-    env->free_global_ref(env, g_svg_overlay);
-  g_svg_overlay = env->make_global_ref(env, overlay);
 
-  return overlay;
+  emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
+
+  env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){current_overlay_sym, overlay});
 }
 
-// Loading a PDF
+// Fetches the overlay object from the current-svg-overlay
+emacs_value get_current_svg_overlay(emacs_env *env) {
+
+  emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
+  emacs_value current_overlay = env->funcall(env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
+
+  return current_overlay;
+}
+
+// loading a PDF
 int load_pdf(PdfState *state, char *input_file) {
 
   state->ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
