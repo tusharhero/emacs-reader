@@ -139,7 +139,7 @@ Keybindings:
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
   ;; Only do this when the buffer has a file associated with it
-  (when page-render-status
+  (when buffer-file-name
     (read-pdf--render-buffer)))
 
 (defun reader-mode-line ()
@@ -157,7 +157,7 @@ Keybindings:
 (add-hook 'read-pdf-mode-hook #'reader-mode-line)
 
 ;; Automatically load the mode
-;; (add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
+(add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
 
 (provide 'reader)
 ;;; reader.el ends here.
