@@ -31,6 +31,82 @@ typedef struct {
 
 emacs_value g_svg_overlay = NULL;
 
+
+// Clean up previous SVG data if any
+void clean_up_svg_data(PdfState *state) {
+  if (state->current_svg_data) {
+    free(state->current_svg_data);
+    state->current_svg_data = NULL;
+    state->current_svg_size = 0;
+  }
+
+  if (state->next_svg_data) {
+    free(state->next_svg_data);
+    state->next_svg_data = NULL;
+    state->next_svg_size = 0;
+  }
+
+  if (state->prev_svg_data) {
+    free(state->prev_svg_data);
+    state->prev_svg_data = NULL;
+    state->prev_svg_size = 0;
+  }
+}
+
+// Drop all PDF pages
+void drop_all_pdf_pages(fz_context *ctx, PdfState *state) {
+  if (state->prev_page)
+    fz_drop_page(ctx, state->prev_page);
+  if (state->current_page)
+    fz_drop_page(ctx, state->current_page);
+  if (state->next_page)
+    fz_drop_page(ctx, state->next_page);
+}
+
+// Reset the PdfState
+void reset_pdf_state(PdfState *state) {
+  fprintf(stderr, "Freeing the existing PdfState\n");
+  clean_up_svg_data(state);
+  drop_all_pdf_pages(state->ctx, state);
+  memset(state, 0, sizeof(PdfState));
+}
+
+PdfState *get_pdf_state_ptr(emacs_env *env) {
+  emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
+  emacs_value ptr =
+    env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
+  PdfState *state = env->get_user_ptr(env, ptr);
+
+  return state;
+}
+
+emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
+                                           emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+
+  PdfState *state = get_pdf_state_ptr(env);
+  return env->make_integer(env, state->current_page_number);
+}
+
+emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
+                                emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+
+  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
+  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
+  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
+                                     (emacs_value[]){start, end});
+  if (g_svg_overlay)
+    env->free_global_ref(env, g_svg_overlay);
+  g_svg_overlay = env->make_global_ref(env, overlay);
+
+  return overlay;
+}
+
 // Loading a PDF
 int load_pdf(PdfState *state, char *input_file) {
 
@@ -96,46 +172,6 @@ int load_pages(PdfState *state, int page_number) {
   }
   return 0;
 }
-
-// Clean up previous SVG data if any
-void clean_up_svg_data(PdfState *state) {
-  if (state->current_svg_data) {
-    free(state->current_svg_data);
-    state->current_svg_data = NULL;
-    state->current_svg_size = 0;
-  }
-
-  if (state->next_svg_data) {
-    free(state->next_svg_data);
-    state->next_svg_data = NULL;
-    state->next_svg_size = 0;
-  }
-
-  if (state->prev_svg_data) {
-    free(state->prev_svg_data);
-    state->prev_svg_data = NULL;
-    state->prev_svg_size = 0;
-  }
-}
-
-// Drop all PDF pages
-void drop_all_pdf_pages(fz_context *ctx, PdfState *state) {
-  if (state->prev_page)
-    fz_drop_page(ctx, state->prev_page);
-  if (state->current_page)
-    fz_drop_page(ctx, state->current_page);
-  if (state->next_page)
-    fz_drop_page(ctx, state->next_page);
-}
-
-// Reset the PdfState
-void reset_pdf_state(PdfState *state) {
-  fprintf(stderr, "Freeing the existing PdfState\n");
-  clean_up_svg_data(state);
-  drop_all_pdf_pages(state->ctx, state);
-  memset(state, 0, sizeof(PdfState));
-}
-
 // Rendering the page
 int render_page(PdfState *state, int page_number) {
   fz_device *prev_dev = NULL;
@@ -289,43 +325,6 @@ int render_page(PdfState *state, int page_number) {
 
   return EXIT_SUCCESS;
 }
-
-PdfState *get_pdf_state_ptr(emacs_env *env) {
-  emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
-  emacs_value ptr =
-    env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
-  PdfState *state = env->get_user_ptr(env, ptr);
-
-  return state;
-}
-
-emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
-                                           emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
-  PdfState *state = get_pdf_state_ptr(env);
-  return env->make_integer(env, state->current_page_number);
-}
-
-emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
-                                emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
-  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
-  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
-  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
-                                     (emacs_value[]){start, end});
-  if (g_svg_overlay)
-    env->free_global_ref(env, g_svg_overlay);
-  g_svg_overlay = env->make_global_ref(env, overlay);
-
-  return overlay;
-}
-
 
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
