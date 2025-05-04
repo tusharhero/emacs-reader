@@ -29,7 +29,7 @@ typedef struct {
   fz_rect page_bbox;
 } PdfState;
 
-static emacs_value g_svg_overlay = NULL;
+emacs_value g_svg_overlay = NULL;
 
 // Loading a PDF
 int load_pdf(PdfState *state, char *input_file) {
@@ -134,6 +134,58 @@ void reset_pdf_state(PdfState *state) {
   clean_up_svg_data(state);
   drop_all_pdf_pages(state->ctx, state);
   memset(state, 0, sizeof(PdfState));
+}
+
+// Returns a pointer to PdfState from the Emacs user pointer.
+PdfState *get_pdf_state_ptr(emacs_env *env) {
+  emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
+  emacs_value ptr =
+    env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
+  PdfState *state = env->get_user_ptr(env, ptr);
+
+  return state;
+}
+
+emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
+                                           emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+
+  PdfState *state = get_pdf_state_ptr(env);
+  return env->make_integer(env, state->current_page_number);
+}
+
+/* void set_current_page_count(emacs_env *env) { */
+/*   PdfState *state = get_pdf_state_ptr(env); */
+/*   emacs_value pagecount_var = env->intern(env, "current-pdf-pagecount"); */
+/*   emacs_value pagecount_args[2] = {pagecount_var, */
+/* 				   env->make_integer(env, state->pagecount)}; */
+/*   env->funcall(env, env->intern(env, "set"), 2, pagecount_args); */
+/* } */
+
+// Set the rendering status of the buffer to be true
+void set_current_render_status(emacs_env *env) {
+  emacs_value render_status_var = env->intern(env, "page-render-status");
+  env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){render_status_var, env->intern(env, "t")});
+}
+
+// The main overlay registering function
+emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
+                                emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+
+  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
+  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
+  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
+                                     (emacs_value[]){start, end});
+  if (g_svg_overlay)
+    env->free_global_ref(env, g_svg_overlay);
+  g_svg_overlay = env->make_global_ref(env, overlay);
+
+  return overlay;
 }
 
 // Rendering the page
@@ -290,43 +342,6 @@ int render_page(PdfState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-static PdfState *get_pdf_state_ptr(emacs_env *env) {
-  emacs_value ptr_sym = env->intern(env, "pdf-state-ptr");
-  emacs_value ptr =
-    env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
-  PdfState *state = env->get_user_ptr(env, ptr);
-
-  return state;
-}
-
-static emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
-                                           emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
-  PdfState *state = get_pdf_state_ptr(env);
-  return env->make_integer(env, state->current_page_number);
-}
-
-static emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
-                                emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
-  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
-  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
-  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
-                                     (emacs_value[]){start, end});
-  if (g_svg_overlay)
-    env->free_global_ref(env, g_svg_overlay);
-  g_svg_overlay = env->make_global_ref(env, overlay);
-
-  return overlay;
-}
-
-
 emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
   (void)nargs;
@@ -374,10 +389,21 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
         state->ctx, state->doc, state->pagecount, state->current_page_number);
 
-    // Exposing the pagecount of the PDF to an Elisp variable
-    emacs_value pagecount_args[2] = {env->intern(env, "current-pdf-pagecount"),
-                                     env->make_integer(env, state->pagecount)};
+    /* set_current_page_count(env); */
+
+    // Exposing the pagecount of the PDF to a buffer-local Elisp variable
+
+    emacs_value pagecount_var = env->intern(env, "current-pdf-pagecount");
+    emacs_value pagecount_args[2] = {pagecount_var,
+				     env->make_integer(env, state->pagecount)};
     env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
+
+    // Create a user pointer and expose it to Emacs in a buffer-local fashion
+    emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
+    emacs_value pdf_state_ptr_sym = env->intern(env, "pdf-state-ptr");
+    env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+		 &pdf_state_ptr_sym);
+    env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){pdf_state_ptr_sym, user_ptr});
 
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
@@ -390,13 +416,6 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
           g_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-      // Create a user pointer and expose it to Emacs in a buffer-local fashion
-      emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
-      emacs_value pdf_state_ptr_sym = env->intern(env, "pdf-state-ptr");
-      env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-		   &pdf_state_ptr_sym);
-      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){pdf_state_ptr_sym, user_ptr});
-
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
     }
@@ -404,6 +423,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     fprintf(stderr, "Loading PDF failed.\n");
   }
 
+  set_current_render_status(env);
   free(file);
   return env->intern(env, "t");
 }
@@ -583,6 +603,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   }
 
   emacs_value fset = env->intern(env, "fset");
+  emacs_value set = env->intern(env, "set");
 
   // Register init-svg-overlay
   emacs_value overlay_symbol = env->intern(env, "init-svg-overlay");
@@ -642,6 +663,17 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value get_current_pdf_page_number_args[2] = {
       get_current_pdf_page_number_symbol, get_current_pdf_page_number_func};
   env->funcall(env, fset, 2, get_current_pdf_page_number_args);
+
+  // Register the buffer-local page count variable
+  emacs_value pagecount_sym = env->intern(env, "current-pdf-pagecount");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+	       &pagecount_sym);
+
+  // Register the buffer-local variable to indicate whether a buffer has been rendered
+  emacs_value page_render_status_sym = env->intern(env, "page-render-status");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+	       &page_render_status_sym);
+  env->funcall(env, set, 2, (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
