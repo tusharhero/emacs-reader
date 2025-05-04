@@ -31,7 +31,6 @@ typedef struct {
 
 emacs_value g_svg_overlay = NULL;
 
-
 // Clean up previous SVG data if any
 void clean_up_svg_data(PdfState *state) {
   if (state->current_svg_data) {
@@ -88,6 +87,13 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
 
   PdfState *state = get_pdf_state_ptr(env);
   return env->make_integer(env, state->current_page_number);
+}
+
+// Exposing the pagecount of the PDF to an Elisp variable
+void set_current_page_number(emacs_env *env, PdfState *state) {
+  emacs_value pagecount_args[2] = {env->intern(env, "current-pdf-pagecount"),
+				   env->make_integer(env, state->pagecount)};
+  env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
 
 emacs_value init_overlay(emacs_env *env, ptrdiff_t nargs,
@@ -373,10 +379,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         "State after load_pdf: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
         state->ctx, state->doc, state->pagecount, state->current_page_number);
 
-    // Exposing the pagecount of the PDF to an Elisp variable
-    emacs_value pagecount_args[2] = {env->intern(env, "current-pdf-pagecount"),
-                                     env->make_integer(env, state->pagecount)};
-    env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
+    set_current_page_number(env, state);
 
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value svg_string =
@@ -641,6 +644,9 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value get_current_pdf_page_number_args[2] = {
       get_current_pdf_page_number_symbol, get_current_pdf_page_number_func};
   env->funcall(env, fset, 2, get_current_pdf_page_number_args);
+
+  // Register the buffer-local page number
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1, (emacs_value[]){env->intern(env, "current-pdf-pagecount")});
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
