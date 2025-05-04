@@ -127,11 +127,12 @@ to render the first page and display it in a new buffer."
   "Keymap for read-pdf-mode.")
 
 ;; Define the major mode
-(define-derived-mode read-pdf-mode special-mode "ReadPDF"
+(defun read-pdf-mode ()
   "Major mode for viewing PDFs rendered by render-pdf module.
 
 Keybindings:
 \\{read-pdf-mode-map}"
+  (interactive)
   (setq-local buffer-read-only t
 	      global-linum-mode nil
 	      cursor-type nil
@@ -139,8 +140,13 @@ Keybindings:
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
   ;; Only do this when the buffer has a file associated with it
-  (when buffer-file-name
-    (read-pdf--render-buffer)))
+  (when (not page-render-status)
+    (read-pdf--render-buffer))
+
+  (use-local-map read-pdf-mode-map)
+  (setq major-mode 'read-pdf-mode)
+  (setq mode-name "ReadPDF")
+  (run-hooks 'read-pdf-mode-hook))
 
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
