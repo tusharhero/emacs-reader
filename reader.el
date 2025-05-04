@@ -48,7 +48,6 @@ to render the first page and display it in a new buffer."
     (error "The 'load-pdf' function from the dynamic module is not available."))
   (switch-to-buffer (create-file-buffer pdf-file))
   (insert "\n")
-  (init-svg-overlay)
   (load-pdf (expand-file-name pdf-file))
   (read-pdf-mode))
 
@@ -103,7 +102,6 @@ to render the first page and display it in a new buffer."
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (init-svg-overlay)
 	  (load-pdf file))
       (message "No file associated with buffer."))))
 
@@ -139,7 +137,7 @@ Keybindings:
               display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
-  ;; Only do this when the buffer has a file associated with it
+  ;; Only do this when pdf is not already rendered
   (when (not page-render-status)
     (read-pdf--render-buffer))
 
@@ -151,13 +149,13 @@ Keybindings:
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
   (setq-local mode-line-format
-		(list
-		 "Page: "
-		 '(:eval (number-to-string (+ 1 (get-current-pdf-pagenumber))))
-		 "/"
-		 '(:eval (number-to-string current-pdf-pagecount))
-		 "  "
-		 mode-line-buffer-identification))
+	      (list
+	       "Page: "
+	       '(:eval (number-to-string (+ 1 (get-current-pdf-pagenumber))))
+	       "/"
+	       '(:eval (number-to-string current-pdf-pagecount))
+	       "  "
+	       mode-line-buffer-identification))
   (force-mode-line-update t))
 
 (add-hook 'read-pdf-mode-hook #'reader-mode-line)
