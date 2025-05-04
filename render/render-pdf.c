@@ -29,8 +29,6 @@ typedef struct {
   fz_rect page_bbox;
 } PdfState;
 
-emacs_value g_svg_overlay = NULL;
-
 // Clean up previous SVG data if any
 void clean_up_svg_data(PdfState *state) {
   if (state->current_svg_data) {
