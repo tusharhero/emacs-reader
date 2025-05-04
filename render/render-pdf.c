@@ -501,7 +501,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     emacs_value image_data =
       env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     emacs_value overlay_put_args[3] = {
-      env->intern(env, "current-svg-overlay"),
+      current_svg_overlay,
       env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   }
