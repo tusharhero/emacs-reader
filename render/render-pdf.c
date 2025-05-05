@@ -394,12 +394,19 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
 
+      // Take the SVG data from PdfState and create an SVG image of it as a Lisp Object.
       emacs_value svg_string =
 	env->make_string(env, state->current_svg_data, state->current_svg_size);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
 	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+
+      // Expose the size of the image created to Emacs
+      emacs_value image_size = env->funcall(env, env->intern(env, "image-display-size"), 2, (emacs_value[]){image_data, env->intern(env, "t")});
+      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){env->intern(env, "current-pdf-image-size"), image_size});
+
+      // Render the created image on the buffer’s overlay
       emacs_value overlay_put_args[3] = {
 	current_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -688,6 +695,14 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value svg_overlay_sym = env->intern(env, "current-svg-overlay");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
 	       &svg_overlay_sym);
+
+  // Register the buffer-local variale for the current pdf’s SVG size
+  emacs_value current_image_size_sym = env->intern(env, "current-pdf-image-size");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1, &current_image_size_sym);
+  env->funcall(env, env->intern(env, "put"), 3,
+	       (emacs_value[]){pdf_state_ptr_sym,
+			       env->intern(env, "permanent-local"),
+			       env->intern(env, "t")});
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
