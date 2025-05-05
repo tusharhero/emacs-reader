@@ -1,7 +1,7 @@
-#+TITLE: Emacs Reader
+#+TITLE: The Emacs Reader
 #+OPTIONS: toc:nil
 
-An all-in-one ebook reader for reading in any format in Emacs. This package intends to take from pdf-tools, nov.el, and doc-view and make them better.
+An all-in-one ebook reader for reading in any format in Emacs. This package intends to take from =pdf-tools=, =nov.el=, and =doc-view= and make them better.
 
 * Dependencies
 Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository until I can maybe talk to package maintainers of =mupdf= and see if things can be resolved.
