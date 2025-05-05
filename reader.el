@@ -30,6 +30,7 @@
 
 ;;; Code:
 (require 'image)
+(require 'image-mode)
 (require 'svg)
 (require 'render-pdf)
 
@@ -38,7 +39,6 @@
   :prefix "reader-"
   :group 'custom)
 
-;; User-facing function to open a PDF
 (defun read-pdf (pdf-file)
   "Open PDF-FILE for viewing.
 This function calls the C function 'load-pdf' from the dynamic module
@@ -49,6 +49,7 @@ to render the first page and display it in a new buffer."
   (switch-to-buffer (create-file-buffer pdf-file))
   (insert "\n")
   (load-pdf (expand-file-name pdf-file))
+  (read-pdf--center-page)
   (read-pdf-mode))
 
 (defun read-pdf--next-page ()
@@ -96,13 +97,24 @@ to render the first page and display it in a new buffer."
   (interactive)
   (kill-buffer (current-buffer)))
 
+(defun read-pdf--center-page (&rest _)
+  "Centers the pages of the PDF with respect to the current window."
+  (let* ((window (selected-window))
+	 (offset (when (> (window-width window t) (car current-pdf-image-size))
+                   `(space :width (,(/ (- (window-width window t) (car current-pdf-image-size)) 2))))))
+    (overlay-put current-svg-overlay 'line-prefix offset)))
+
+;; Invoke every time window’s size changes
+(add-hook 'window-size-change-functions #'read-pdf--center-page)
+
 (defun read-pdf--render-buffer ()
-  "Render the file this buffer is associated with."
+  "Render the PDF file this buffer is associated with. It is to be called while a PDF’s buffer is already opened."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (load-pdf file))
+	  (load-pdf file)
+	  (read-pdf--center-page))
       (message "No file associated with buffer."))))
 
 ;; Define the keymap for read-pdf-mode

@@ -63,7 +63,7 @@ void drop_all_pdf_pages(fz_context *ctx, PdfState *state) {
 // Reset the PdfState
 void reset_pdf_state(PdfState *state) {
   fprintf(stderr, "Freeing the existing PdfState\n");
-    *state = (PdfState){
+  *state = (PdfState){
     .ctx = NULL,
     .doc = NULL,
     .pagecount = 0,
@@ -128,7 +128,6 @@ void init_overlay(emacs_env *env) {
   emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
   emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
                                      (emacs_value[]){start, end});
-
   emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
 
   env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){current_overlay_sym, overlay});
@@ -434,7 +433,6 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)data;
 
   PdfState *state = get_pdf_state_ptr(env);
-
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   emacs_value next_svg_string =
