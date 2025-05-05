@@ -63,9 +63,28 @@ void drop_all_pdf_pages(fz_context *ctx, PdfState *state) {
 // Reset the PdfState
 void reset_pdf_state(PdfState *state) {
   fprintf(stderr, "Freeing the existing PdfState\n");
-  clean_up_svg_data(state);
-  drop_all_pdf_pages(state->ctx, state);
-  memset(state, 0, sizeof(PdfState));
+    *state = (PdfState){
+    .ctx = NULL,
+    .doc = NULL,
+    .pagecount = 0,
+    .current_page_number = 0,
+    .next_page_number = 0,
+    .prev_page_number = 0,
+    .current_svg_data = NULL,
+    .current_svg_size = 0,
+    .next_svg_data = NULL,
+    .next_svg_size = 0,
+    .prev_svg_data = NULL,
+    .prev_svg_size = 0,
+    .current_page = NULL,
+    .prev_page = NULL,
+    .next_page = NULL,
+    .page_bbox =
+    {
+      .x0 = 0.0f,
+      .y0 = 0.0f,
+    },
+  };
 }
 
 // Fetch pointer to PdfState from Emacs Environment to a C pointer
@@ -358,31 +377,7 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   }
 
   PdfState *state = malloc(sizeof(PdfState));
-  *state = (PdfState){
-    .ctx = NULL,
-    .doc = NULL,
-    .pagecount = 0,
-    .current_page_number = 0,
-    .next_page_number = 0,
-    .prev_page_number = 0,
-    .current_svg_data = NULL,
-    .current_svg_size = 0,
-    .next_svg_data = NULL,
-    .next_svg_size = 0,
-    .prev_svg_data = NULL,
-    .prev_svg_size = 0,
-    .current_page = NULL,
-    .prev_page = NULL,
-    .next_page = NULL,
-    .page_bbox =
-    {
-      .x0 = 0.0f,
-      .y0 = 0.0f,
-    },
-  };
-
   reset_pdf_state(state);
-  fprintf(stderr, "Attempting to load: %s\n", file);
 
   if (load_pdf(state, file) == EXIT_SUCCESS) {
     fprintf(stderr, "PDF loaded successfully with %d pages.\n",
