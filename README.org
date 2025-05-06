@@ -37,3 +37,4 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 - =M-<= and =gg= for going to the first page.
 - =M->= and =G= for going to the last page.
 - =M-g g= or =g n= for going to a particular page.
+- =+= and =-= for zooming in and out of the current page.
