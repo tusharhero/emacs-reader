@@ -448,8 +448,8 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (state->current_page_number < (state->pagecount - 2)) {
     render_page(state, state->next_page_number);
   } else if (state->current_page_number == (state->pagecount - 2)) {
-    // At n-2 it makes sure state’s pages are restructured according to next
-    // page but not rendered.
+    // At n-2 it makes sure state’s pages are restructured according to
+    //next page but not rendered.
     load_pages(state, state->next_page_number);
   } else if (state->current_page_number == (state->pagecount - 1)) {
     fprintf(stderr, "Already at the last page.\n");
