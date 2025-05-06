@@ -311,6 +311,7 @@ int render_page(PdfState *state, int page_number) {
   fz_try(state->ctx) {
     close_all_outputs(state->ctx, curr_out, prev_out, next_out);
   }
+
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot close output: %s\n", fz_caught_message(state->ctx));
 

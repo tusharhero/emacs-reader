@@ -104,16 +104,8 @@ to render the first page and display it in a new buffer."
                    `(space :width (,(/ (- (window-width window t) (car current-pdf-image-size)) 2))))))
     (overlay-put current-svg-overlay 'line-prefix offset)))
 
-(defun read-pdf--center-page-local (_frame)
-  "Only center the page for the window that’s in read-pdf-mode."
-  (dolist (window (window-list))
-    (with-current-buffer (window-buffer window)
-      (when (eq major-mode 'read-pdf-mode)
-	(with-selected-window window
-	  (read-pdf--center-page))))))
-
 ;; Invoke every time window’s size changes
-(add-hook 'window-size-change-functions #'read-pdf--center-page-local)
+(add-hook 'read-pdf-mode-hook (lambda () (add-hook 'window-size-change-functions #'read-pdf--center-page nil t) t))
 
 (defun read-pdf--render-buffer ()
   "Render the PDF file this buffer is associated with. It is to be called while a PDF’s buffer is already opened."
