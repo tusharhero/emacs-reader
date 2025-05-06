@@ -603,6 +603,32 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
+emacs_value emacs_pdf_change_page_size(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+                            void *data) {
+  (void)nargs;
+  (void)data;
+
+  PdfState *state = get_pdf_state_ptr(env);
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+
+  emacs_value svg_string =
+    env->make_string(env, state->current_svg_data, state->current_svg_size);
+  emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
+			       env->intern(env, "t")};
+  emacs_value image_data =
+    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+
+  emacs_value cdr_image_data = env->funcall(env, env->intern(env, "cdr"), 1, &image_data);
+
+  emacs_value modified_cdr = env->funcall(env, env->intern(env, "plist-put"), 3, (emacs_value[]){cdr_image_data, env->intern(env, ":scale"), args[0]});
+  env->funcall(env, env->intern(env, "setcdr"), 2, (emacs_value[]){image_data, modified_cdr});
+  emacs_value overlay_put_args[3] = {
+    current_svg_overlay, env->intern(env, "display"), image_data};
+  env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
+  return env->intern(env, "t");
+}
+
 int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment(runtime);
   if (!env) {
@@ -702,6 +728,12 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 	       (emacs_value[]){pdf_state_ptr_sym,
 			       env->intern(env, "permanent-local"),
 			       env->intern(env, "t")});
+
+  emacs_value change_page_size_func_sym = env->intern(env, "pdf-change-page-size");
+  emacs_value change_page_size_func = env->make_function(
+					     env, 1, 1, emacs_pdf_change_page_size, "Scales the current page of the PDF by a given factor, which is provided as an argument to this function", NULL);
+  emacs_value change_page_size_args[2] = {change_page_size_func_sym, change_page_size_func};
+  env->funcall(env, fset, 2, change_page_size_args);
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
