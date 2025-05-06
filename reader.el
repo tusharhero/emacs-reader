@@ -99,8 +99,7 @@ to render the first page and display it in a new buffer."
 
 (defun read-pdf--center-page (&optional window)
   "Centers the pages of the PDF with respect to the current window."
-  (let* ((window (selected-window))
-	 (offset (when (> (window-width window t) (car current-pdf-image-size))
+  (let* ((offset (when (> (window-width window t) (car current-pdf-image-size))
                    `(space :width (,(/ (- (window-width window t) (car current-pdf-image-size)) 2))))))
     (overlay-put current-svg-overlay 'line-prefix offset)))
 
