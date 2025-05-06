@@ -39,6 +39,24 @@
   :prefix "reader-"
   :group 'custom)
 
+(defgroup read-pdf nil
+  "Group for customization to the PDF Reader."
+  :prefix "read-pdf-"
+  :group 'custom)
+
+(defcustom read-pdf-enlarge-factor 1.10
+  "The fractional amount by which the page would be enlarged."
+  :group 'read-pdf
+  :type 'number)
+
+(defcustom read-pdf-shrink-factor 0.90
+  "The fractional amount by which the page would be shrinked."
+  :group 'read-pdf
+  :type 'number)
+
+(defvar read-pdf-current-pdf-scale 1)
+(make-variable-buffer-local 'read-pdf-current-pdf-scale)
+
 (defun read-pdf (pdf-file)
   "Open PDF-FILE for viewing.
 This function calls the C function 'load-pdf' from the dynamic module
@@ -92,6 +110,28 @@ to render the first page and display it in a new buffer."
   (goto-pdf-page (- n 1)) ; MuPDF does 0-indexing
   (force-mode-line-update t))
 
+(defun read-pdf--enlarge-size ()
+  "Enlarge the size of the current page with respect to the `read-pdf-enlarge-factor'"
+  (interactive)
+  (unless (fboundp 'pdf-change-page-size)
+    (error "The 'pdf-change-page-size' function from the dynamic module is not available."))
+  (let ((scaling-factor (* read-pdf-current-pdf-scale read-pdf-enlarge-factor)))
+    (pdf-change-page-size scaling-factor)
+    (setq read-pdf-current-pdf-scale scaling-factor))
+  (read-pdf--center-page)
+  (force-mode-line-update t))
+
+(defun read-pdf--shrink-size ()
+  "Shrink the size of the current page with respect to the `read-pdf-enlarge-factor'"
+  (interactive)
+  (unless (fboundp 'pdf-change-page-size)
+    (error "The 'pdf-change-page-size' function from the dynamic module is not available."))
+  (let ((scaling-factor (* read-pdf-current-pdf-scale read-pdf-shrink-factor)))
+    (pdf-change-page-size scaling-factor)
+    (setq read-pdf-current-pdf-scale scaling-factor))
+  (read-pdf--center-page)
+  (force-mode-line-update t))
+
 (defun read-pdf--kill-buffer ()
   "Kill the buffer with the rendered PDF"
   (interactive)
@@ -130,6 +170,8 @@ to render the first page and display it in a new buffer."
     (define-key map (kbd "M->") #'read-pdf--last-page)
     (define-key map (kbd "M-g g") #'read-pdf--goto-page)
     (define-key map (kbd "g n") #'read-pdf--goto-page)
+    (define-key map (kbd "=") #'read-pdf--enlarge-size)
+    (define-key map (kbd "-") #'read-pdf--shrink-size)
     (define-key map (kbd "Q") #'read-pdf--kill-buffer)
     map)
   "Keymap for read-pdf-mode.")
