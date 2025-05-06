@@ -104,9 +104,6 @@ to render the first page and display it in a new buffer."
                    `(space :width (,(/ (- (window-width window t) (car current-pdf-image-size)) 2))))))
     (overlay-put current-svg-overlay 'line-prefix offset)))
 
-;; Invoke every time window’s size changes
-(add-hook 'window-size-change-functions #'read-pdf--center-page t)
-
 (defun read-pdf--render-buffer ()
   "Render the PDF file this buffer is associated with. It is to be called while a PDF’s buffer is already opened."
   (interactive)
@@ -156,7 +153,9 @@ Keybindings:
   (use-local-map read-pdf-mode-map)
   (setq major-mode 'read-pdf-mode)
   (setq mode-name "ReadPDF")
-  (run-hooks 'read-pdf-mode-hook))
+  (run-hooks 'read-pdf-mode-hook)
+  ;; Invoke centering every time window’s size changes only in read-pdf-mode windows
+  (add-hook 'window-size-change-functions #'read-pdf--center-page nil t))
 
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
