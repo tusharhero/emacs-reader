@@ -98,10 +98,12 @@ to render the first page and display it in a new buffer."
   (kill-buffer (current-buffer)))
 
 (defun read-pdf--center-page (&optional window)
-  "Centers the pages of the PDF with respect to the current window."
-  (let* ((offset (when (> (window-width window t) (car current-pdf-image-size))
-                   `(space :width (,(/ (- (window-width window t) (car current-pdf-image-size)) 2))))))
-    (overlay-put current-svg-overlay 'line-prefix offset)))
+  "Centers the pages of the PDF with respect to the window in which the PDF is opened."
+  (with-current-buffer (window-buffer window)
+    (when (equal major-mode 'read-pdf-mode)
+      (let ((offset (when (> (window-width window t) (car current-pdf-image-size))
+                      `(space :width (,(/ (- (window-width window t) (car current-pdf-image-size)) 2))))))
+        (overlay-put current-svg-overlay 'line-prefix offset)))))
 
 (defun read-pdf--render-buffer ()
   "Render the PDF file this buffer is associated with. It is to be called while a PDF’s buffer is already opened."
