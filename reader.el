@@ -67,7 +67,6 @@ to render the first page and display it in a new buffer."
   (switch-to-buffer (create-file-buffer pdf-file))
   (insert "\n")
   (load-pdf (expand-file-name pdf-file))
-  (read-pdf--center-page)
   (read-pdf-mode))
 
 (defun read-pdf--next-page ()
@@ -118,7 +117,6 @@ to render the first page and display it in a new buffer."
   (let ((scaling-factor (* read-pdf-current-pdf-scale read-pdf-enlarge-factor)))
     (pdf-change-page-size scaling-factor)
     (setq read-pdf-current-pdf-scale scaling-factor))
-  (read-pdf--center-page)
   (force-mode-line-update t))
 
 (defun read-pdf--shrink-size ()
@@ -129,7 +127,6 @@ to render the first page and display it in a new buffer."
   (let ((scaling-factor (* read-pdf-current-pdf-scale read-pdf-shrink-factor)))
     (pdf-change-page-size scaling-factor)
     (setq read-pdf-current-pdf-scale scaling-factor))
-  (read-pdf--center-page)
   (force-mode-line-update t))
 
 (defun read-pdf--kill-buffer ()
@@ -151,8 +148,7 @@ to render the first page and display it in a new buffer."
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (load-pdf file)
-	  (read-pdf--center-page))
+	  (load-pdf file))
       (message "No file associated with buffer."))))
 
 ;; Define the keymap for read-pdf-mode
