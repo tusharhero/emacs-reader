@@ -122,6 +122,30 @@ void set_current_page_number(emacs_env *env, PdfState *state) {
   env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
 
+// Expose the size of the image created to Emacs
+emacs_value get_current_pdf_image_size(emacs_env *env, ptrdiff_t nargs,
+                                       emacs_value *args, void *data) {
+  (void)nargs;
+  (void)data;
+  (void)args;
+
+  PdfState *state = get_pdf_state_ptr(env);
+
+  emacs_value svg_string =
+    env->make_string(env, state->current_svg_data, state->current_svg_size);
+  emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
+			       env->intern(env, "t")};
+  emacs_value image_data =
+    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+
+  emacs_value image_size = env->funcall(env, env->intern(env, "image-display-size"), 2, (emacs_value[]){image_data, env->intern(env, "t")});
+  env->funcall(
+      env, env->intern(env, "set"), 2,
+      (emacs_value[]){env->intern(env, "current-pdf-image-size"), image_size});
+
+  return image_size;
+}
+
 // Initializes the overlay and stores it in a buffer-local variable
 void init_overlay(emacs_env *env) {
   emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
@@ -401,10 +425,6 @@ emacs_value emacs_load_pdf(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                                    env->intern(env, "t")};
       emacs_value image_data =
 	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-
-      // Expose the size of the image created to Emacs
-      emacs_value image_size = env->funcall(env, env->intern(env, "image-display-size"), 2, (emacs_value[]){image_data, env->intern(env, "t")});
-      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){env->intern(env, "current-pdf-image-size"), image_size});
 
       // Render the created image on the buffer’s overlay
       emacs_value overlay_put_args[3] = {
@@ -734,6 +754,15 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 					     env, 1, 1, emacs_pdf_change_page_size, "Scales the current page of the PDF by a given factor, which is provided as an argument to this function", NULL);
   emacs_value change_page_size_args[2] = {change_page_size_func_sym, change_page_size_func};
   env->funcall(env, fset, 2, change_page_size_args);
+
+  emacs_value get_image_size_sym =
+      env->intern(env, "get-current-pdf-image-size");
+  emacs_value get_image_size_func = env->make_function(
+      env, 0, 0, get_current_pdf_image_size,
+      "Fetches the image size of the current page in the PDF.", NULL);
+  emacs_value get_image_size_args[2] = {get_image_size_sym,
+                                        get_image_size_func};
+  env->funcall(env, fset, 2, get_image_size_args);
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-pdf");
