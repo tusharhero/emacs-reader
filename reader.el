@@ -3,7 +3,7 @@
 ;; Copyright (c) 2025 Divya Ranjan Pattanaik <divya@subvertising.org>
 
 ;; Author: Divya Ranjan Pattanaik <divya@subvertising.org>
-;; Keywords: document reader, mupdf
+;; Keywords: document-reader, mupdf
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.1"))
 ;; URL: https://codeberg.org/divyaranjan/emacs-reader
@@ -32,152 +32,147 @@
 (require 'image)
 (require 'image-mode)
 (require 'svg)
-(require 'render-pdf)
+(require 'render-core)
 
 (defgroup reader nil
   "Group for Reader’s customizations."
   :prefix "reader-"
   :group 'custom)
 
-(defgroup read-pdf nil
-  "Group for customization to the PDF Reader."
-  :prefix "read-pdf-"
-  :group 'custom)
-
-(defcustom read-pdf-enlarge-factor 1.10
+(defcustom reader-enlarge-factor 1.10
   "The fractional amount by which the page would be enlarged."
-  :group 'read-pdf
+  :group 'reader
   :type 'number)
 
-(defcustom read-pdf-shrink-factor 0.90
+(defcustom reader-shrink-factor 0.90
   "The fractional amount by which the page would be shrinked."
-  :group 'read-pdf
+  :group 'reader
   :type 'number)
 
-(defvar read-pdf-current-pdf-scale 1)
-(make-variable-buffer-local 'read-pdf-current-pdf-scale)
+(defvar reader-current-doc-scale 1)
+(make-variable-buffer-local 'reader-current-doc-scale)
 
-(defun read-pdf (pdf-file)
-  "Open PDF-FILE for viewing.
-This function calls the C function 'load-pdf' from the dynamic module
-to render the first page and display it in a new buffer."
-  (interactive "fFind PDF file: ")
-  (unless (fboundp 'load-pdf)
-    (error "The 'load-pdf' function from the dynamic module is not available."))
-  (switch-to-buffer (create-file-buffer pdf-file))
+(defun open-doc (file)
+  "Open document FILE for viewing.
+This function calls the C function 'load-doc' from the dynamic module
+to render the first page and displays it in a new buffer."
+  (interactive "fOpen document: ")
+  (unless (fboundp 'load-doc)
+    (error "The 'load-doc' function from the dynamic module is not available."))
+  (switch-to-buffer (create-file-buffer file))
   (insert "\n")
-  (load-pdf (expand-file-name pdf-file))
-  (read-pdf-mode))
+  (load-doc (expand-file-name file))
+  (reader-mode))
 
-(defun read-pdf--next-page ()
-  "Go to the next page of the PDF."
+(defun reader-next-page ()
+  "Go to the next page of the visiting document."
   (interactive)
-  (unless (fboundp 'next-pdf-page)
-    (error "The 'next-pdf-page' function from the dynamic module is not available."))
-  (next-pdf-page)
+  (unless (fboundp 'next-doc-page)
+    (error "The 'next-doc-page' function from the dynamic module is not available."))
+  (next-doc-page)
   (force-mode-line-update t))
 
-(defun read-pdf--previous-page ()
-  "Go to the previous page of the PDF."
+(defun reader-previous-page ()
+  "Go to the previous page of the visiting document."
   (interactive)
-  (unless (fboundp 'previous-pdf-page)
-    (error "The 'previous-pdf-page' function from the dynamic module is not available."))
-  (previous-pdf-page)
+  (unless (fboundp 'previous-doc-page)
+    (error "The 'previous-doc-page' function from the dynamic module is not available."))
+  (previous-doc-page)
   (force-mode-line-update t))
 
-(defun read-pdf--first-page ()
-  "Go to the first page of the PDF"
+(defun reader-first-page ()
+  "Go to the first page of the visiting document."
   (interactive)
-  (unless (fboundp 'first-pdf-page)
-    (error "The 'first-pdf-page' function from the dynamic module is not available."))
-  (first-pdf-page)
+  (unless (fboundp 'first-doc-page)
+    (error "The 'first-doc-page' function from the dynamic module is not available."))
+  (first-doc-page)
   (force-mode-line-update t))
 
-(defun read-pdf--last-page ()
-  "Go to the last page of the PDF."
+(defun reader-last-page ()
+  "Go to the last page of the visiting document."
   (interactive)
-  (unless (fboundp 'last-pdf-page)
-    (error "The 'last-pdf-page' function from the dynamic module is not available."))
-  (last-pdf-page)
+  (unless (fboundp 'last-doc-page)
+    (error "The 'last-doc-page' function from the dynamic module is not available."))
+  (last-doc-page)
   (force-mode-line-update t))
 
-(defun read-pdf--goto-page (n)
-  "Go to page number 'n' in the PDF"
+(defun reader-page (n)
+  "Go to page number 'N' in the current document"
   (interactive "nPage: ")
-  (unless (fboundp 'goto-pdf-page)
-    (error "The 'goto-pdf-page' function from the dynamic module is not available."))
-  (goto-pdf-page (- n 1)) ; MuPDF does 0-indexing
+  (unless (fboundp 'goto-doc-page)
+    (error "The 'goto-doc-page' function from the dynamic module is not available."))
+  (goto-doc-page (- n 1)) ; MuPDF does 0-indexing
   (force-mode-line-update t))
 
-(defun read-pdf--enlarge-size ()
-  "Enlarge the size of the current page with respect to the `read-pdf-enlarge-factor'"
+(defun reader-enlarge-size ()
+  "Enlarge the size of the current page with respect to the `reader-enlarge-factor'"
   (interactive)
-  (unless (fboundp 'pdf-change-page-size)
-    (error "The 'pdf-change-page-size' function from the dynamic module is not available."))
-  (let ((scaling-factor (* read-pdf-current-pdf-scale read-pdf-enlarge-factor)))
-    (pdf-change-page-size scaling-factor)
-    (setq read-pdf-current-pdf-scale scaling-factor))
+  (unless (fboundp 'doc-change-page-size)
+    (error "The 'doc-change-page-size' function from the dynamic module is not available."))
+  (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
+    (doc-change-page-size scaling-factor)
+    (setq reader-current-doc-scale scaling-factor))
   (force-mode-line-update t))
 
-(defun read-pdf--shrink-size ()
-  "Shrink the size of the current page with respect to the `read-pdf-enlarge-factor'"
+(defun reader-shrink-size ()
+  "Shrink the size of the current page with respect to the `reader-shrink-factor'"
   (interactive)
-  (unless (fboundp 'pdf-change-page-size)
-    (error "The 'pdf-change-page-size' function from the dynamic module is not available."))
-  (let ((scaling-factor (* read-pdf-current-pdf-scale read-pdf-shrink-factor)))
-    (pdf-change-page-size scaling-factor)
-    (setq read-pdf-current-pdf-scale scaling-factor))
+  (unless (fboundp 'doc-change-page-size)
+    (error "The 'doc-change-page-size' function from the dynamic module is not available."))
+  (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
+    (doc-change-page-size scaling-factor)
+    (setq reader-current-doc-scale scaling-factor))
   (force-mode-line-update t))
 
-(defun read-pdf--kill-buffer ()
-  "Kill the buffer with the rendered PDF"
+(defun reader-kill-buffer ()
+  "Kill the current buffer and the document"
   (interactive)
   (kill-buffer (current-buffer)))
 
-(defun read-pdf--center-page (&optional window)
-  "Centers the pages of the PDF with respect to the window in which the PDF is opened."
+(defun reader-center-page (&optional window)
+  "Centers the pages of the document with respect to the window in which the document is opened."
   (with-current-buffer (window-buffer window)
-    (when (equal major-mode 'read-pdf-mode)
-      (let ((offset (when (> (window-width window t) (car (get-current-pdf-image-size)))
-                      `(space :width (,(/ (- (window-width window t) (car (get-current-pdf-image-size))) 2))))))
+    (when (equal major-mode 'reader-mode)
+      (let ((offset (when (> (window-width window t) (car (get-current-doc-image-size)))
+                      `(space :width (,(/ (- (window-width window t) (car (get-current-doc-image-size))) 2))))))
         (overlay-put current-svg-overlay 'line-prefix offset)))))
 
-(defun read-pdf--render-buffer ()
-  "Render the PDF file this buffer is associated with. It is to be called while a PDF’s buffer is already opened."
+(defun reader-render-buffer ()
+  "Render the document file this buffer is associated with. It is to be called while a document’s buffer is already opened and the buffer is not in `reader-mode'."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (load-pdf file))
+	  (load-doc file))
       (message "No file associated with buffer."))))
 
-;; Define the keymap for read-pdf-mode
-(defvar read-pdf-mode-map
+;; Define the keymap for reader-mode
+(defvar reader-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "n") #'read-pdf--next-page)
-    (define-key map (kbd "j") #'read-pdf--next-page)
-    (define-key map (kbd "C-n") #'read-pdf--next-page)
-    (define-key map (kbd "p") #'read-pdf--previous-page)
-    (define-key map (kbd "k") #'read-pdf--previous-page)
-    (define-key map (kbd "C-p") #'read-pdf--previous-page)
-    (define-key map (kbd "gg") #'read-pdf--first-page)
-    (define-key map (kbd "M-<") #'read-pdf--first-page)
-    (define-key map (kbd "G") #'read-pdf--last-page)
-    (define-key map (kbd "M->") #'read-pdf--last-page)
-    (define-key map (kbd "M-g g") #'read-pdf--goto-page)
-    (define-key map (kbd "g n") #'read-pdf--goto-page)
-    (define-key map (kbd "=") #'read-pdf--enlarge-size)
-    (define-key map (kbd "-") #'read-pdf--shrink-size)
-    (define-key map (kbd "Q") #'read-pdf--kill-buffer)
+    (define-key map (kbd "n") #'reader-next-page)
+    (define-key map (kbd "j") #'reader-next-page)
+    (define-key map (kbd "C-n") #'reader-next-page)
+    (define-key map (kbd "p") #'reader-previous-page)
+    (define-key map (kbd "k") #'reader-previous-page)
+    (define-key map (kbd "C-p") #'reader-previous-page)
+    (define-key map (kbd "gg") #'reader-first-page)
+    (define-key map (kbd "M-<") #'reader-first-page)
+    (define-key map (kbd "G") #'reader-last-page)
+    (define-key map (kbd "M->") #'reader-last-page)
+    (define-key map (kbd "M-g g") #'reader-goto-page)
+    (define-key map (kbd "g n") #'reader-goto-page)
+    (define-key map (kbd "=") #'reader-enlarge-size)
+    (define-key map (kbd "-") #'reader-shrink-size)
+    (define-key map (kbd "Q") #'reader-kill-buffer)
     map)
-  "Keymap for read-pdf-mode.")
+  "Keymap for reader-mode.")
 
 ;; Define the major mode
-(defun read-pdf-mode ()
-  "Major mode for viewing PDFs rendered by render-pdf module.
+(defun reader-mode ()
+  "Major mode for viewing documents in The Emacs Reader.
 
 Keybindings:
-\\{read-pdf-mode-map}"
+\\{reader-mode-map}"
   (interactive)
   (setq-local buffer-read-only t
 	      global-linum-mode nil
@@ -185,33 +180,47 @@ Keybindings:
               display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
-  ;; Only do this when pdf is not already rendered
-  (when (not page-render-status)
-    (read-pdf--render-buffer))
+  ;; Only do this when document is not already rendered
+  (when (not doc-render-status)
+    (reader-render-buffer))
 
-  (use-local-map read-pdf-mode-map)
-  (setq major-mode 'read-pdf-mode)
-  (setq mode-name "ReadPDF")
-  (run-hooks 'read-pdf-mode-hook)
-  ;; Invoke centering every time window’s size changes only in read-pdf-mode windows
-  (add-hook 'window-size-change-functions #'read-pdf--center-page nil t))
+  (use-local-map reader-mode-map)
+  (setq major-mode 'reader-mode)
+  (setq mode-name "Emacs Reader")
+  (run-hooks 'reader-mode-hook)
+  ;; Invoke centering every time window’s size changes only in reader-mode windows
+  (add-hook 'window-size-change-functions #'reader-center-page nil t))
 
+;; Modeline for the reader-mode
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
   (setq-local mode-line-format
 	      (list
 	       "Page: "
-	       '(:eval (number-to-string (+ 1 (get-current-pdf-pagenumber))))
+	       '(:eval (number-to-string (+ 1 (get-current-doc-pagenumber))))
 	       "/"
-	       '(:eval (number-to-string current-pdf-pagecount))
+	       '(:eval (number-to-string current-doc-pagecount))
 	       "  "
 	       mode-line-buffer-identification))
   (force-mode-line-update t))
 
-(add-hook 'read-pdf-mode-hook #'reader-mode-line)
+(add-hook 'reader-mode-hook #'reader-mode-line)
 
-;; Automatically load the mode
-(add-to-list 'auto-mode-alist '("\\.pdf\\'" . read-pdf-mode))
+;; Automatically load the mode for the supported document formats
+(dolist (pattern '("\\.pdf\\'"
+		   "\\.epub\\'"
+		   "\\.odt\\'"
+		   "\\.ods\\'"
+		   "\\.odg\\'"
+		   "\\.odp\\'"
+		   "\\.docx\\'"
+		   "\\.pptx\\'"
+		   "\\.xlsx\\'"
+		   "\\.fb2\\'"
+		   "\\.xps\\'"
+		   "\\.mobi\\'"
+		   "\\.cbz\\'"))
+  (add-to-list 'auto-mode-alist (cons pattern 'reader-mode)))
 
 (provide 'reader)
 ;;; reader.el ends here.
