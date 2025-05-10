@@ -96,7 +96,7 @@ to render the first page and displays it in a new buffer."
   (last-doc-page)
   (force-mode-line-update t))
 
-(defun reader-page (n)
+(defun reader-goto-page (n)
   "Go to page number 'N' in the current document"
   (interactive "nPage: ")
   (unless (fboundp 'goto-doc-page)
@@ -176,7 +176,6 @@ Keybindings:
   (interactive)
   (setq-local buffer-read-only t
 	      global-linum-mode nil
-	      cursor-type nil
               display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
