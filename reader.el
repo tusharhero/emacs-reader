@@ -133,9 +133,20 @@ to render the first page and displays it in a new buffer."
   "Centers the pages of the document with respect to the window in which the document is opened."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
-      (let ((offset (when (> (window-width window t) (car (get-current-doc-image-size)))
-                      `(space :width (,(/ (- (window-width window t) (car (get-current-doc-image-size))) 2))))))
-        (overlay-put current-svg-overlay 'line-prefix offset)))))
+      (let* ((window-width (window-width window))
+	     (pixel-window-width (window-width window t))
+	     (pixel-per-col (/ pixel-window-width
+                               window-width))
+	     (doc-image-width (car (get-current-doc-image-size)))
+	     (doc-fits-p (> pixel-window-width doc-image-width))
+	     (raw-offset (/ (- pixel-window-width doc-image-width) 2))
+	     (overlay-offset
+	      `(space :width (,(if doc-fits-p raw-offset 0)))))
+        (overlay-put current-svg-overlay 'line-prefix overlay-offset)
+	(when-let* (((not doc-fits-p)) ; scroll to the center of the doc
+		    (scroll-offset
+		     (/ (abs raw-offset) pixel-per-col)))
+	  (set-window-hscroll window scroll-offset))))))
 
 (defun reader-render-buffer ()
   "Render the document file this buffer is associated with. It is to be called while a document’s buffer is already opened and the buffer is not in `reader-mode'."
