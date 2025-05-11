@@ -637,6 +637,8 @@ emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs, emacs_va
   (void)nargs;
   (void)data;
 
+  emacs_value scale_factor = args[0];
+
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
@@ -649,7 +651,7 @@ emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs, emacs_va
 
   emacs_value cdr_image_data = env->funcall(env, env->intern(env, "cdr"), 1, &image_data);
 
-  emacs_value modified_cdr = env->funcall(env, env->intern(env, "plist-put"), 3, (emacs_value[]){cdr_image_data, env->intern(env, ":scale"), args[0]});
+  emacs_value modified_cdr = env->funcall(env, env->intern(env, "plist-put"), 3, (emacs_value[]){cdr_image_data, env->intern(env, ":scale"), scale_factor});
   env->funcall(env, env->intern(env, "setcdr"), 2, (emacs_value[]){image_data, modified_cdr});
   emacs_value overlay_put_args[3] = {
     current_svg_overlay, env->intern(env, "display"), image_data};
