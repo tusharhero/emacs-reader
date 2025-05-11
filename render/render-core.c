@@ -13,6 +13,7 @@ int plugin_is_GPL_compatible;
 typedef struct {
   fz_context *ctx;
   fz_document *doc;
+  char *path;
   int pagecount;
   int prev_page_number;
   int current_page_number;
@@ -66,6 +67,7 @@ void reset_doc_state(DocState *state) {
   *state = (DocState){
     .ctx = NULL,
     .doc = NULL,
+    .path = NULL,
     .pagecount = 0,
     .current_page_number = 0,
     .next_page_number = 0,
@@ -167,7 +169,7 @@ emacs_value get_current_svg_overlay(emacs_env *env) {
 }
 
 // Loading a document into MuPDF context, and respective document handlers
-int load_doc(DocState *state, char *input_file) {
+int load_doc(DocState *state) {
   state->ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
   if (!state->ctx) {
     fprintf(stderr, "Cannot create MuPDF context\n");
@@ -181,9 +183,12 @@ int load_doc(DocState *state, char *input_file) {
     state->ctx = NULL;
     return EXIT_FAILURE;
   }
-  fz_try(state->ctx) { state->doc = fz_open_document(state->ctx, input_file); }
+  fz_try(state->ctx) {
+    state->doc = fz_open_document(state->ctx, state->path);
+}
+
   fz_catch(state->ctx) {
-    fprintf(stderr, "Cannot open document '%s': %s\n", input_file,
+    fprintf(stderr, "Cannot open document '%s': %s\n", state->path,
             fz_caught_message(state->ctx));
     fz_drop_context(state->ctx);
     state->ctx = NULL;
@@ -392,20 +397,18 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
   (void)nargs;
   (void)data;
-  char *file;
   size_t str_length = 0;
+  DocState *state = malloc(sizeof(DocState));
+  reset_doc_state(state);
 
-  if (!emacs_2_c_str(env, args[0], &file, &str_length)) {
+  if (!emacs_2_c_str(env, args[0], &state->path , &str_length)) {
     fprintf(stderr, "Failed to convert Emacs string to C string.\n");
     return env->intern(env, "nil");
   }
 
-  DocState *state = malloc(sizeof(DocState));
-  reset_doc_state(state);
-
-  if (load_doc(state, file) == EXIT_SUCCESS) {
-    fprintf(stderr, "Document loaded successfully with %d pages.\n",
-            state->pagecount);
+  if (load_doc(state) == EXIT_SUCCESS) {
+    fprintf(stderr, "%s loaded successfully with %d pages.\n",
+            state->path ,state->pagecount);
     fprintf(
 	    stderr,
 	    "State after loading the document: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
@@ -421,10 +424,17 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       // Take the SVG data from DocState and create an SVG image of it as a Lisp Object.
       emacs_value svg_string =
 	env->make_string(env, state->current_svg_data, state->current_svg_size);
-      emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
-                                   env->intern(env, "t")};
+      emacs_value image_args[4] = {svg_string, env->intern(env, "svg"),
+				   env->intern(env, "t")};
       emacs_value image_data =
 	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+
+      // Expose the current document’s rendered SVG size to a buffer-local Elisp variable
+      emacs_value image_size = env->funcall(env, env->intern(env, "image-display-size"), 2, (emacs_value[]){image_data, env->intern(env, "t")});
+      env->funcall(
+		   env, env->intern(env, "set"), 2,
+		   (emacs_value[]){env->intern(env, "current-doc-image-size"), image_size});
+
 
       // Render the created image on the buffer’s overlay
       emacs_value overlay_put_args[3] = {
@@ -442,7 +452,6 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     fprintf(stderr, "Loading document failed.\n");
   }
 
-  free(file);
   return env->intern(env, "t");
 }
 
