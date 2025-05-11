@@ -1,7 +1,9 @@
 List of all the people who contributed to The Emacs Reader. For more information on what is included, visit: https://www.gnu.org/prep/maintain/html_node/Legally-Significant.html#Legally-Significant.
 
-Legally Significant Code Contributions :
+Legally Significant Contributions :
 
 Divya Ranjan Pattanaik <divya@subvertising.org>	    Author of the initial version of all files of the project.
 
-Non-code Contributions:
+Tushar <tusharhero@sdf.org>			    Revised the reader-center-page in reader.el to accomodate edge cases.
+
+Other Contributions:
