@@ -1,35 +1,35 @@
-;;; reader.el --- Reading Documents in Emacs  -*- lexical-binding: t; -*-
+;;; reader.el --- Document Reader for Emacs          -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2025 Divya Ranjan Pattanaik <divya@subvertising.org>
+;; Copyright (C) 2025  Divya Ranjan Pattanaik
 
 ;; Author: Divya Ranjan Pattanaik <divya@subvertising.org>
-;; Created: 15 jan 2025
-;; Keywords: lisp
+;; Keywords: lisp, files, tools
 ;; Version: 0.1.9
-;; URL: https://codeberg.org/divyaranjan/emacs-reader
 ;; Package-Requires: ((emacs "26.1"))
+;; URL: https://codeberg.org/divyaranjan/emacs-reader
 
-;; This file is not part of GNU Emacs.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is free software; you can redistribute it and/or modify it under
-;; the terms of the GNU General Public License as published by the Free Software
-;; Foundation, either version 3 of the License, or (at your option) any later
-;; version.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;; This program is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-;; details.
-
-;; You should have received a copy of the GNU General Public License along with
-;; this program. If not, see <https://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; The package uses MuPDF to render documents natively in GNU Emacs for reading,
-;; editing and other purposes.
+;; This package provides a general purpose document reader within
+;; Emacs by leveraging the use of dynamic modules.  It primarily
+;; relies on MuPDF to do the rendering, and Emacs Lisp’s native SVG
+;; capabilities to view the rendered images and manipulate them.
 
 ;;; Code:
+
 (require 'image)
 (require 'image-mode)
 (require 'svg)
@@ -55,7 +55,7 @@
 
 (defun reader-open-doc (file)
   "Open document FILE for viewing.
-This function calls the C function 'load-doc' from the dynamic module
+This function calls the C function `load-doc' from the dynamic module
 to render the first page and displays it in a new buffer."
   (interactive "fOpen document: ")
   (switch-to-buffer (create-file-buffer file))
