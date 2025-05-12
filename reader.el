@@ -1,4 +1,4 @@
-;;; reader.el --- Document Reader for Emacs          -*- lexical-binding: t; -*-
+;;; reader.el --- General-purpose Document Viewer -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Divya Ranjan Pattanaik
 
@@ -183,7 +183,7 @@ Keybindings:
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
-  ;; Invoke centering every time window’s size changes only in reader-mode windows
+  ;; Invoke centering every time window's size changes only in reader-mode windows
   (add-hook 'window-size-change-functions #'reader-center-page nil t))
 
 ;; Modeline for the reader-mode
