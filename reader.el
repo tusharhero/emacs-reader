@@ -1,12 +1,13 @@
 ;;; reader.el --- Reading Documents in Emacs  -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2025 Divya Ranjan Pattanaik <divya@subvertising.org>
+;; Copyright (C) 2025 Divya Ranjan Pattanaik <divya@subvertising.org>
 
 ;; Author: Divya Ranjan Pattanaik <divya@subvertising.org>
-;; Keywords: document-reader, mupdf
-;; Version: 0.1.0
-;; Package-Requires: ((emacs "24.1"))
+;; Created: 15 jan 2025
+;; Keywords: reader, mupdf, pdf-tools, doc-view
+;; Version: 0.1.9
 ;; URL: https://codeberg.org/divyaranjan/emacs-reader
+;; Package-Requires: ((emacs "24.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -23,10 +24,10 @@
 ;; You should have received a copy of the GNU General Public License along with
 ;; this program. If not, see <https://www.gnu.org/licenses/>.
 
-;; In addition to conditions of the GNU General Public License, this program may
-;; not be redistributed without the following acknowledgement:
-
 ;;; Commentary:
+
+;; The package uses MuPDF to render documents natively in GNU Emacs for reading,
+;; editing and other purposes.
 
 ;;; Code:
 (require 'image)
