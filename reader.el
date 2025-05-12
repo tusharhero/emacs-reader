@@ -4,10 +4,10 @@
 
 ;; Author: Divya Ranjan Pattanaik <divya@subvertising.org>
 ;; Created: 15 jan 2025
-;; Keywords: reader, mupdf, pdf-tools, doc-view
+;; Keywords: lisp
 ;; Version: 0.1.9
 ;; URL: https://codeberg.org/divyaranjan/emacs-reader
-;; Package-Requires: ((emacs "24.1"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -53,13 +53,11 @@
 (defvar reader-current-doc-scale 1)
 (make-variable-buffer-local 'reader-current-doc-scale)
 
-(defun open-doc (file)
+(defun reader-open-doc (file)
   "Open document FILE for viewing.
 This function calls the C function 'load-doc' from the dynamic module
 to render the first page and displays it in a new buffer."
   (interactive "fOpen document: ")
-  (unless (fboundp 'load-doc)
-    (error "The 'load-doc' function from the dynamic module is not available."))
   (switch-to-buffer (create-file-buffer file))
   (insert "\n")
   (load-doc (expand-file-name file))
@@ -68,70 +66,56 @@ to render the first page and displays it in a new buffer."
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
   (interactive)
-  (unless (fboundp 'next-doc-page)
-    (error "The 'next-doc-page' function from the dynamic module is not available."))
   (next-doc-page)
   (force-mode-line-update t))
 
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
-  (unless (fboundp 'previous-doc-page)
-    (error "The 'previous-doc-page' function from the dynamic module is not available."))
   (previous-doc-page)
   (force-mode-line-update t))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
   (interactive)
-  (unless (fboundp 'first-doc-page)
-    (error "The 'first-doc-page' function from the dynamic module is not available."))
   (first-doc-page)
   (force-mode-line-update t))
 
 (defun reader-last-page ()
   "Go to the last page of the visiting document."
   (interactive)
-  (unless (fboundp 'last-doc-page)
-    (error "The 'last-doc-page' function from the dynamic module is not available."))
   (last-doc-page)
   (force-mode-line-update t))
 
 (defun reader-goto-page (n)
-  "Go to page number 'N' in the current document"
+  "Go to page number 'N' in the current document."
   (interactive "nPage: ")
-  (unless (fboundp 'goto-doc-page)
-    (error "The 'goto-doc-page' function from the dynamic module is not available."))
   (goto-doc-page (- n 1)) ; MuPDF does 0-indexing
   (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
-  "Enlarge the size of the current page with respect to the `reader-enlarge-factor'"
+  "Enlarge the size of the current page with respect to the `reader-enlarge-factor'."
   (interactive)
-  (unless (fboundp 'doc-change-page-size)
-    (error "The 'doc-change-page-size' function from the dynamic module is not available."))
   (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
     (doc-change-page-size scaling-factor)
     (setq reader-current-doc-scale scaling-factor))
   (force-mode-line-update t))
 
 (defun reader-shrink-size ()
-  "Shrink the size of the current page with respect to the `reader-shrink-factor'"
+  "Shrink the size of the current page with respect to the `reader-shrink-factor'."
   (interactive)
-  (unless (fboundp 'doc-change-page-size)
-    (error "The 'doc-change-page-size' function from the dynamic module is not available."))
   (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
     (doc-change-page-size scaling-factor)
     (setq reader-current-doc-scale scaling-factor))
   (force-mode-line-update t))
 
 (defun reader-kill-buffer ()
-  "Kill the current buffer and the document"
+  "Kill the current buffer and the document."
   (interactive)
   (kill-buffer (current-buffer)))
 
 (defun reader-center-page (&optional window)
-  "Centers the pages of the document with respect to the window in which the document is opened."
+  "Centers the pages of the document with respect to the WINDOW in which the document is opened."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
       (let* ((window-width (window-width window))
@@ -150,7 +134,7 @@ to render the first page and displays it in a new buffer."
 	  (set-window-hscroll window scroll-offset))))))
 
 (defun reader-render-buffer ()
-  "Render the document file this buffer is associated with. It is to be called while a document’s buffer is already opened and the buffer is not in `reader-mode'."
+  "Render the document file this buffer is associated with.  It is to be called while a document’s buffer is already opened and the buffer is not in `reader-mode'."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
