@@ -28,6 +28,7 @@ typedef struct {
   fz_page *next_page;
   fz_page *prev_page;
   fz_rect page_bbox;
+  fz_outline *outline;
 } DocState;
 
 // Clean up previous SVG data if any
@@ -65,28 +66,19 @@ void drop_all_doc_pages(fz_context *ctx, DocState *state) {
 void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
   *state = (DocState){
-    .ctx = NULL,
-    .doc = NULL,
-    .path = NULL,
-    .pagecount = 0,
-    .current_page_number = 0,
-    .next_page_number = 0,
-    .prev_page_number = 0,
-    .current_svg_data = NULL,
-    .current_svg_size = 0,
-    .next_svg_data = NULL,
-    .next_svg_size = 0,
-    .prev_svg_data = NULL,
-    .prev_svg_size = 0,
-    .current_page = NULL,
-    .prev_page = NULL,
-    .next_page = NULL,
+    .ctx = NULL, .doc = NULL, .path = NULL, .pagecount = 0,
+    .current_page_number = 0, .next_page_number = 0, .prev_page_number = 0,
+    .current_svg_data = NULL, .current_svg_size = 0, .next_svg_data = NULL,
+    .next_svg_size = 0, .prev_svg_data = NULL, .prev_svg_size = 0,
+    .current_page = NULL, .prev_page = NULL, .next_page = NULL,
     .page_bbox =
     {
       .x0 = 0.0f,
       .y0 = 0.0f,
     },
+    .outline = NULL
   };
+
 }
 
 // Fetch pointer to DocState from Emacs Environment to a C pointer
@@ -185,7 +177,7 @@ int load_doc(DocState *state) {
   }
   fz_try(state->ctx) {
     state->doc = fz_open_document(state->ctx, state->path);
-}
+  }
 
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot open document '%s': %s\n", state->path,
@@ -194,6 +186,19 @@ int load_doc(DocState *state) {
     state->ctx = NULL;
     return EXIT_FAILURE;
   }
+
+  fz_try(state->ctx) {
+    state->outline = fz_load_outline(state->ctx, state->doc);
+  }
+
+  fz_catch(state->ctx) {
+    fprintf(stderr, "Cannot create outline for the document '%s': %s\n", state->path,
+            fz_caught_message(state->ctx));
+    fz_drop_context(state->ctx);
+    state->outline = NULL;
+    return EXIT_FAILURE;
+  }
+
   fz_try(state->ctx) {
     state->pagecount = fz_count_pages(state->ctx, state->doc);
   }
