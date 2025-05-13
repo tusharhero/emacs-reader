@@ -98,7 +98,8 @@ to render the first page and displays it in a new buffer."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
     (doc-change-page-size scaling-factor)
-    (setq reader-current-doc-scale scaling-factor))
+    (setq reader-current-doc-scale scaling-factor)
+    (reader-center-page))
   (force-mode-line-update t))
 
 (defun reader-shrink-size ()
@@ -106,13 +107,18 @@ to render the first page and displays it in a new buffer."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
     (doc-change-page-size scaling-factor)
-    (setq reader-current-doc-scale scaling-factor))
+    (setq reader-current-doc-scale scaling-factor)
+    (reader-center-page))
   (force-mode-line-update t))
 
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
   (interactive)
   (kill-buffer (current-buffer)))
+
+(defun get-current-doc-image-size ()
+  "Get the size of the current page's doc image."
+  (image-size (overlay-get current-svg-overlay 'display) t))
 
 (defun reader-center-page (&optional window)
   "Centers the pages of the document with respect to the WINDOW in which the document is opened."
