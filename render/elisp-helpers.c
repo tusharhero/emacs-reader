@@ -101,3 +101,31 @@ void register_module_func(
   emacs_value elisp_func_args[2] = {elisp_func_symbol, elisp_func};
   env->funcall(env, env->intern(env, "fset"), 2, elisp_func_args);
 }
+
+
+/**
+ * svg2elisp - Create an Elisp image object from raw SVG data
+ * @env: Emacs environment pointer
+ * @svg_data: SVG data that is to be rendered as image, should usually be from
+ * the DocState.
+ * @svg_size: The size of the SVG data that is going to be rendered, should
+ * usually be from the DocState.
+ *
+ * One needs to be extremely about handling the SVG data, and make sure it later
+ * gets dropped and freed accordingly.
+ *
+ * Returns: The Elisp image object, which will be a specific plist, and can be
+rendered in Emacs with `insert-image' or other means.
+
+ */
+
+emacs_value svg2elisp_image(emacs_env *env, char *svg_data, size_t svg_size) {
+  emacs_value svg_string =
+      env->make_string(env, svg_data, svg_size);
+  emacs_value image_args[4] = {svg_string, env->intern(env, "svg"),
+                               env->intern(env, "t")};
+  emacs_value image_data =
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+
+  return image_data;
+}
