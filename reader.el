@@ -69,11 +69,23 @@ to render the first page and displays it in a new buffer."
   (next-doc-page)
   (force-mode-line-update t))
 
+(defun reader-scroll-down ()
+  "Scroll down the current page."
+  (interactive)
+  (set-window-vscroll nil
+		      (1+ (window-vscroll nil))))
+
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
   (previous-doc-page)
   (force-mode-line-update t))
+
+(defun reader-scroll-up ()
+  "Scroll up the current page."
+  (interactive)
+  (set-window-vscroll nil
+		      (1- (window-vscroll nil))))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
