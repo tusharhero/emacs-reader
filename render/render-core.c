@@ -66,27 +66,35 @@ void drop_all_doc_pages(fz_context *ctx, DocState *state) {
 // Reset the state of the document in heap memory
 void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
-  *state = (DocState){
-    .ctx = NULL, .doc = NULL, .path = NULL, .pagecount = 0,
-    .current_page_number = 0, .next_page_number = 0, .prev_page_number = 0,
-    .current_svg_data = NULL, .current_svg_size = 0, .next_svg_data = NULL,
-    .next_svg_size = 0, .prev_svg_data = NULL, .prev_svg_size = 0,
-    .current_page = NULL, .prev_page = NULL, .next_page = NULL,
-    .page_bbox =
-    {
-      .x0 = 0.0f,
-      .y0 = 0.0f,
-    },
-    .outline = NULL
-  };
-
+  *state = (DocState){.ctx = NULL,
+                      .doc = NULL,
+                      .path = NULL,
+                      .pagecount = 0,
+                      .current_page_number = 0,
+                      .next_page_number = 0,
+                      .prev_page_number = 0,
+                      .current_svg_data = NULL,
+                      .current_svg_size = 0,
+                      .next_svg_data = NULL,
+                      .next_svg_size = 0,
+                      .prev_svg_data = NULL,
+                      .prev_svg_size = 0,
+                      .current_page = NULL,
+                      .prev_page = NULL,
+                      .next_page = NULL,
+                      .page_bbox =
+                          {
+                              .x0 = 0.0f,
+                              .y0 = 0.0f,
+                          },
+                      .outline = NULL};
 }
 
 // Fetch pointer to DocState from Emacs Environment to a C pointer
 DocState *get_doc_state_ptr(emacs_env *env) {
   emacs_value ptr_sym = env->intern(env, "doc-state-ptr");
   emacs_value ptr =
-    env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
+      env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
   DocState *state = env->get_user_ptr(env, ptr);
 
   return state;
@@ -94,7 +102,7 @@ DocState *get_doc_state_ptr(emacs_env *env) {
 
 // Fetches the current page number of the document that’s open
 emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
-				    emacs_value *args, void *data) {
+                                    emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
   (void)args;
@@ -113,11 +121,12 @@ void set_current_render_status(emacs_env *env) {
 // Exposing the pagecount of the document to an Elisp variable
 void set_current_pagecount(emacs_env *env, DocState *state) {
   emacs_value pagecount_args[2] = {env->intern(env, "current-doc-pagecount"),
-				   env->make_integer(env, state->pagecount)};
+                                   env->make_integer(env, state->pagecount)};
   env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
 
-// Expose the current document’s rendered SVG size to a buffer-local Elisp variable
+// Expose the current document’s rendered SVG size to a buffer-local Elisp
+// variable
 emacs_value get_current_doc_image_size(emacs_env *env, ptrdiff_t nargs,
                                        emacs_value *args, void *data) {
   (void)nargs;
@@ -127,13 +136,15 @@ emacs_value get_current_doc_image_size(emacs_env *env, ptrdiff_t nargs,
   DocState *state = get_doc_state_ptr(env);
 
   emacs_value svg_string =
-    env->make_string(env, state->current_svg_data, state->current_svg_size);
+      env->make_string(env, state->current_svg_data, state->current_svg_size);
   emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
-			       env->intern(env, "t")};
+                               env->intern(env, "t")};
   emacs_value image_data =
-    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
 
-  emacs_value image_size = env->funcall(env, env->intern(env, "image-display-size"), 2, (emacs_value[]){image_data, env->intern(env, "t")});
+  emacs_value image_size =
+      env->funcall(env, env->intern(env, "image-display-size"), 2,
+                   (emacs_value[]){image_data, env->intern(env, "t")});
   env->funcall(
       env, env->intern(env, "set"), 2,
       (emacs_value[]){env->intern(env, "current-doc-image-size"), image_size});
@@ -149,14 +160,16 @@ void init_overlay(emacs_env *env) {
                                      (emacs_value[]){start, end});
   emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
 
-  env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){current_overlay_sym, overlay});
+  env->funcall(env, env->intern(env, "set"), 2,
+               (emacs_value[]){current_overlay_sym, overlay});
 }
 
 // Fetches the overlay object from the current-svg-overlay
 emacs_value get_current_svg_overlay(emacs_env *env) {
 
   emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
-  emacs_value current_overlay = env->funcall(env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
+  emacs_value current_overlay = env->funcall(
+      env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
 
   return current_overlay;
 }
@@ -176,9 +189,7 @@ int load_doc(DocState *state) {
     state->ctx = NULL;
     return EXIT_FAILURE;
   }
-  fz_try(state->ctx) {
-    state->doc = fz_open_document(state->ctx, state->path);
-  }
+  fz_try(state->ctx) { state->doc = fz_open_document(state->ctx, state->path); }
 
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot open document '%s': %s\n", state->path,
@@ -193,8 +204,8 @@ int load_doc(DocState *state) {
   }
 
   fz_catch(state->ctx) {
-    fprintf(stderr, "Cannot create outline for the document '%s': %s\n", state->path,
-            fz_caught_message(state->ctx));
+    fprintf(stderr, "Cannot create outline for the document '%s': %s\n",
+            state->path, fz_caught_message(state->ctx));
     fz_drop_context(state->ctx);
     state->outline = NULL;
     return EXIT_FAILURE;
@@ -225,13 +236,13 @@ int load_pages(DocState *state, int page_number) {
     if (0 < page_number) {
       state->prev_page_number = page_number - 1;
       state->prev_page =
-	fz_load_page(state->ctx, state->doc, state->prev_page_number);
+          fz_load_page(state->ctx, state->doc, state->prev_page_number);
     }
 
     if (page_number < (state->pagecount - 1)) {
       state->next_page_number = page_number + 1;
       state->next_page =
-	fz_load_page(state->ctx, state->doc, state->next_page_number);
+          fz_load_page(state->ctx, state->doc, state->next_page_number);
     }
   }
   fz_catch(state->ctx) {
@@ -300,11 +311,11 @@ int render_page(DocState *state, int page_number) {
   // Create an SVG device
   fz_try(state->ctx) {
     curr_dev =
-      fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
+        fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
     prev_dev =
-      fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
+        fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
     next_dev =
-      fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
+        fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
   }
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot create SVG device: %s\n",
@@ -407,18 +418,19 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = malloc(sizeof(DocState));
   reset_doc_state(state);
 
-  if (!elisp_2_c_str(env, args[0], &state->path , &str_length)) {
+  if (!elisp_2_c_str(env, args[0], &state->path, &str_length)) {
     fprintf(stderr, "Failed to convert Emacs string to C string.\n");
     return env->intern(env, "nil");
   }
 
   if (load_doc(state) == EXIT_SUCCESS) {
-    fprintf(stderr, "%s loaded successfully with %d pages.\n",
-            state->path ,state->pagecount);
-    fprintf(
-	    stderr,
-	    "State after loading the document: ctx=%p, doc=%p, pagecount=%d, current_page=%d\n",
-	    state->ctx, state->doc, state->pagecount, state->current_page_number);
+    fprintf(stderr, "%s loaded successfully with %d pages.\n", state->path,
+            state->pagecount);
+    fprintf(stderr,
+            "State after loading the document: ctx=%p, doc=%p, pagecount=%d, "
+            "current_page=%d\n",
+            state->ctx, state->doc, state->pagecount,
+            state->current_page_number);
 
     set_current_pagecount(env, state);
     set_current_render_status(env);
@@ -427,30 +439,34 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
 
-      // Take the SVG data from DocState and create an SVG image of it as a Lisp Object.
-      emacs_value svg_string =
-	env->make_string(env, state->current_svg_data, state->current_svg_size);
+      // Take the SVG data from DocState and create an SVG image of it as a Lisp
+      // Object.
+      emacs_value svg_string = env->make_string(env, state->current_svg_data,
+                                                state->current_svg_size);
       emacs_value image_args[4] = {svg_string, env->intern(env, "svg"),
-				   env->intern(env, "t")};
+                                   env->intern(env, "t")};
       emacs_value image_data =
-	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+          env->funcall(env, env->intern(env, "create-image"), 3, image_args);
 
-      // Expose the current document’s rendered SVG size to a buffer-local Elisp variable
-      emacs_value image_size = env->funcall(env, env->intern(env, "image-display-size"), 2, (emacs_value[]){image_data, env->intern(env, "t")});
-      env->funcall(
-		   env, env->intern(env, "set"), 2,
-		   (emacs_value[]){env->intern(env, "current-doc-image-size"), image_size});
-
+      // Expose the current document’s rendered SVG size to a buffer-local Elisp
+      // variable
+      emacs_value image_size =
+          env->funcall(env, env->intern(env, "image-display-size"), 2,
+                       (emacs_value[]){image_data, env->intern(env, "t")});
+      env->funcall(env, env->intern(env, "set"), 2,
+                   (emacs_value[]){env->intern(env, "current-doc-image-size"),
+                                   image_size});
 
       // Render the created image on the buffer’s overlay
       emacs_value overlay_put_args[3] = {
-	current_svg_overlay, env->intern(env, "display"), image_data};
+          current_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
       // Create a user pointer and expose it to Emacs in a buffer-local fashion
       emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
       emacs_value doc_state_ptr_sym = env->intern(env, "doc-state-ptr");
-      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){doc_state_ptr_sym, user_ptr});
+      env->funcall(env, env->intern(env, "set"), 2,
+                   (emacs_value[]){doc_state_ptr_sym, user_ptr});
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
     }
@@ -472,20 +488,20 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   emacs_value next_svg_string =
-    env->make_string(env, state->next_svg_data, state->next_svg_size);
+      env->make_string(env, state->next_svg_data, state->next_svg_size);
   emacs_value image_args[3] = {next_svg_string, env->intern(env, "svg"),
                                env->intern(env, "t")};
   emacs_value image_data =
-    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-  emacs_value overlay_put_args[3] = {current_svg_overlay, env->intern(env, "display"),
-                                     image_data};
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+  emacs_value overlay_put_args[3] = {current_svg_overlay,
+                                     env->intern(env, "display"), image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
   if (state->current_page_number < (state->pagecount - 2)) {
     render_page(state, state->next_page_number);
   } else if (state->current_page_number == (state->pagecount - 2)) {
     // At n-2 it makes sure state’s pages are restructured according to
-    //next page but not rendered.
+    // next page but not rendered.
     load_pages(state, state->next_page_number);
   } else if (state->current_page_number == (state->pagecount - 1)) {
     fprintf(stderr, "Already at the last page.\n");
@@ -512,11 +528,11 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (state->current_page_number < (state->pagecount - 1)) {
 
     emacs_value prev_svg_string =
-      env->make_string(env, state->prev_svg_data, state->prev_svg_size);
+        env->make_string(env, state->prev_svg_data, state->prev_svg_size);
     emacs_value image_args[3] = {prev_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     emacs_value overlay_put_args[3] = {current_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -531,14 +547,13 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   } else {
     render_page(state, (state->pagecount - 2));
     emacs_value current_svg_string =
-      env->make_string(env, state->current_svg_data, state->current_svg_size);
+        env->make_string(env, state->current_svg_data, state->current_svg_size);
     emacs_value image_args[3] = {current_svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-    emacs_value overlay_put_args[3] = {
-      current_svg_overlay,
-      env->intern(env, "display"), image_data};
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+    emacs_value overlay_put_args[3] = {current_svg_overlay,
+                                       env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   }
 
@@ -565,11 +580,11 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
     emacs_value svg_string =
-      env->make_string(env, state->prev_svg_data, state->prev_svg_size);
+        env->make_string(env, state->prev_svg_data, state->prev_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     emacs_value overlay_put_args[3] = {current_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -594,11 +609,11 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (render_page(state, (state->pagecount - 2)) == EXIT_SUCCESS) {
     state->current_page_number = (state->pagecount - 1);
     emacs_value svg_string =
-      env->make_string(env, state->next_svg_data, state->next_svg_size);
+        env->make_string(env, state->next_svg_data, state->next_svg_size);
     emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                  env->intern(env, "t")};
     emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+        env->funcall(env, env->intern(env, "create-image"), 3, image_args);
     emacs_value overlay_put_args[3] = {current_svg_overlay,
                                        env->intern(env, "display"), image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -622,14 +637,14 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (page_number > 1 && page_number < (state->pagecount - 1)) {
     state->current_page_number = page_number;
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
-      emacs_value svg_string =
-	env->make_string(env, state->current_svg_data, state->current_svg_size);
+      emacs_value svg_string = env->make_string(env, state->current_svg_data,
+                                                state->current_svg_size);
       emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
                                    env->intern(env, "t")};
       emacs_value image_data =
-	env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+          env->funcall(env, env->intern(env, "create-image"), 3, image_args);
       emacs_value overlay_put_args[3] = {
-	current_svg_overlay, env->intern(env, "display"), image_data};
+          current_svg_overlay, env->intern(env, "display"), image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       fprintf(stderr, "Page number out of bounds");
@@ -638,8 +653,8 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
-emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data) {
+emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs,
+                                       emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
 
@@ -649,18 +664,23 @@ emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs, emacs_va
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   emacs_value svg_string =
-    env->make_string(env, state->current_svg_data, state->current_svg_size);
+      env->make_string(env, state->current_svg_data, state->current_svg_size);
   emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
-			       env->intern(env, "t")};
+                               env->intern(env, "t")};
   emacs_value image_data =
-    env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
 
-  emacs_value cdr_image_data = env->funcall(env, env->intern(env, "cdr"), 1, &image_data);
+  emacs_value cdr_image_data =
+      env->funcall(env, env->intern(env, "cdr"), 1, &image_data);
 
-  emacs_value modified_cdr = env->funcall(env, env->intern(env, "plist-put"), 3, (emacs_value[]){cdr_image_data, env->intern(env, ":scale"), scale_factor});
-  env->funcall(env, env->intern(env, "setcdr"), 2, (emacs_value[]){image_data, modified_cdr});
-  emacs_value overlay_put_args[3] = {
-    current_svg_overlay, env->intern(env, "display"), image_data};
+  emacs_value modified_cdr =
+      env->funcall(env, env->intern(env, "plist-put"), 3,
+                   (emacs_value[]){cdr_image_data, env->intern(env, ":scale"),
+                                   scale_factor});
+  env->funcall(env, env->intern(env, "setcdr"), 2,
+               (emacs_value[]){image_data, modified_cdr});
+  emacs_value overlay_put_args[3] = {current_svg_overlay,
+                                     env->intern(env, "display"), image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
   return env->intern(env, "t");
@@ -677,58 +697,60 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 
   // Register load-doc
   emacs_value load_func_symbol = env->intern(env, "load-doc");
-  emacs_value load_func =
-    env->make_function(env, 1, 1, emacs_load_doc, "Opens a document in Emacs.", NULL);
+  emacs_value load_func = env->make_function(
+      env, 1, 1, emacs_load_doc, "Opens a document in Emacs.", NULL);
   emacs_value load_args[2] = {load_func_symbol, load_func};
   env->funcall(env, fset, 2, load_args);
 
   // Register next-doc-page
   emacs_value next_func_symbol = env->intern(env, "next-doc-page");
-  emacs_value next_func = env->make_function(env, 0, 0, emacs_next_page,
-                                             "Go to the next page of the document.", NULL);
+  emacs_value next_func = env->make_function(
+      env, 0, 0, emacs_next_page, "Go to the next page of the document.", NULL);
   emacs_value next_args[2] = {next_func_symbol, next_func};
   env->funcall(env, fset, 2, next_args);
 
   // Register previous-doc-page
   emacs_value prev_func_symbol = env->intern(env, "previous-doc-page");
-  emacs_value prev_func = env->make_function(
-					     env, 0, 0, emacs_prev_page, "Go to the previous page of the document.", NULL);
+  emacs_value prev_func =
+      env->make_function(env, 0, 0, emacs_prev_page,
+                         "Go to the previous page of the document.", NULL);
   emacs_value prev_args[2] = {prev_func_symbol, prev_func};
   env->funcall(env, fset, 2, prev_args);
 
   // Register first-doc-page
   emacs_value first_page_func_symbol = env->intern(env, "first-doc-page");
   emacs_value first_page_func = env->make_function(
-						   env, 0, 0, emacs_first_page, "Go to the document's first page.", NULL);
+      env, 0, 0, emacs_first_page, "Go to the document's first page.", NULL);
   emacs_value first_page_args[2] = {first_page_func_symbol, first_page_func};
   env->funcall(env, fset, 2, first_page_args);
 
   // Register last-doc-page
   emacs_value last_page_func_symbol = env->intern(env, "last-doc-page");
   emacs_value last_page_func = env->make_function(
-						  env, 0, 0, emacs_last_page, "Go to the document's last page.", NULL);
+      env, 0, 0, emacs_last_page, "Go to the document's last page.", NULL);
   emacs_value last_page_args[2] = {last_page_func_symbol, last_page_func};
   env->funcall(env, fset, 2, last_page_args);
 
   // Register goto-doc-page
   emacs_value goto_page_func_symbol = env->intern(env, "goto-doc-page");
   emacs_value goto_page_func = env->make_function(
-						  env, 1, 1, emacs_goto_page, "Go to page number N of the document", NULL);
+      env, 1, 1, emacs_goto_page, "Go to page number N of the document", NULL);
   emacs_value goto_page_args[2] = {goto_page_func_symbol, goto_page_func};
   env->funcall(env, fset, 2, goto_page_args);
 
   // Register get-current-doc-page-number
   emacs_value get_current_doc_page_number_symbol =
-    env->intern(env, "get-current-doc-pagenumber");
-  emacs_value get_current_doc_page_number_func =
-    env->make_function(env, 0, 0, get_current_page_number,
-		       "Get current page number for the visiting document", NULL);
+      env->intern(env, "get-current-doc-pagenumber");
+  emacs_value get_current_doc_page_number_func = env->make_function(
+      env, 0, 0, get_current_page_number,
+      "Get current page number for the visiting document", NULL);
   emacs_value get_current_doc_page_number_args[2] = {
-    get_current_doc_page_number_symbol, get_current_doc_page_number_func};
+      get_current_doc_page_number_symbol, get_current_doc_page_number_func};
   env->funcall(env, fset, 2, get_current_doc_page_number_args);
 
   // Register the buffer-local page number
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1, (emacs_value[]){env->intern(env, "current-doc-pagecount")});
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+               (emacs_value[]){env->intern(env, "current-doc-pagecount")});
 
   // Register the buffer-local variable to indicate whether a buffer has been
   // rendered
@@ -736,8 +758,8 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &page_render_status_sym);
   env->funcall(
-	       env, env->intern(env, "set"), 2,
-	       (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
+      env, env->intern(env, "set"), 2,
+      (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
   // Ensure that the variable stays buffer-local and doesn’t get overriden
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){page_render_status_sym,
@@ -747,7 +769,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Register the buffer-local user pointer for DocState
   emacs_value doc_state_ptr_sym = env->intern(env, "doc-state-ptr");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-	       &doc_state_ptr_sym);
+               &doc_state_ptr_sym);
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){doc_state_ptr_sym,
                                env->intern(env, "permanent-local"),
@@ -756,21 +778,28 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Register the buffer-local variable current-svg-overlay
   emacs_value svg_overlay_sym = env->intern(env, "current-svg-overlay");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-	       &svg_overlay_sym);
+               &svg_overlay_sym);
 
   // Register the buffer-local variale current-doc-image-size
-  emacs_value current_image_size_sym = env->intern(env, "current-doc-image-size");
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1, &current_image_size_sym);
+  emacs_value current_image_size_sym =
+      env->intern(env, "current-doc-image-size");
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+               &current_image_size_sym);
   env->funcall(env, env->intern(env, "put"), 3,
-	       (emacs_value[]){doc_state_ptr_sym,
-			       env->intern(env, "permanent-local"),
-			       env->intern(env, "t")});
+               (emacs_value[]){doc_state_ptr_sym,
+                               env->intern(env, "permanent-local"),
+                               env->intern(env, "t")});
 
   // Register the doc-change-page-size function
-  emacs_value change_page_size_func_sym = env->intern(env, "doc-change-page-size");
+  emacs_value change_page_size_func_sym =
+      env->intern(env, "doc-change-page-size");
   emacs_value change_page_size_func = env->make_function(
-					     env, 1, 1, emacs_doc_change_page_size, "Scales the current page of the document by a given factor, which is provided as an argument to this function", NULL);
-  emacs_value change_page_size_args[2] = {change_page_size_func_sym, change_page_size_func};
+      env, 1, 1, emacs_doc_change_page_size,
+      "Scales the current page of the document by a given factor, which is "
+      "provided as an argument to this function",
+      NULL);
+  emacs_value change_page_size_args[2] = {change_page_size_func_sym,
+                                          change_page_size_func};
   env->funcall(env, fset, 2, change_page_size_args);
 
   // Register the get-current-doc-image-size function
@@ -778,7 +807,8 @@ int emacs_module_init(struct emacs_runtime *runtime) {
       env->intern(env, "get-current-doc-image-size");
   emacs_value get_image_size_func = env->make_function(
       env, 0, 0, get_current_doc_image_size,
-      "Fetches the image size of the rendered SVG of the current document.", NULL);
+      "Fetches the image size of the rendered SVG of the current document.",
+      NULL);
   emacs_value get_image_size_args[2] = {get_image_size_sym,
                                         get_image_size_func};
   env->funcall(env, fset, 2, get_image_size_args);
