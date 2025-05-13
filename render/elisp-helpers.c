@@ -102,7 +102,6 @@ void register_module_func(
   env->funcall(env, env->intern(env, "fset"), 2, elisp_func_args);
 }
 
-
 /**
  * svg2elisp - Create an Elisp image object from raw SVG data
  * @env: Emacs environment pointer
@@ -119,13 +118,23 @@ rendered in Emacs with `insert-image' or other means.
 
  */
 
-emacs_value svg2elisp_image(emacs_env *env, char *svg_data, size_t svg_size) {
-  emacs_value svg_string =
-      env->make_string(env, svg_data, svg_size);
-  emacs_value image_args[4] = {svg_string, env->intern(env, "svg"),
-                               env->intern(env, "t")};
+emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
+                            size_t svg_size) {
+  emacs_value image_width = env->make_integer(env, doc_page_width(state));
+  emacs_value image_length = env->make_integer(env, doc_page_length(state));
+
+  emacs_value svg_string = env->make_string(env, svg_data, svg_size);
+  emacs_value image_args[7] = {
+      svg_string,
+      env->intern(env, "svg"),
+      env->intern(env, "t"),
+      env->intern(env, ":width"),
+      image_width,
+      env->intern(env, ":length"),
+      image_length
+  };
   emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
+      env->funcall(env, env->intern(env, "create-image"), 7, image_args);
 
   return image_data;
 }
