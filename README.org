@@ -38,7 +38,7 @@ So, since you’d be building =mupdf= from source to produce the shared object =
 * Installation
 For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. The easier way to do this is through the [[https://github.com/radian-software/straight.el][straight]] package manager or Emacs’ built-in =package-vc=. The latter still has some quirks, but here are the recipes for both:
 
-1. =use-package= with =straight=
+-  =use-package= with =straight=
    #+begin_src emacs-lisp
 (use-package reader
   :straight '(reader :type git :host codeberg :repo "divyaranjan/emacs-reader"
@@ -46,8 +46,7 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 	      :pre-build ("make" "all")))
    #+end_src
 
-
-2. =use-package= with =package-vc=:
+- =use-package= with =package-vc=:
    #+begin_src emacs-lisp
      (setq package-vc-allow-build-commands t)
      (use-package reader
