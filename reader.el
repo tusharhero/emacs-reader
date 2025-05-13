@@ -67,6 +67,7 @@ to render the first page and displays it in a new buffer."
   "Go to the next page of the visiting document."
   (interactive)
   (next-doc-page)
+  (doc-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
@@ -80,6 +81,7 @@ to render the first page and displays it in a new buffer."
   "Go to the previous page of the visiting document."
   (interactive)
   (previous-doc-page)
+  (doc-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
@@ -93,6 +95,7 @@ to render the first page and displays it in a new buffer."
   "Go to the first page of the visiting document."
   (interactive)
   (first-doc-page)
+  (doc-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
@@ -100,6 +103,7 @@ to render the first page and displays it in a new buffer."
   "Go to the last page of the visiting document."
   (interactive)
   (last-doc-page)
+  (doc-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
@@ -107,6 +111,7 @@ to render the first page and displays it in a new buffer."
   "Go to page number 'N' in the current document."
   (interactive "nPage: ")
   (goto-doc-page (- n 1)) ; MuPDF does 0-indexing
+  (doc-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
