@@ -13,7 +13,7 @@ RPATHS = -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
 SRCS = render/helpers.c render/render-core.c
 OBJS = $(SRCS:.c=.o)
 
-LIB_NAME = module/render-core.so
+LIB_NAME = render-core.so
 
 .PHONY: all clean submodule
 
