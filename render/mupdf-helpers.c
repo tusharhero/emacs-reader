@@ -172,3 +172,15 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
   if (next)
     fz_close_device(ctx, next);
 }
+
+
+int doc_page_width(DocState *state) {
+  int width = (int)(state->page_bbox.x1 - state->page_bbox.x0);
+  return width;
+}
+
+
+int doc_page_length(DocState *state) {
+  int length = (int)(state->page_bbox.y1 - state->page_bbox.y0);
+  return length;
+}
