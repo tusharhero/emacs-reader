@@ -1,5 +1,4 @@
 #include "elisp-helpers.h"
-#include "mupdf-helpers.h"
 #include <assert.h>
 #include <emacs-module.h>
 #include <mupdf/fitz.h>
@@ -281,6 +280,7 @@ int render_page(DocState *state, int page_number) {
     return EXIT_FAILURE;
   }
 
+
   // Run the page through the device
   fz_try(state->ctx) {
     fz_run_page(state->ctx, state->current_page, curr_dev, fz_identity, NULL);
@@ -394,7 +394,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       // Take the SVG data from DocState and create an SVG image of it as a Lisp
       // Object.
       emacs_value current_image_data = svg2elisp_image(
-          env, state->current_svg_data, state->current_svg_size);
+          env, state, state->current_svg_data, state->current_svg_size);
 
       // Render the created image on the buffer’s overlay
       emacs_value overlay_put_args[3] = {
@@ -427,7 +427,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   emacs_value next_image_data =
-      svg2elisp_image(env, state->next_svg_data, state->next_svg_size);
+      svg2elisp_image(env, state, state->next_svg_data, state->next_svg_size);
   emacs_value overlay_put_args[3] = {
       current_svg_overlay, env->intern(env, "display"), next_image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -461,9 +461,10 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   }
 
   if (state->current_page_number < (state->pagecount - 1)) {
-
     emacs_value prev_image_data =
-        svg2elisp_image(env, state->prev_svg_data, state->prev_svg_size);
+        svg2elisp_image(env, state, state->prev_svg_data,
+    state->prev_svg_size);
+
     emacs_value overlay_put_args[3] = {
         current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -477,8 +478,8 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     }
   } else {
     render_page(state, (state->pagecount - 2));
-    emacs_value current_image_data =
-        svg2elisp_image(env, state->current_svg_data, state->current_svg_size);
+    emacs_value current_image_data = svg2elisp_image(
+        env, state, state->current_svg_data, state->current_svg_size);
     emacs_value overlay_put_args[3] = {
         current_svg_overlay, env->intern(env, "display"), current_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -505,10 +506,11 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   state->current_page_number = 1;
 
   if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
+
     emacs_value prev_image_data =
-        svg2elisp_image(env, state->prev_svg_data, state->prev_svg_size);
+        svg2elisp_image(env, state, state->prev_svg_data, state->prev_svg_size);
     emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), prev_image_data};
+      current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     fprintf(stderr, "Failed to render the first page.\n");
@@ -530,7 +532,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (render_page(state, (state->pagecount - 2)) == EXIT_SUCCESS) {
     state->current_page_number = (state->pagecount - 1);
     emacs_value next_page_data =
-        svg2elisp_image(env, state->next_svg_data, state->next_svg_size);
+        svg2elisp_image(env, state, state->next_svg_data, state->next_svg_size);
     emacs_value overlay_put_args[3] = {
         current_svg_overlay, env->intern(env, "display"), next_page_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
@@ -555,7 +557,7 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     state->current_page_number = page_number;
     if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value current_image_data = svg2elisp_image(
-          env, state->current_svg_data, state->current_svg_size);
+          env, state, state->current_svg_data, state->current_svg_size);
       emacs_value overlay_put_args[3] = {
           current_svg_overlay, env->intern(env, "display"), current_image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
