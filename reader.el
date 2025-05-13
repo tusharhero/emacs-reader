@@ -67,30 +67,35 @@ to render the first page and displays it in a new buffer."
   "Go to the next page of the visiting document."
   (interactive)
   (next-doc-page)
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
   (previous-doc-page)
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
   (interactive)
   (first-doc-page)
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-last-page ()
   "Go to the last page of the visiting document."
   (interactive)
   (last-doc-page)
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-goto-page (n)
   "Go to page number 'N' in the current document."
   (interactive "nPage: ")
   (goto-doc-page (- n 1)) ; MuPDF does 0-indexing
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
@@ -98,8 +103,8 @@ to render the first page and displays it in a new buffer."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
     (doc-change-page-size scaling-factor)
-    (setq reader-current-doc-scale scaling-factor)
-    (reader-center-page))
+    (setq reader-current-doc-scale scaling-factor))
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-shrink-size ()
@@ -107,8 +112,8 @@ to render the first page and displays it in a new buffer."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
     (doc-change-page-size scaling-factor)
-    (setq reader-current-doc-scale scaling-factor)
-    (reader-center-page))
+    (setq reader-current-doc-scale scaling-factor))
+  (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-kill-buffer ()
