@@ -66,7 +66,26 @@ void provide(emacs_env *env, const char *value) {
 }
 
 /**
-
+ * register_module_func - Register a function from the dynamic module into the
+ * Emacs environment.  It makes the function available to be directly usable
+ * from Emacs as any other Elisp function.
+ * @env: Pointer to the Emacs environment for the runtime (emacs_env).
+ * @module_func: Pointer to the function (emacs_value) that needs to be
+registered.
+ * @symbol: The symbol for which the function is to be registered.
+ * @min_args: The minimum number of arguments this function must be provided
+ with.
+ * @max_args: The maximum number of arguments this function can take.
+ * @docstring: The string which would act as the docstring for the module
+ function. Equivalent to the docstring in Elisp functions, and visible from
+ C-h f.
+ *
+ * The @module_func must be not only compile-able but also it must respect the
+ * Elisp runtime of Emacs, any sort of undefined or unpredictable behavior would
+ * not be found during compile-time, but rather would result in a segfault of
+ * Emacs.
+ *
+ * Returns: nothing
  */
 
 void register_module_func(
