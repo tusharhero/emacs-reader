@@ -1,4 +1,5 @@
-#include "helpers.h"
+#include "elisp-helpers.h"
+#include "mupdf-helpers.h"
 #include <assert.h>
 #include <emacs-module.h>
 #include <mupdf/fitz.h>
@@ -406,7 +407,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = malloc(sizeof(DocState));
   reset_doc_state(state);
 
-  if (!emacs_2_c_str(env, args[0], &state->path , &str_length)) {
+  if (!elisp_2_c_str(env, args[0], &state->path , &str_length)) {
     fprintf(stderr, "Failed to convert Emacs string to C string.\n");
     return env->intern(env, "nil");
   }

@@ -10,7 +10,7 @@ CFLAGS = -Wall -Wextra -fPIC -I$(dir $(MUPDF_HEADERS))
 LDFLAGS = -L$(dir $(LIBMUPDF)) -lmupdf
 RPATHS = -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
 
-SRCS = render/helpers.c render/render-core.c
+SRCS = render/elisp-helpers.c render/mupdf-helpers.c render/render-core.c
 OBJS = $(SRCS:.c=.o)
 
 LIB_NAME = render-core.so
@@ -30,7 +30,7 @@ $(LIBMUPDF):
 	$(MAKE) -C $(MUPDF_DIR) shared USE_SYSTEM_LIBS=no XCFLAGS="-DLCMS2MT_PREFIX=lcms2mt_"
 
 # Rule to compile C source files into object files
-%.o: %.c render/helpers.h
+%.o: %.c %.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up build artifacts
