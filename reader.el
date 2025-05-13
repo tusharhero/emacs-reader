@@ -140,7 +140,10 @@ to render the first page and displays it in a new buffer."
 
 (defun get-current-doc-image-size ()
   "Get the size of the current page's doc image."
-  (image-size (overlay-get current-svg-overlay 'display) t))
+  (let* ((cdr-image (cdr (overlay-get current-svg-overlay 'display)))
+	 (width (plist-get cdr-image :width))
+	 (length (plist-get cdr-image :length)))
+    (cons width length)))
 
 (defun reader-center-page (&optional window)
   "Centers the pages of the document with respect to the WINDOW in which the document is opened."
