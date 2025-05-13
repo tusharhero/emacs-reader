@@ -421,15 +421,6 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       emacs_value image_data =
           env->funcall(env, env->intern(env, "create-image"), 3, image_args);
 
-      // Expose the current document’s rendered SVG size to a buffer-local Elisp
-      // variable
-      emacs_value image_size =
-          env->funcall(env, env->intern(env, "image-display-size"), 2,
-                       (emacs_value[]){image_data, env->intern(env, "t")});
-      env->funcall(env, env->intern(env, "set"), 2,
-                   (emacs_value[]){env->intern(env, "current-doc-image-size"),
-                                   image_size});
-
       // Render the created image on the buffer’s overlay
       emacs_value overlay_put_args[3] = {
           current_svg_overlay, env->intern(env, "display"), image_data};
@@ -726,16 +717,6 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_value svg_overlay_sym = env->intern(env, "current-svg-overlay");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &svg_overlay_sym);
-
-  // Register the buffer-local variale current-doc-image-size
-  emacs_value current_image_size_sym =
-      env->intern(env, "current-doc-image-size");
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               &current_image_size_sym);
-  env->funcall(env, env->intern(env, "put"), 3,
-               (emacs_value[]){doc_state_ptr_sym,
-                               env->intern(env, "permanent-local"),
-                               env->intern(env, "t")});
 
   // Register the doc-change-page-size function
   register_module_func(
