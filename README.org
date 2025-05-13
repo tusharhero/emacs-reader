@@ -1,12 +1,12 @@
 #+TITLE: The GNU Emacs Reader
 #+OPTIONS: toc:nil
 
-An all-in-one ebook reader for GNU Emacs, supporting all the major ebook formats. This package intends to take from =pdf-tools=, =nov.el=, and =doc-view= and make them better. And as such, it is effectively a drop-in replacement for them
+An all-in-one document reader for GNU Emacs, supporting all the major document formats. This package intends to take from =doc-view=, =nov.el=, and =pdf-tools= and make them better. And as such, it is effectively a drop-in replacement for them
 
 * Supported Formats
-The Emacs Reader (following MuPDF) renders all the formats below in SVGs (Scalable Vector Graphics):
+The Emacs Reader (via MuPDF) renders all the formats below by way of SVGs (Scalable Vector Graphics):
 
-** E-Book Formats
+** Well-supported Formats
 + PDF
 + EPUB
 + MOBI
@@ -15,7 +15,7 @@ The Emacs Reader (following MuPDF) renders all the formats below in SVGs (Scalab
 + CBZ
 
 ** Office Document Formats
-These formats below aren’t really for e-book reading, and as such while they are supported by MuPDF and can be opened fine, it’s just not going to be that good of an experience. It should only be used for quickly checking the textual contents of the document, and certainly cannot be edited inside Emacs.
+These formats below are not really for document reading, and as such while they are supported by MuPDF and can be opened fine, it’s just not going to be that good of an experience. It should only be used for quickly checking the textual contents of the document, and certainly cannot be edited inside Emacs. (You may use LibreOffice for that.)
 
 *** Open Document Formats (LibreOffice)
 + ODT
@@ -24,27 +24,19 @@ These formats below aren’t really for e-book reading, and as such while they a
 + ODG
 
 *** Proprietary Micro$oft Formats
-Using these formats is heavily discouraged, since you’re using GNU software, you should /always/ prefer the above formats from LibreOffice. But since MuPDF does come with some very minimal support for these proprietary formats as well, they can also be viewed:
+Using these formats is heavily discouraged, you should /always/ prefer the above formats from LibreOffice (Which can also you help you edit these formats if you need to). But since MuPDF does come with some very minimal support for these proprietary formats as well, they can also be viewed:
 
 + DOCX
 + PPTX
 + XLSX
 
 * Dependencies
-Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository until I can maybe talk to package maintainers of =mupdf= and see if things can be resolved.
+Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule.
 
 So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the depencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
 
 * Installation
 For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. The easier way to do this is through the [[https://github.com/radian-software/straight.el][straight]] package manager or Emacs’ built-in =package-vc=. The latter still has some quirks, but here are the recipes for both:
-
--  =use-package= with =straight=
-   #+begin_src emacs-lisp
-(use-package reader
-  :straight '(reader :type git :host codeberg :repo "divyaranjan/emacs-reader"
-	      :files ("reader.el" "render-core.so")
-	      :pre-build ("make" "all")))
-   #+end_src
 
 - =use-package= with =package-vc=:
    #+begin_src emacs-lisp
@@ -52,6 +44,14 @@ For now, until the package has been published to GNU ELPA, the only way to insta
      (use-package reader
        :vc (:url "https://codeberg.org/divyaranjan/emacs-reader"
      	    :make "all"))
+   #+end_src
+
+-  =use-package= with =straight=
+   #+begin_src emacs-lisp
+(use-package reader
+  :straight '(reader :type git :host codeberg :repo "divyaranjan/emacs-reader"
+	      :files ("reader.el" "render-core.so")
+	      :pre-build ("make" "all")))
    #+end_src
 
 *NOTE:* Both of these commands will take a /long/ time, because they’re going to invoke the =make= command which will recursively fetch the submodule and it’s dependencies. *It’ll hang your Emacs for a good ~15-20m, so be careful.*
