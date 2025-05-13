@@ -693,60 +693,34 @@ int emacs_module_init(struct emacs_runtime *runtime) {
     return 1;
   }
 
-  emacs_value fset = env->intern(env, "fset");
-
   // Register load-doc
-  emacs_value load_func_symbol = env->intern(env, "load-doc");
-  emacs_value load_func = env->make_function(
-      env, 1, 1, emacs_load_doc, "Opens a document in Emacs.", NULL);
-  emacs_value load_args[2] = {load_func_symbol, load_func};
-  env->funcall(env, fset, 2, load_args);
+  register_module_func(env, emacs_load_doc, "load-doc", 1, 1,
+                       "Opens a document in Emacs.");
 
   // Register next-doc-page
-  emacs_value next_func_symbol = env->intern(env, "next-doc-page");
-  emacs_value next_func = env->make_function(
-      env, 0, 0, emacs_next_page, "Go to the next page of the document.", NULL);
-  emacs_value next_args[2] = {next_func_symbol, next_func};
-  env->funcall(env, fset, 2, next_args);
+  register_module_func(env, emacs_next_page, "next-doc-page", 0, 0,
+                       "Go to the next page of the document.");
 
   // Register previous-doc-page
-  emacs_value prev_func_symbol = env->intern(env, "previous-doc-page");
-  emacs_value prev_func =
-      env->make_function(env, 0, 0, emacs_prev_page,
-                         "Go to the previous page of the document.", NULL);
-  emacs_value prev_args[2] = {prev_func_symbol, prev_func};
-  env->funcall(env, fset, 2, prev_args);
+  register_module_func(env, emacs_prev_page, "previous-doc-page", 0, 0,
+                       "Go to the previous page of the document.");
 
   // Register first-doc-page
-  emacs_value first_page_func_symbol = env->intern(env, "first-doc-page");
-  emacs_value first_page_func = env->make_function(
-      env, 0, 0, emacs_first_page, "Go to the document's first page.", NULL);
-  emacs_value first_page_args[2] = {first_page_func_symbol, first_page_func};
-  env->funcall(env, fset, 2, first_page_args);
+  register_module_func(env, emacs_first_page, "first-doc-page", 0, 0,
+                       "Go to the document's first page.");
 
   // Register last-doc-page
-  emacs_value last_page_func_symbol = env->intern(env, "last-doc-page");
-  emacs_value last_page_func = env->make_function(
-      env, 0, 0, emacs_last_page, "Go to the document's last page.", NULL);
-  emacs_value last_page_args[2] = {last_page_func_symbol, last_page_func};
-  env->funcall(env, fset, 2, last_page_args);
+  register_module_func(env, emacs_last_page, "last-doc-page", 0, 0,
+                       "Go to the document's last page.");
 
   // Register goto-doc-page
-  emacs_value goto_page_func_symbol = env->intern(env, "goto-doc-page");
-  emacs_value goto_page_func = env->make_function(
-      env, 1, 1, emacs_goto_page, "Go to page number N of the document", NULL);
-  emacs_value goto_page_args[2] = {goto_page_func_symbol, goto_page_func};
-  env->funcall(env, fset, 2, goto_page_args);
+  register_module_func(env, emacs_goto_page, "goto-doc-page", 1, 1,
+                       "Go to page number N of the document");
 
   // Register get-current-doc-page-number
-  emacs_value get_current_doc_page_number_symbol =
-      env->intern(env, "get-current-doc-pagenumber");
-  emacs_value get_current_doc_page_number_func = env->make_function(
-      env, 0, 0, get_current_page_number,
-      "Get current page number for the visiting document", NULL);
-  emacs_value get_current_doc_page_number_args[2] = {
-      get_current_doc_page_number_symbol, get_current_doc_page_number_func};
-  env->funcall(env, fset, 2, get_current_doc_page_number_args);
+  register_module_func(env, get_current_page_number,
+                       "get-current-doc-pagenumber", 0, 0,
+                       "Get current page number for the visiting document");
 
   // Register the buffer-local page number
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
@@ -791,27 +765,14 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                                env->intern(env, "t")});
 
   // Register the doc-change-page-size function
-  emacs_value change_page_size_func_sym =
-      env->intern(env, "doc-change-page-size");
-  emacs_value change_page_size_func = env->make_function(
-      env, 1, 1, emacs_doc_change_page_size,
-      "Scales the current page of the document by a given factor, which is "
-      "provided as an argument to this function",
-      NULL);
-  emacs_value change_page_size_args[2] = {change_page_size_func_sym,
-                                          change_page_size_func};
-  env->funcall(env, fset, 2, change_page_size_args);
+  register_module_func(
+      env, emacs_doc_change_page_size, "doc-change-page-size", 1, 1,
+      "Scales the current page of the document by a given FACTOR");
 
   // Register the get-current-doc-image-size function
-  emacs_value get_image_size_sym =
-      env->intern(env, "get-current-doc-image-size");
-  emacs_value get_image_size_func = env->make_function(
-      env, 0, 0, get_current_doc_image_size,
-      "Fetches the image size of the rendered SVG of the current document.",
-      NULL);
-  emacs_value get_image_size_args[2] = {get_image_size_sym,
-                                        get_image_size_func};
-  env->funcall(env, fset, 2, get_image_size_args);
+  register_module_func(
+      env, get_current_doc_image_size, "get-current-doc-image-size", 0, 0,
+      "Fetches the image size of the rendered SVG of the current document.");
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-core");

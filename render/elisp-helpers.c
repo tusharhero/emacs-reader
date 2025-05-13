@@ -64,3 +64,21 @@ void provide(emacs_env *env, const char *value) {
 
   env->funcall(env, Qprovide, 1, args);
 }
+
+/**
+
+ */
+
+void register_module_func(
+    emacs_env *env,
+    emacs_value (*module_func)(emacs_env *env, ptrdiff_t nargs,
+                               emacs_value *args, void *data),
+    char *symbol, int min_args, int max_args, char *docstring) {
+
+  emacs_value elisp_func_symbol = env->intern(env, symbol);
+  emacs_value elisp_func =
+      env->make_function(env, min_args, max_args, module_func, docstring, NULL);
+
+  emacs_value elisp_func_args[2] = {elisp_func_symbol, elisp_func};
+  env->funcall(env, env->intern(env, "fset"), 2, elisp_func_args);
+}
