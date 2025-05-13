@@ -125,33 +125,6 @@ void set_current_pagecount(emacs_env *env, DocState *state) {
   env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
 
-// Expose the current document’s rendered SVG size to a buffer-local Elisp
-// variable
-emacs_value get_current_doc_image_size(emacs_env *env, ptrdiff_t nargs,
-                                       emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
-  DocState *state = get_doc_state_ptr(env);
-
-  emacs_value svg_string =
-      env->make_string(env, state->current_svg_data, state->current_svg_size);
-  emacs_value image_args[3] = {svg_string, env->intern(env, "svg"),
-                               env->intern(env, "t")};
-  emacs_value image_data =
-      env->funcall(env, env->intern(env, "create-image"), 3, image_args);
-
-  emacs_value image_size =
-      env->funcall(env, env->intern(env, "image-display-size"), 2,
-                   (emacs_value[]){image_data, env->intern(env, "t")});
-  env->funcall(
-      env, env->intern(env, "set"), 2,
-      (emacs_value[]){env->intern(env, "current-doc-image-size"), image_size});
-
-  return image_size;
-}
-
 // Initializes the overlay and stores it in a buffer-local variable
 void init_overlay(emacs_env *env) {
   emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
@@ -768,11 +741,6 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   register_module_func(
       env, emacs_doc_change_page_size, "doc-change-page-size", 1, 1,
       "Scales the current page of the document by a given FACTOR");
-
-  // Register the get-current-doc-image-size function
-  register_module_func(
-      env, get_current_doc_image_size, "get-current-doc-image-size", 0, 0,
-      "Fetches the image size of the rendered SVG of the current document.");
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-core");
