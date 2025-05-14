@@ -634,15 +634,13 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     return env->intern(env, "nil");
   }
 
-  // Can’t set to zero beacuse render_page needs to render previous or next page
-  state->current_page_number = 1;
+  state->current_page_number = 0;
 
-  if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
-
-    emacs_value prev_image_data =
-        svg2elisp_image(env, state, state->prev_svg_data, state->prev_svg_size);
+  if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
+    emacs_value prev_image_data = svg2elisp_image(
+        env, state, state->current_svg_data, state->current_svg_size);
     emacs_value overlay_put_args[3] = {
-      current_svg_overlay, env->intern(env, "display"), prev_image_data};
+        current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     fprintf(stderr, "Failed to render the first page.\n");
