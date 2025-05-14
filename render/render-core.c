@@ -10,64 +10,6 @@
 
 int plugin_is_GPL_compatible;
 
-// Clean up previous SVG data if any
-void clean_up_svg_data(DocState *state) {
-  if (state->current_svg_data) {
-    free(state->current_svg_data);
-    state->current_svg_data = NULL;
-    state->current_svg_size = 0;
-  }
-
-  if (state->next_svg_data) {
-    free(state->next_svg_data);
-    state->next_svg_data = NULL;
-    state->next_svg_size = 0;
-  }
-
-  if (state->prev_svg_data) {
-    free(state->prev_svg_data);
-    state->prev_svg_data = NULL;
-    state->prev_svg_size = 0;
-  }
-}
-
-// Drop all pages of the document from the context
-void drop_all_doc_pages(fz_context *ctx, DocState *state) {
-  if (state->prev_page)
-    fz_drop_page(ctx, state->prev_page);
-  if (state->current_page)
-    fz_drop_page(ctx, state->current_page);
-  if (state->next_page)
-    fz_drop_page(ctx, state->next_page);
-}
-
-// Reset the state of the document in heap memory
-void reset_doc_state(DocState *state) {
-  fprintf(stderr, "Freeing the existing DocState\n");
-  *state = (DocState){.ctx = NULL,
-                      .doc = NULL,
-                      .path = NULL,
-                      .pagecount = 0,
-                      .current_page_number = 0,
-                      .next_page_number = 0,
-                      .prev_page_number = 0,
-                      .current_svg_data = NULL,
-                      .current_svg_size = 0,
-                      .next_svg_data = NULL,
-                      .next_svg_size = 0,
-                      .prev_svg_data = NULL,
-                      .prev_svg_size = 0,
-                      .current_page = NULL,
-                      .prev_page = NULL,
-                      .next_page = NULL,
-                      .page_bbox =
-                          {
-                              .x0 = 0.0f,
-                              .y0 = 0.0f,
-                          },
-                      .outline = NULL};
-}
-
 // Fetch pointer to DocState from Emacs Environment to a C pointer
 DocState *get_doc_state_ptr(emacs_env *env) {
   emacs_value ptr_sym = env->intern(env, "doc-state-ptr");

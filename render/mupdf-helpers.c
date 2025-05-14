@@ -198,3 +198,89 @@ int doc_page_length(DocState *state) {
   int length = (int)(state->page_bbox.y1 - state->page_bbox.y0);
   return length;
 }
+
+/**
+ * clean_up_svg_data - Free and reset all SVG data buffers in the DocState.
+ * @state: Pointer to the DocState whose SVG data will be cleaned up.
+ *
+ * This function checks each of the SVG data pointers (current, next, prev)
+ * in the provided DocState. If a pointer is non-NULL, it frees the
+ * allocated memory, sets the pointer to NULL, and resets the corresponding
+ * size field to 0. Safely ignores any already-NULL pointers.
+ */
+
+void clean_up_svg_data(DocState *state) {
+  if (state->current_svg_data) {
+    free(state->current_svg_data);
+    state->current_svg_data = NULL;
+    state->current_svg_size = 0;
+  }
+
+  if (state->next_svg_data) {
+    free(state->next_svg_data);
+    state->next_svg_data = NULL;
+    state->next_svg_size = 0;
+  }
+
+  if (state->prev_svg_data) {
+    free(state->prev_svg_data);
+    state->prev_svg_data = NULL;
+    state->prev_svg_size = 0;
+  }
+}
+
+/**
+ * drop_all_doc_pages - Drop (release) all loaded pages in the DocState.
+ * @ctx: mupdf context used to drop pages.
+ * @state: Pointer to the DocState containing the pages to drop.
+ *
+ * Drops each of the page objects (prev, current, next) stored in the
+ * DocState by calling `fz_drop_page()`. Any NULL page pointers are
+ * safely ignored.
+ */
+
+void drop_all_doc_pages(fz_context *ctx, DocState *state) {
+  if (state->prev_page)
+    fz_drop_page(ctx, state->prev_page);
+  if (state->current_page)
+    fz_drop_page(ctx, state->current_page);
+  if (state->next_page)
+    fz_drop_page(ctx, state->next_page);
+}
+
+/**
+ * reset_doc_state - Reset all fields of a DocState to their initial values.
+ * @state: Pointer to the DocState to be reset.
+ *
+ * Clears out any existing data in the DocState by overwriting it with
+ * an initializer that sets all pointers to NULL, integer/page-number
+ * fields to zero, and the page bounding box to zero coordinates.
+ * Use this after dropping pages or closing the document to ensure the
+ * state is clean before reuse.
+ */
+
+void reset_doc_state(DocState *state) {
+  fprintf(stderr, "Freeing the existing DocState\n");
+  *state = (DocState){.ctx = NULL,
+                      .doc = NULL,
+                      .path = NULL,
+                      .pagecount = 0,
+                      .current_page_number = 0,
+                      .next_page_number = 0,
+                      .prev_page_number = 0,
+                      .current_svg_data = NULL,
+                      .current_svg_size = 0,
+                      .next_svg_data = NULL,
+                      .next_svg_size = 0,
+                      .prev_svg_data = NULL,
+                      .prev_svg_size = 0,
+                      .current_page = NULL,
+                      .prev_page = NULL,
+                      .next_page = NULL,
+                      .page_bbox =
+                          {
+                              .x0 = 0.0f,
+                              .y0 = 0.0f,
+                          },
+                      .outline = NULL};
+}
