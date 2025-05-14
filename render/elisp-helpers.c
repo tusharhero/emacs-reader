@@ -124,15 +124,13 @@ emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
   emacs_value image_length = env->make_integer(env, doc_page_length(state));
 
   emacs_value svg_string = env->make_string(env, svg_data, svg_size);
-  emacs_value image_args[7] = {
-      svg_string,
-      env->intern(env, "svg"),
-      env->intern(env, "t"),
-      env->intern(env, ":width"),
-      image_width,
-      env->intern(env, ":length"),
-      image_length
-  };
+  emacs_value image_args[7] = {svg_string,
+                               env->intern(env, "svg"),
+                               env->intern(env, "t"),
+                               env->intern(env, ":width"),
+                               image_width,
+                               env->intern(env, ":length"),
+                               image_length};
   emacs_value image_data =
       env->funcall(env, env->intern(env, "create-image"), 7, image_args);
 

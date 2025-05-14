@@ -49,5 +49,4 @@ void clean_up_svg_data(DocState *state);
 void drop_all_doc_pages(fz_context *ctx, DocState *state);
 void reset_doc_state(DocState *state);
 
-
 #endif

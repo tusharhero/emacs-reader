@@ -51,10 +51,10 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 
 -  =use-package= with =straight=
    #+begin_src emacs-lisp
-(use-package reader
-  :straight '(reader :type git :host codeberg :repo "divyaranjan/emacs-reader"
-	      :files ("reader.el" "render-core.so")
-	      :pre-build ("make" "all")))
+     (use-package reader
+       :straight '(reader :type git :host codeberg :repo "divyaranjan/emacs-reader"
+     	      :files ("reader.el" "render-core.so")
+     	      :pre-build ("make" "all")))
    #+end_src
 
 *NOTE:* Both of these commands will take a /long/ time, because they’re going to invoke the =make= command which will recursively fetch the submodule and it’s dependencies. *It’ll hang your Emacs for a good ~15-20m, so be careful.*
