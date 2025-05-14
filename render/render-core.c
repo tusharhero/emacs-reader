@@ -228,8 +228,9 @@ int load_pages(DocState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-// Rendering the page
-int render_page(DocState *state, int page_number) {
+// Rendering the current page (n) and it’s adjacent ones (n-1, n+1)
+
+int render_pages(DocState *state, int page_number) {
   fz_device *prev_dev = NULL;
   fz_output *prev_out = NULL;
   fz_buffer *prev_buf = NULL;
@@ -242,17 +243,15 @@ int render_page(DocState *state, int page_number) {
   fz_output *next_out = NULL;
   fz_buffer *next_buf = NULL;
 
-  // Check valid state
-  if (!state->ctx || !state->doc || page_number < 0 ||
+  // Check whether the page number and state are valid
+  if (!state || !state->ctx || !state->doc || page_number < 0 ||
       page_number >= state->pagecount) {
     fprintf(stderr, "Invalid state or page number for rendering SVG.\n");
     return EXIT_FAILURE;
   }
 
-  // Clean up existing data
   clean_up_svg_data(state);
 
-  // Load the page, and it’s adjacent ones.
   load_pages(state, page_number);
 
   // Get the page bounding box
@@ -260,125 +259,240 @@ int render_page(DocState *state, int page_number) {
   float page_width = state->page_bbox.x1 - state->page_bbox.x0;
   float page_height = state->page_bbox.y1 - state->page_bbox.y0;
 
-  // Create buffers
-  if (create_buffers(state->ctx, &curr_buf, &prev_buf, &next_buf) ==
-      EXIT_FAILURE) {
-    fz_drop_document(state->ctx, state->doc);
-    fz_drop_context(state->ctx);
-
-    fprintf(stderr, "Creating buffers failed.\n");
-    return EXIT_FAILURE;
-  }
-
-  // Create an output object associated with each of the buffers
-  if (create_outputs(state->ctx, &curr_out, &prev_out, &next_out, curr_buf,
-                     prev_buf, next_buf) == EXIT_FAILURE) {
-    drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_doc_pages(state->ctx, state);
-    fz_drop_document(state->ctx, state->doc);
-    fz_drop_context(state->ctx);
-
-    fprintf(stderr, "Creating outputs failed.\n");
-    return EXIT_FAILURE;
-  }
-
-  // Create an SVG device
+  // Create buffer, output and SVG device for the current page
   fz_try(state->ctx) {
+    curr_buf = fz_new_buffer(state->ctx, 1024);
+    curr_out = fz_new_output_with_buffer(state->ctx, curr_buf);
     curr_dev =
         fz_new_svg_device(state->ctx, curr_out, page_width, page_height, 0, 1);
-    prev_dev =
-        fz_new_svg_device(state->ctx, prev_out, page_width, page_height, 0, 1);
-    next_dev =
-        fz_new_svg_device(state->ctx, next_out, page_width, page_height, 0, 1);
   }
   fz_catch(state->ctx) {
-    fprintf(stderr, "Cannot create SVG device: %s\n",
+    fprintf(stderr, "Failed to create resources for current page: %s\n",
             fz_caught_message(state->ctx));
-    close_all_outputs(state->ctx, curr_out, prev_out, next_out);
-    drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
-    drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_doc_pages(state->ctx, state);
+    if (curr_dev)
+      fz_drop_device(state->ctx, curr_dev);
+    if (curr_out)
+      fz_drop_output(state->ctx, curr_out);
+    if (curr_buf)
+      fz_drop_buffer(state->ctx, curr_buf);
     fz_drop_document(state->ctx, state->doc);
     fz_drop_context(state->ctx);
     return EXIT_FAILURE;
   }
 
+  // If the previous page is available, create resources for that.
+  if (state->prev_page) {
+    fz_try(state->ctx) {
+      prev_buf = fz_new_buffer(state->ctx, 1024);
+      prev_out = fz_new_output_with_buffer(state->ctx, prev_buf);
+      prev_dev = fz_new_svg_device(state->ctx, prev_out, page_width,
+                                   page_height, 0, 1);
+    }
+    fz_catch(state->ctx) {
+      fprintf(stderr, "Failed to create resources for current page: %s\n",
+              fz_caught_message(state->ctx));
+      if (prev_dev)
+        fz_drop_device(state->ctx, prev_dev);
+      if (prev_out)
+        fz_drop_output(state->ctx, prev_out);
+      if (prev_buf)
+        fz_drop_buffer(state->ctx, prev_buf);
+      if (curr_dev)
+        fz_drop_device(state->ctx, curr_dev);
+      if (curr_out)
+        fz_drop_output(state->ctx, curr_out);
+      if (curr_buf)
+        fz_drop_buffer(state->ctx, curr_buf);
+      fz_drop_document(state->ctx, state->doc);
+      fz_drop_context(state->ctx);
+      return EXIT_FAILURE;
+    }
+  }
 
-  // Run the page through the device
+  // If the next page is available, create resources for that.
+  if (state->next_page) {
+    fz_try(state->ctx) {
+      next_buf = fz_new_buffer(state->ctx, 1024);
+      next_out = fz_new_output_with_buffer(state->ctx, next_buf);
+      next_dev = fz_new_svg_device(state->ctx, next_out, page_width,
+                                   page_height, 0, 1);
+    }
+    fz_catch(state->ctx) {
+      fprintf(stderr, "Failed to create resources for current page: %s\n",
+              fz_caught_message(state->ctx));
+      if (next_dev)
+        fz_drop_device(state->ctx, next_dev);
+      if (next_out)
+        fz_drop_output(state->ctx, next_out);
+      if (next_buf)
+        fz_drop_buffer(state->ctx, next_buf);
+      if (prev_dev)
+        fz_drop_device(state->ctx, prev_dev);
+      if (prev_out)
+        fz_drop_output(state->ctx, prev_out);
+      if (prev_buf)
+        fz_drop_buffer(state->ctx, prev_buf);
+      if (curr_dev)
+        fz_drop_device(state->ctx, curr_dev);
+      if (curr_out)
+        fz_drop_output(state->ctx, curr_out);
+      if (curr_buf)
+        fz_drop_buffer(state->ctx, curr_buf);
+      fz_drop_document(state->ctx, state->doc);
+      fz_drop_context(state->ctx);
+      return EXIT_FAILURE;
+    }
+  }
+
+  // Run the current page through it’s corresponding SVG device and if other
+  // pages are also available, do the same for them.
+
   fz_try(state->ctx) {
     fz_run_page(state->ctx, state->current_page, curr_dev, fz_identity, NULL);
-    fz_run_page(state->ctx, state->prev_page, prev_dev, fz_identity, NULL);
-    fz_run_page(state->ctx, state->next_page, next_dev, fz_identity, NULL);
+    if (state->prev_page && prev_dev) {
+      fz_run_page(state->ctx, state->prev_page, prev_dev, fz_identity, NULL);
+    }
+    if (state->next_page && next_dev) {
+      fz_run_page(state->ctx, state->next_page, next_dev, fz_identity, NULL);
+    }
   }
-
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot run page: %s\n", fz_caught_message(state->ctx));
-    close_all_devices(state->ctx, curr_dev, prev_dev, next_dev);
-    drop_all_devices(state->ctx, curr_dev, prev_dev, next_dev);
-    close_all_outputs(state->ctx, curr_out, prev_out, next_out);
-    drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
-    drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_doc_pages(state->ctx, state);
-    fz_drop_document(state->ctx, state->doc);
-    fz_drop_context(state->ctx);
+    if (next_dev)
+      fz_drop_device(state->ctx, next_dev); // Close not called, just drop
+    if (next_out)
+      fz_drop_output(state->ctx, next_out);
+    if (next_buf)
+      fz_drop_buffer(state->ctx, next_buf);
+    if (prev_dev)
+      fz_drop_device(state->ctx, prev_dev);
+    if (prev_out)
+      fz_drop_output(state->ctx, prev_out);
+    if (prev_buf)
+      fz_drop_buffer(state->ctx, prev_buf);
+    fz_drop_device(state->ctx, curr_dev);
+    fz_drop_output(state->ctx, curr_out);
+    fz_drop_buffer(state->ctx, curr_buf);
     return EXIT_FAILURE;
   }
 
-  // Close and drop the devices
-  close_all_devices(state->ctx, curr_dev, prev_dev, next_dev);
-  drop_all_devices(state->ctx, curr_dev, prev_dev, next_dev);
-
-  // Close the output to finalize the buffer content
+  // Close and drop devices
   fz_try(state->ctx) {
-    close_all_outputs(state->ctx, curr_out, prev_out, next_out);
+    fz_close_device(state->ctx, curr_dev);
+    if (prev_dev)
+      fz_close_device(state->ctx, prev_dev);
+    if (next_dev)
+      fz_close_device(state->ctx, next_dev);
+  }
+  fz_catch(state->ctx) {
+    fprintf(stderr, "Cannot close device: %s\n", fz_caught_message(state->ctx));
+    // Devices are already broken, just drop everything
+    if (next_dev)
+      fz_drop_device(state->ctx, next_dev);
+    if (next_out)
+      fz_drop_output(state->ctx, next_out);
+    if (next_buf)
+      fz_drop_buffer(state->ctx, next_buf);
+    if (prev_dev)
+      fz_drop_device(state->ctx, prev_dev);
+    if (prev_out)
+      fz_drop_output(state->ctx, prev_out);
+    if (prev_buf)
+      fz_drop_buffer(state->ctx, prev_buf);
+    fz_drop_device(state->ctx, curr_dev);
+    fz_drop_output(state->ctx, curr_out);
+    fz_drop_buffer(state->ctx, curr_buf);
+    return EXIT_FAILURE;
   }
 
+  fz_drop_device(state->ctx, curr_dev);
+  curr_dev = NULL;
+  if (prev_dev) {
+    fz_drop_device(state->ctx, prev_dev);
+    prev_dev = NULL;
+  }
+  if (next_dev) {
+    fz_drop_device(state->ctx, next_dev);
+    next_dev = NULL;
+  }
+
+  // Close the outputs to finalize the buffer contents.
+  fz_try(state->ctx) {
+    fz_close_output(state->ctx, curr_out);
+    if (prev_out)
+      fz_close_output(state->ctx, prev_out);
+    if (next_out)
+      fz_close_output(state->ctx, next_out);
+  }
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot close output: %s\n", fz_caught_message(state->ctx));
-
-    drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
-    drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_doc_pages(state->ctx, state);
-    fz_drop_document(state->ctx, state->doc);
-    fz_drop_context(state->ctx);
-
+    // Outputs are already broken, just drop everything else
+    if (next_out)
+      fz_drop_output(state->ctx, next_out);
+    if (next_buf)
+      fz_drop_buffer(state->ctx, next_buf);
+    if (prev_out)
+      fz_drop_output(state->ctx, prev_out);
+    if (prev_buf)
+      fz_drop_buffer(state->ctx, prev_buf);
+    fz_drop_output(state->ctx, curr_out);
+    fz_drop_buffer(state->ctx, curr_buf);
     return EXIT_FAILURE;
   }
 
-  // Allocate memory for SVG data
+  // Allocate memory for the SVG data and copy them to DocState’s respective
+  // fields
   state->current_svg_size = curr_buf->len;
   state->current_svg_data = (char *)malloc(state->current_svg_size + 1);
 
-  state->prev_svg_size = prev_buf->len;
-  state->prev_svg_data = (char *)malloc(state->prev_svg_size + 1);
-
-  state->next_svg_size = next_buf->len;
-  state->next_svg_data = (char *)malloc(state->next_svg_size + 1);
-
-  if (state->current_svg_data == NULL || state->prev_svg_data == NULL ||
-      state->next_svg_data == NULL) {
-    fprintf(stderr, "Cannot allocate memory for SVG data\n");
-
-    drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
-    drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
-    drop_all_doc_pages(state->ctx, state);
-    fz_drop_document(state->ctx, state->doc);
-    fz_drop_context(state->ctx);
-
-    return EXIT_FAILURE;
-  }
-
-  // Copy the data and null-terminate
   memcpy(state->current_svg_data, curr_buf->data, state->current_svg_size);
   state->current_svg_data[state->current_svg_size] = '\0';
-  memcpy(state->prev_svg_data, prev_buf->data, state->prev_svg_size);
-  state->prev_svg_data[state->prev_svg_size] = '\0';
-  memcpy(state->next_svg_data, next_buf->data, state->next_svg_size);
-  state->next_svg_data[state->next_svg_size] = '\0';
+
+  if (state->prev_page && prev_buf) {
+    state->prev_svg_size = prev_buf->len;
+    state->prev_svg_data = (char *)malloc(state->prev_svg_size + 1);
+
+    memcpy(state->prev_svg_data, prev_buf->data, state->prev_svg_size);
+    state->prev_svg_data[state->prev_svg_size] = '\0';
+  } else {
+    state->prev_svg_data = NULL;
+    state->prev_svg_size = 0;
+  }
+
+  if (state->next_page && next_buf) {
+    state->next_svg_size = next_buf->len;
+    state->next_svg_data = (char *)malloc(state->next_svg_size + 1);
+
+    memcpy(state->next_svg_data, next_buf->data, state->next_svg_size);
+    state->next_svg_data[state->next_svg_size] = '\0';
+  } else {
+    state->next_svg_data = NULL;
+    state->next_svg_size = 0;
+  }
 
   // Clean up
-  drop_all_outputs(state->ctx, curr_out, prev_out, next_out);
-  drop_all_buffers(state->ctx, curr_buf, prev_buf, next_buf);
+  fz_drop_output(state->ctx, curr_out);
+  curr_out = NULL;
+  if (prev_out) {
+    fz_drop_output(state->ctx, prev_out);
+    prev_out = NULL;
+  }
+  if (next_out) {
+    fz_drop_output(state->ctx, next_out);
+    next_out = NULL;
+  }
+
+  fz_drop_buffer(state->ctx, curr_buf);
+  curr_buf = NULL;
+  if (prev_buf) {
+    fz_drop_buffer(state->ctx, prev_buf);
+    prev_buf = NULL;
+  }
+  if (next_buf) {
+    fz_drop_buffer(state->ctx, next_buf);
+    next_buf = NULL;
+  }
+
   drop_all_doc_pages(state->ctx, state);
 
   return EXIT_SUCCESS;
