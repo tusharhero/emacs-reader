@@ -146,7 +146,7 @@ Any other file format would simply not show up as a candidate."
 (defun reader-scroll-up (&optional amount)
   "Scroll up the current page.
 Optionally specify the AMOUNT by which to scroll."
-  (interactive)
+  (interactive "P")
   (let ((vscroll (- (window-vscroll) (if (not amount)
 					 1 amount))))
     (set-window-vscroll nil vscroll)))
@@ -161,7 +161,7 @@ Optionally specify the AMOUNT by which to scroll."
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
-  (interactive)
+  (interactive "P")
   (when-let* (((reader-can-scroll-down-p))
 	      (vscroll (+ (window-vscroll) (if (not amount)
 					       1 amount))))
@@ -179,11 +179,12 @@ Optionally specify the AMOUNT by which to scroll."
   (set-window-hscroll nil
 		      (1+ (window-hscroll))))
 
-(defun reader-scroll-up-or-prev-page ()
-  "Scroll up the current page or go to the previous page if can't scroll."
-  (interactive)
+(defun reader-scroll-up-or-prev-page (&optional amount)
+  "Scroll up the current page or go to the previous page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "P")
   (let* ((prev-scroll (window-vscroll)))
-    (reader-scroll-up)
+    (reader-scroll-up amount)
     (when-let* (((= prev-scroll (window-vscroll)))
 		(image-height (cdr (get-current-doc-image-size)))
 		(pixel-window-height (window-body-height nil t))
@@ -192,11 +193,12 @@ Optionally specify the AMOUNT by which to scroll."
       (reader-previous-page)
       (set-window-vscroll nil bottom-most-scroll-pixel t))))
 
-(defun reader-scroll-down-or-next-page ()
-  "Scroll down the current page or go to the next page if can't scroll."
-  (interactive)
+(defun reader-scroll-down-or-next-page (&optional amount)
+  "Scroll down the current page or go to the next page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "P")
   (let* ((prev-scroll (window-vscroll)))
-    (reader-scroll-down)
+    (reader-scroll-down amount)
     (when (= prev-scroll (window-vscroll))
       (reader-next-page)
       (set-window-vscroll nil 0))))
