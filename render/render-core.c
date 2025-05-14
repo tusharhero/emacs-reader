@@ -659,17 +659,23 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (render_page(state, (state->pagecount - 2)) == EXIT_SUCCESS) {
-    state->current_page_number = (state->pagecount - 1);
-    emacs_value next_page_data =
-        svg2elisp_image(env, state, state->next_svg_data, state->next_svg_size);
+  if (state->current_page_number == state->pagecount - 1) {
+    fprintf(stderr, "Already at the last page\n");
+    return env->intern(env, "nil");
+  }
+
+  state->current_page_number = state->pagecount - 1;
+
+  if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
+    emacs_value current_page_data = svg2elisp_image(
+        env, state, state->current_svg_data, state->current_svg_size);
     emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), next_page_data};
+        current_svg_overlay, env->intern(env, "display"), current_page_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     fprintf(stderr, "Failed to render the last page.\n");
   }
-
+  state->current_page_number = state->pagecount - 1;
   return env->intern(env, "t");
 }
 
