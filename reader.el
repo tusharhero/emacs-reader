@@ -87,19 +87,21 @@ Any other file format would simply not show up as a candidate."
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
   (interactive)
-  (next-doc-page)
-  (doc-change-page-size reader-current-doc-scale)
-  (reader-center-page)
-  (force-mode-line-update t))
-
+  (let ((status (next-doc-page)))
+    (when status
+      (doc-change-page-size reader-current-doc-scale)
+      (reader-center-page)
+      (force-mode-line-update t))
+    status))
 
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
-  (previous-doc-page)
-  (doc-change-page-size reader-current-doc-scale)
-  (reader-center-page)
-  (force-mode-line-update t))
+  (let ((status (previous-doc-page)))
+    (doc-change-page-size reader-current-doc-scale)
+    (reader-center-page)
+    (force-mode-line-update t)
+    status))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
@@ -186,12 +188,13 @@ Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-up amount)
-    (when-let* (((= prev-scroll (window-vscroll)))
+    (when-let* (((and (= prev-scroll (window-vscroll))
+		      ;; if succeeds
+		      (reader-previous-page)))
 		(image-height (cdr (get-current-doc-image-size)))
 		(pixel-window-height (window-body-height nil t))
 		(bottom-most-scroll-pixel
 		 (- image-height pixel-window-height)))
-      (reader-previous-page)
       (set-window-vscroll nil bottom-most-scroll-pixel t))))
 
 (defun reader-scroll-down-or-next-page (&optional amount)
@@ -200,8 +203,9 @@ Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-down amount)
-    (when (= prev-scroll (window-vscroll))
-      (reader-next-page)
+    (when (and (= prev-scroll (window-vscroll))
+	       ;; if succeeds
+	       (reader-next-page))
       (set-window-vscroll nil 0))))
 
 (defun reader-kill-buffer ()

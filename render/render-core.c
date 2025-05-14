@@ -562,6 +562,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     render_pages(state, state->next_page_number);
   } else {
     fprintf(stderr, "Already at the last page.\n");
+    return env->intern(env, "nil");
   }
 
   return env->intern(env, "t");
