@@ -569,13 +569,9 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       current_svg_overlay, env->intern(env, "display"), next_image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-  if (state->current_page_number < (state->pagecount - 2)) {
-    render_page(state, state->next_page_number);
-  } else if (state->current_page_number == (state->pagecount - 2)) {
-    // At n-2 it makes sure state’s pages are restructured according to
-    // next page but not rendered.
-    load_pages(state, state->next_page_number);
-  } else if (state->current_page_number == (state->pagecount - 1)) {
+  if (state->current_page_number < (state->pagecount - 1)) {
+    render_pages(state, state->next_page_number);
+  } else {
     fprintf(stderr, "Already at the last page.\n");
   }
 
