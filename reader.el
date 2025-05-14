@@ -128,16 +128,17 @@ to render the first page and displays it in a new buffer."
   (set-window-vscroll nil
 		      (1- (window-vscroll))))
 
+(defun reader-can-scroll-down-p ()
+  "Non-nil if there's more of the image below the current window bottom."
+  (let ((image-height (cdr (get-current-doc-image-size)))
+        (win-bottom-pos (+ pixel-window-height pixel-window-vscroll)))
+    (and image-height (< win-bottom-pos image-height))))
+
 (defun reader-scroll-down ()
   "Scroll down the current page."
   (interactive)
-  (let* ((doc-image-height (cdr (get-current-doc-image-size)))
-	 (pixel-window-vscroll (window-vscroll nil t))
-	 (pixel-window-height (window-body-height nil t))
-	 (doc-bottom-pos (+ pixel-window-height pixel-window-vscroll)))
-    (when (< doc-bottom-pos  doc-image-height)
-      (set-window-vscroll nil
-			(1+ (window-vscroll))))))
+  (when (reader-can-scroll-down-p)
+    (set-window-vscroll nil (1+ (window-vscroll)))))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
