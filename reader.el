@@ -153,22 +153,38 @@ Optionally specify the AMOUNT by which to scroll."
 					 1 amount))))
     (set-window-vscroll nil vscroll)))
 
-(defun reader-can-scroll-down-p ()
-  "Non-nil if there's more of the image below the current window bottom."
-  (let ((image-height (cdr (get-current-doc-image-size)))
-        (win-bottom-pos (+ (window-vscroll nil t)
-			   (window-body-height nil t))))
-    (and image-height (< win-bottom-pos image-height))))
+(defun reader-can-scroll-down-p (&optional amount)
+  "Non-nil if there's more of the image below the current window bottom.
+Optionally calculate if there is enough to scroll by AMOUNT."
+  (let* ((amount (if (not amount) 1 amount))
+	 (image-height (cdr (get-current-doc-image-size)))
+	 (window-height (window-body-height))
+	 (pixel-window-height (window-body-height nil t))
+	 (pixel-per-col (/ pixel-window-height
+                           window-height))
+         (pixel-amount (* pixel-per-col amount))
+         (win-bottom-pos (+ (window-vscroll nil t)
+			    pixel-amount
+			    pixel-window-height)))
+    (and image-height
+	 (< win-bottom-pos image-height))))
 
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  amount
-  (when-let* (((reader-can-scroll-down-p))
+  (when-let* (((reader-can-scroll-down-p amount))
 	      (vscroll (+ (window-vscroll) (if (not amount)
 					       1 amount))))
     (set-window-vscroll nil vscroll)))
+
+(defun reader-scroll-down-screenful (&optional amount)
+  "Scroll down the current page by a screenful.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (reader-scroll-down scroll)))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
@@ -253,13 +269,14 @@ Optionally specify the AMOUNT by which to scroll."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "N") #'reader-next-page)
     (define-key map (kbd "J") #'reader-next-page)
-    (define-key map (kbd "<next>") #'reader-next-page)
     (define-key map (kbd "j") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "SPC") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<down>") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<wheel-down>") #'reader-scroll-down-or-next-page)
+    (define-key map (kbd "<next>") #'reader-scroll-down-screenful)
+    (define-key map (kbd "C-v") #'reader-scroll-down-screenful)
 
     (define-key map (kbd "P") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
