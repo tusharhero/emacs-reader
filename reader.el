@@ -131,7 +131,8 @@ to render the first page and displays it in a new buffer."
 (defun reader-can-scroll-down-p ()
   "Non-nil if there's more of the image below the current window bottom."
   (let ((image-height (cdr (get-current-doc-image-size)))
-        (win-bottom-pos (+ pixel-window-height pixel-window-vscroll)))
+        (win-bottom-pos (+ (window-vscroll nil t)
+			   (window-body-height nil t))))
     (and image-height (< win-bottom-pos image-height))))
 
 (defun reader-scroll-down ()
