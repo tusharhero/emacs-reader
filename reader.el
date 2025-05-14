@@ -87,19 +87,21 @@ Any other file format would simply not show up as a candidate."
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
   (interactive)
-  (next-doc-page)
-  (doc-change-page-size reader-current-doc-scale)
-  (reader-center-page)
-  (force-mode-line-update t))
-
+  (let ((status (next-doc-page)))
+    (when status
+      (doc-change-page-size reader-current-doc-scale)
+      (reader-center-page)
+      (force-mode-line-update t))
+    status))
 
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
-  (previous-doc-page)
-  (doc-change-page-size reader-current-doc-scale)
-  (reader-center-page)
-  (force-mode-line-update t))
+  (let ((status (previous-doc-page)))
+    (doc-change-page-size reader-current-doc-scale)
+    (reader-center-page)
+    (force-mode-line-update t)
+    status))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
@@ -143,11 +145,13 @@ Any other file format would simply not show up as a candidate."
   (reader-center-page)
   (force-mode-line-update t))
 
-(defun reader-scroll-up ()
-  "Scroll up the current page."
-  (interactive)
-  (set-window-vscroll nil
-		      (1- (window-vscroll))))
+(defun reader-scroll-up (&optional amount)
+  "Scroll up the current page.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((vscroll (- (window-vscroll) (if (not amount)
+					 1 amount))))
+    (set-window-vscroll nil vscroll)))
 
 (defun reader-can-scroll-down-p ()
   "Non-nil if there's more of the image below the current window bottom."
@@ -156,11 +160,15 @@ Any other file format would simply not show up as a candidate."
 			   (window-body-height nil t))))
     (and image-height (< win-bottom-pos image-height))))
 
-(defun reader-scroll-down ()
-  "Scroll down the current page."
-  (interactive)
-  (when (reader-can-scroll-down-p)
-    (set-window-vscroll nil (1+ (window-vscroll)))))
+(defun reader-scroll-down (&optional amount)
+  "Scroll down the current page.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  amount
+  (when-let* (((reader-can-scroll-down-p))
+	      (vscroll (+ (window-vscroll) (if (not amount)
+					       1 amount))))
+    (set-window-vscroll nil vscroll)))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
@@ -174,26 +182,30 @@ Any other file format would simply not show up as a candidate."
   (set-window-hscroll nil
 		      (1+ (window-hscroll))))
 
-(defun reader-scroll-up-or-prev-page ()
-  "Scroll up the current page or go to the previous page if can't scroll."
-  (interactive)
+(defun reader-scroll-up-or-prev-page (&optional amount)
+  "Scroll up the current page or go to the previous page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
   (let* ((prev-scroll (window-vscroll)))
-    (reader-scroll-up)
-    (when-let* (((= prev-scroll (window-vscroll)))
+    (reader-scroll-up amount)
+    (when-let* (((and (= prev-scroll (window-vscroll))
+		      ;; if succeeds
+		      (reader-previous-page)))
 		(image-height (cdr (get-current-doc-image-size)))
 		(pixel-window-height (window-body-height nil t))
 		(bottom-most-scroll-pixel
 		 (- image-height pixel-window-height)))
-      (reader-previous-page)
       (set-window-vscroll nil bottom-most-scroll-pixel t))))
 
-(defun reader-scroll-down-or-next-page ()
-  "Scroll down the current page or go to the next page if can't scroll."
-  (interactive)
+(defun reader-scroll-down-or-next-page (&optional amount)
+  "Scroll down the current page or go to the next page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
   (let* ((prev-scroll (window-vscroll)))
-    (reader-scroll-down)
-    (when (= prev-scroll (window-vscroll))
-      (reader-next-page)
+    (reader-scroll-down amount)
+    (when (and (= prev-scroll (window-vscroll))
+	       ;; if succeeds
+	       (reader-next-page))
       (set-window-vscroll nil 0))))
 
 (defun reader-kill-buffer ()

@@ -520,9 +520,11 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                    (emacs_value[]){doc_state_ptr_sym, user_ptr});
     } else {
       fprintf(stderr, "Rendering initial page failed.\n");
+      return env->intern(env, "nil");
     }
   } else {
     fprintf(stderr, "Loading document failed.\n");
+    return env->intern(env, "nil");
   }
 
   return env->intern(env, "t");
@@ -552,6 +554,11 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
+  if (state->current_page_number == (state->pagecount - 1)) {
+    fprintf(stderr, "Already at the last page.\n");
+    return env->intern(env, "nil");
+  }
+
   emacs_value next_image_data =
       svg2elisp_image(env, state, state->next_svg_data, state->next_svg_size);
   emacs_value overlay_put_args[3] = {
@@ -560,8 +567,6 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state->current_page_number < (state->pagecount - 1)) {
     render_pages(state, state->next_page_number);
-  } else {
-    fprintf(stderr, "Already at the last page.\n");
   }
 
   return env->intern(env, "t");
@@ -660,6 +665,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     fprintf(stderr, "Failed to render the first page.\n");
+    return env->intern(env, "nil");
   }
   state->current_page_number = 0;
   return env->intern(env, "t");
@@ -703,6 +709,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     fprintf(stderr, "Failed to render the last page.\n");
+    return env->intern(env, "nil");
   }
   state->current_page_number = state->pagecount - 1;
   return env->intern(env, "t");
@@ -741,6 +748,7 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       fprintf(stderr, "Page number out of bounds");
+      return env->intern(env, "nil");
     }
   }
   return env->intern(env, "t");
