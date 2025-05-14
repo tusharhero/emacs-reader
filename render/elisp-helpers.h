@@ -17,4 +17,12 @@ void register_module_func(
 emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
                             size_t svg_size);
 
+DocState *get_doc_state_ptr(emacs_env *env);
+emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
+                                    emacs_value *args, void *data);
+void set_current_render_status(emacs_env *env);
+void set_current_pagecount(emacs_env *env, DocState *state);
+void init_overlay(emacs_env *env);
+emacs_value get_current_svg_overlay(emacs_env *env);
+
 #endif

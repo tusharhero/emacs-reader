@@ -9,64 +9,6 @@
 #include <string.h>
 
 int plugin_is_GPL_compatible;
-
-// Fetch pointer to DocState from Emacs Environment to a C pointer
-DocState *get_doc_state_ptr(emacs_env *env) {
-  emacs_value ptr_sym = env->intern(env, "doc-state-ptr");
-  emacs_value ptr =
-      env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
-  DocState *state = env->get_user_ptr(env, ptr);
-
-  return state;
-}
-
-// Fetches the current page number of the document that’s open
-emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
-                                    emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
-
-  DocState *state = get_doc_state_ptr(env);
-  return env->make_integer(env, state->current_page_number);
-}
-
-// Set the rendering status of the document in the buffer buffer to be true
-void set_current_render_status(emacs_env *env) {
-  emacs_value render_status_var = env->intern(env, "doc-render-status");
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){render_status_var, env->intern(env, "t")});
-}
-
-// Exposing the pagecount of the document to an Elisp variable
-void set_current_pagecount(emacs_env *env, DocState *state) {
-  emacs_value pagecount_args[2] = {env->intern(env, "current-doc-pagecount"),
-                                   env->make_integer(env, state->pagecount)};
-  env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
-}
-
-// Initializes the overlay and stores it in a buffer-local variable
-void init_overlay(emacs_env *env) {
-  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
-  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
-  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
-                                     (emacs_value[]){start, end});
-  emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
-
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){current_overlay_sym, overlay});
-}
-
-// Fetches the overlay object from the current-svg-overlay
-emacs_value get_current_svg_overlay(emacs_env *env) {
-
-  emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
-  emacs_value current_overlay = env->funcall(
-      env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
-
-  return current_overlay;
-}
-
 // Loading a document into MuPDF context, and respective document handlers
 int load_doc(DocState *state) {
   state->ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
