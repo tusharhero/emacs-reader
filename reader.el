@@ -71,11 +71,6 @@ to render the first page and displays it in a new buffer."
   (reader-center-page)
   (force-mode-line-update t))
 
-(defun reader-scroll-down ()
-  "Scroll down the current page."
-  (interactive)
-  (set-window-vscroll nil
-		      (1+ (window-vscroll nil))))
 
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
@@ -84,12 +79,6 @@ to render the first page and displays it in a new buffer."
   (doc-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
-
-(defun reader-scroll-up ()
-  "Scroll up the current page."
-  (interactive)
-  (set-window-vscroll nil
-		      (1- (window-vscroll nil))))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
@@ -132,6 +121,30 @@ to render the first page and displays it in a new buffer."
     (setq reader-current-doc-scale scaling-factor))
   (reader-center-page)
   (force-mode-line-update t))
+
+(defun reader-scroll-up ()
+  "Scroll up the current page."
+  (interactive)
+  (set-window-vscroll nil
+		      (1- (window-vscroll nil))))
+
+(defun reader-scroll-down ()
+  "Scroll down the current page."
+  (interactive)
+  (set-window-vscroll nil
+		      (1+ (window-vscroll nil))))
+
+(defun reader-scroll-left ()
+  "Scroll to the left of the current page."
+  (interactive)
+  (set-window-hscroll nil
+		      (1- (window-hscroll nil))))
+
+(defun reader-scroll-right ()
+  "Scroll to the left of the current page."
+  (interactive)
+  (set-window-hscroll nil
+		      (1+ (window-hscroll nil))))
 
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
@@ -176,12 +189,23 @@ to render the first page and displays it in a new buffer."
 ;; Define the keymap for reader-mode
 (defvar reader-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "n") #'reader-next-page)
-    (define-key map (kbd "j") #'reader-next-page)
-    (define-key map (kbd "C-n") #'reader-next-page)
-    (define-key map (kbd "p") #'reader-previous-page)
-    (define-key map (kbd "k") #'reader-previous-page)
-    (define-key map (kbd "C-p") #'reader-previous-page)
+    (define-key map (kbd "N") #'reader-next-page)
+    (define-key map (kbd "J") #'reader-next-page)
+    (define-key map (kbd "j") #'reader-scroll-down)
+    (define-key map (kbd "n") #'reader-scroll-down)
+    (define-key map (kbd "C-n") #'reader-scroll-down)
+
+    (define-key map (kbd "P") #'reader-previous-page)
+    (define-key map (kbd "K") #'reader-previous-page)
+    (define-key map (kbd "p") #'reader-scroll-up)
+    (define-key map (kbd "k") #'reader-scroll-up)
+    (define-key map (kbd "C-p") #'reader-scroll-up)
+
+    (define-key map (kbd "h") #'reader-scroll-left)
+    (define-key map (kbd "l") #'reader-scroll-right)
+    (define-key map (kbd "C-f") #'reader-scroll-right)
+    (define-key map (kbd "C-b") #'reader-scroll-left)
+
     (define-key map (kbd "gg") #'reader-first-page)
     (define-key map (kbd "M-<") #'reader-first-page)
     (define-key map (kbd "G") #'reader-last-page)
