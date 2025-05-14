@@ -126,25 +126,47 @@ to render the first page and displays it in a new buffer."
   "Scroll up the current page."
   (interactive)
   (set-window-vscroll nil
-		      (1- (window-vscroll nil))))
+		      (1- (window-vscroll))))
 
 (defun reader-scroll-down ()
   "Scroll down the current page."
   (interactive)
-  (set-window-vscroll nil
-		      (1+ (window-vscroll nil))))
+  (let* ((doc-image-height (cdr (get-current-doc-image-size)))
+	 (pixel-window-vscroll (window-vscroll nil t))
+	 (pixel-window-height (window-body-height nil t))
+	 (doc-bottom-pos (+ pixel-window-height pixel-window-vscroll)))
+    (when (< doc-bottom-pos  doc-image-height)
+      (set-window-vscroll nil
+			(1+ (window-vscroll))))))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
   (interactive)
   (set-window-hscroll nil
-		      (1- (window-hscroll nil))))
+		      (1- (window-hscroll))))
 
 (defun reader-scroll-right ()
   "Scroll to the left of the current page."
   (interactive)
   (set-window-hscroll nil
-		      (1+ (window-hscroll nil))))
+		      (1+ (window-hscroll))))
+
+(defun reader-scroll-up-or-prev-page ()
+  "Scroll up the current page or go to the previous page if can't scroll."
+  (interactive)
+  (let* ((prev-scroll (window-vscroll)))
+    (reader-scroll-up)
+    (when (= prev-scroll (window-vscroll))
+      (reader-previous-page))))
+
+(defun reader-scroll-down-or-next-page ()
+  "Scroll down the current page or go to the next page if can't scroll."
+  (interactive)
+  (let* ((prev-scroll (window-vscroll)))
+    (reader-scroll-down)
+    (when (= prev-scroll (window-vscroll))
+      (reader-next-page)
+      (set-window-vscroll nil 0))))
 
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
