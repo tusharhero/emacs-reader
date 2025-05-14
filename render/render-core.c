@@ -180,21 +180,11 @@ int load_doc(DocState *state) {
 
 // Load the page, and it’s adjacent ones.
 int load_pages(DocState *state, int page_number) {
+
   fz_try(state->ctx) {
     state->current_page_number = page_number;
-    state->current_page = fz_load_page(state->ctx, state->doc, page_number);
-
-    if (0 < page_number) {
-      state->prev_page_number = page_number - 1;
-      state->prev_page =
-          fz_load_page(state->ctx, state->doc, state->prev_page_number);
-    }
-
-    if (page_number < (state->pagecount - 1)) {
-      state->next_page_number = page_number + 1;
-      state->next_page =
-          fz_load_page(state->ctx, state->doc, state->next_page_number);
-    }
+    state->current_page =
+        fz_load_page(state->ctx, state->doc, state->current_page_number);
   }
   fz_catch(state->ctx) {
     fprintf(stderr, "Cannot load pages: %s\n", fz_caught_message(state->ctx));
@@ -202,7 +192,40 @@ int load_pages(DocState *state, int page_number) {
     fz_drop_context(state->ctx);
     return EXIT_FAILURE;
   }
-  return 0;
+
+  if (page_number > 0) {
+    fz_try(state->ctx) {
+      state->prev_page_number = page_number - 1;
+      state->prev_page =
+          fz_load_page(state->ctx, state->doc, state->prev_page_number);
+    }
+    fz_catch(state->ctx) {
+      fprintf(stderr, "Cannot load pages: %s\n", fz_caught_message(state->ctx));
+      fz_drop_document(state->ctx, state->doc);
+      fz_drop_context(state->ctx);
+      return EXIT_FAILURE;
+    }
+  } else {
+    state->prev_page = NULL;
+  }
+
+  if (page_number < state->pagecount - 1) {
+    fz_try(state->ctx) {
+      state->next_page_number = page_number + 1;
+      state->next_page =
+          fz_load_page(state->ctx, state->doc, state->next_page_number);
+    }
+    fz_catch(state->ctx) {
+      fprintf(stderr, "Cannot load pages: %s\n", fz_caught_message(state->ctx));
+      fz_drop_document(state->ctx, state->doc);
+      fz_drop_context(state->ctx);
+      return EXIT_FAILURE;
+    }
+  } else {
+    state->next_page = NULL;
+  }
+
+  return EXIT_SUCCESS;
 }
 
 // Rendering the page
