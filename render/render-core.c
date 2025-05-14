@@ -11,7 +11,7 @@
 int plugin_is_GPL_compatible;
 
 /**
- * load_doc - Initialize MuPDF context and other document essentials
+ * load_mupdf_doc - Initialize MuPDF context and other document essentials
  * @state: Pointer to a DocState with `.path` set to the document file path.
  *
  * Creates a new MuPDF context, registers document handlers, opens the
@@ -26,7 +26,7 @@ int plugin_is_GPL_compatible;
  * Return: EXIT_SUCCESS on success; EXIT_FAILURE if any step fails.
  */
 
-int load_doc(DocState *state) {
+int load_mupdf_doc(DocState *state) {
   state->ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
   if (!state->ctx) {
     fprintf(stderr, "Cannot create MuPDF context\n");
@@ -456,7 +456,7 @@ int render_pages(DocState *state, int page_number) {
  *
  * Allocates and resets a new DocState, converts the provided Elisp string in
  * args[0] to a C string and stores it in state->path. Attempts to open the
- * document via load_doc(); on success:
+ * document via load_mupdf_doc(); on success:
  *   1. Emits debug messages to stderr about load status and page count.
  *   2. Exposes the total page count to Elisp via set_current_pagecount().
  *   3. Marks the render status true in Elisp via set_current_render_status().
@@ -487,7 +487,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     return env->intern(env, "nil");
   }
 
-  if (load_doc(state) == EXIT_SUCCESS) {
+  if (load_mupdf_doc(state) == EXIT_SUCCESS) {
     fprintf(stderr, "%s loaded successfully with %d pages.\n", state->path,
             state->pagecount);
     fprintf(stderr,
