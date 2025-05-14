@@ -173,12 +173,26 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
     fz_close_device(ctx, next);
 }
 
+/**
+ * doc_page_width - Provide integer width of the current document
+ * @state: Pointer to DocState
+ * Return: Integer width
+ * It calculates the width of the mupdf page, has nothing to do with the Emacs
+ * image for the document.
+ */
 
 int doc_page_width(DocState *state) {
   int width = (int)(state->page_bbox.x1 - state->page_bbox.x0);
   return width;
 }
 
+/**
+ * doc_page_length - Provide integer length of the current document
+ * @state: Pointer to DocState
+ * Return: Integer length
+ * It calculates the length of the mupdf page, has nothing to do with the Emacs
+ * image for the document.
+ */
 
 int doc_page_length(DocState *state) {
   int length = (int)(state->page_bbox.y1 - state->page_bbox.y0);
