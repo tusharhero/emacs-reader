@@ -53,15 +53,36 @@
 (defvar reader-current-doc-scale 1)
 (make-variable-buffer-local 'reader-current-doc-scale)
 
-(defun reader-open-doc (file)
-  "Open document FILE for viewing.
+(defun reader-open-doc ()
+  "Open a document for viewing.
 This function calls the C function `load-doc' from the dynamic module
-to render the first page and displays it in a new buffer."
-  (interactive "fOpen document: ")
-  (switch-to-buffer (create-file-buffer file))
-  (insert "\n")
-  (load-doc (expand-file-name file))
-  (reader-mode))
+to render the first page and displays it in a new buffer.  The only files
+that can be opened are of the following formats:
+- PDF
+- EPUB
+- MOBI
+- FB2
+- XPS/OpenXPS
+- CBZ
+- DOCX/PPTX/XLSX
+- ODT/ODS/ODP/ODG
+
+Any other file format would simply not show up as a candidate."
+  (interactive)
+  (let* ((exts '("pdf" "epub" "mobi" "fb2" "xps" "cbz" "docx"
+		 "pptx" "xlsx" "odt" "ods" "odp" "odg"))
+	 (rgx (concat "\\." (regexp-opt exts t) "$"))
+	 (files (directory-files default-directory nil rgx))
+	 (file (read-file-name
+		"Open document: "
+		nil nil t nil
+		(lambda (f)
+                  (or (file-directory-p f)
+                      (string-match-p rgx f))))))
+    	 (switch-to-buffer (create-file-buffer file))
+	 (insert "\n")
+	 (load-doc (expand-file-name file))
+	 (reader-mode)))
 
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
