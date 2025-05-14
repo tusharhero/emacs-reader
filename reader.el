@@ -247,6 +247,7 @@ Any other file format would simply not show up as a candidate."
     (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "SPC") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<down>") #'reader-scroll-down-or-next-page)
+    (define-key map (kbd "<wheel-down>") #'reader-scroll-down-or-next-page)
 
     (define-key map (kbd "P") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
@@ -257,6 +258,7 @@ Any other file format would simply not show up as a candidate."
     (define-key map (kbd "DEL") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "S-SPC") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<up>") #'reader-scroll-up-or-prev-page)
+    (define-key map (kbd "<wheel-up>") #'reader-scroll-up-or-prev-page)
 
     (define-key map (kbd "h") #'reader-scroll-left)
     (define-key map (kbd "l") #'reader-scroll-right)
