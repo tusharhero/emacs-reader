@@ -526,7 +526,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     init_overlay(env);
     emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-    if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
+    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
 
       // Take the SVG data from DocState and create an SVG image of it as a Lisp
       // Object.
