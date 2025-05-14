@@ -224,7 +224,7 @@ Any other file format would simply not show up as a candidate."
         (overlay-put current-svg-overlay 'line-prefix overlay-offset)
 	(when-let* (((not doc-fits-p)) ; scroll to the center of the doc
 		    (scroll-offset
-		     (/ (abs raw-offset) pixel-per-col)))
+		     (round (/ (abs raw-offset) pixel-per-col))))
 	  (set-window-hscroll window scroll-offset))))))
 
 (defun reader-render-buffer ()
