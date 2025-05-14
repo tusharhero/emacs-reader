@@ -146,7 +146,7 @@ Any other file format would simply not show up as a candidate."
 (defun reader-scroll-up (&optional amount)
   "Scroll up the current page.
 Optionally specify the AMOUNT by which to scroll."
-  (interactive "P")
+  (interactive "p")
   (let ((vscroll (- (window-vscroll) (if (not amount)
 					 1 amount))))
     (set-window-vscroll nil vscroll)))
@@ -161,7 +161,8 @@ Optionally specify the AMOUNT by which to scroll."
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
-  (interactive "P")
+  (interactive "p")
+  amount
   (when-let* (((reader-can-scroll-down-p))
 	      (vscroll (+ (window-vscroll) (if (not amount)
 					       1 amount))))
@@ -182,7 +183,7 @@ Optionally specify the AMOUNT by which to scroll."
 (defun reader-scroll-up-or-prev-page (&optional amount)
   "Scroll up the current page or go to the previous page if can't scroll.
 Optionally specify the AMOUNT by which to scroll."
-  (interactive "P")
+  (interactive "p")
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-up amount)
     (when-let* (((= prev-scroll (window-vscroll)))
@@ -196,7 +197,7 @@ Optionally specify the AMOUNT by which to scroll."
 (defun reader-scroll-down-or-next-page (&optional amount)
   "Scroll down the current page or go to the next page if can't scroll.
 Optionally specify the AMOUNT by which to scroll."
-  (interactive "P")
+  (interactive "p")
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-down amount)
     (when (= prev-scroll (window-vscroll))
