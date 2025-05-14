@@ -147,25 +147,54 @@ Any other file format would simply not show up as a candidate."
   "Scroll up the current page."
   (interactive)
   (set-window-vscroll nil
-		      (1- (window-vscroll nil))))
+		      (1- (window-vscroll))))
+
+(defun reader-can-scroll-down-p ()
+  "Non-nil if there's more of the image below the current window bottom."
+  (let ((image-height (cdr (get-current-doc-image-size)))
+        (win-bottom-pos (+ (window-vscroll nil t)
+			   (window-body-height nil t))))
+    (and image-height (< win-bottom-pos image-height))))
 
 (defun reader-scroll-down ()
   "Scroll down the current page."
   (interactive)
-  (set-window-vscroll nil
-		      (1+ (window-vscroll nil))))
+  (when (reader-can-scroll-down-p)
+    (set-window-vscroll nil (1+ (window-vscroll)))))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
   (interactive)
   (set-window-hscroll nil
-		      (1- (window-hscroll nil))))
+		      (1- (window-hscroll))))
 
 (defun reader-scroll-right ()
   "Scroll to the left of the current page."
   (interactive)
   (set-window-hscroll nil
-		      (1+ (window-hscroll nil))))
+		      (1+ (window-hscroll))))
+
+(defun reader-scroll-up-or-prev-page ()
+  "Scroll up the current page or go to the previous page if can't scroll."
+  (interactive)
+  (let* ((prev-scroll (window-vscroll)))
+    (reader-scroll-up)
+    (when-let* (((= prev-scroll (window-vscroll)))
+		(image-height (cdr (get-current-doc-image-size)))
+		(pixel-window-height (window-body-height nil t))
+		(bottom-most-scroll-pixel
+		 (- image-height pixel-window-height)))
+      (reader-previous-page)
+      (set-window-vscroll nil bottom-most-scroll-pixel t))))
+
+(defun reader-scroll-down-or-next-page ()
+  "Scroll down the current page or go to the next page if can't scroll."
+  (interactive)
+  (let* ((prev-scroll (window-vscroll)))
+    (reader-scroll-down)
+    (when (= prev-scroll (window-vscroll))
+      (reader-next-page)
+      (set-window-vscroll nil 0))))
 
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
@@ -212,15 +241,15 @@ Any other file format would simply not show up as a candidate."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "N") #'reader-next-page)
     (define-key map (kbd "J") #'reader-next-page)
-    (define-key map (kbd "j") #'reader-scroll-down)
-    (define-key map (kbd "n") #'reader-scroll-down)
-    (define-key map (kbd "C-n") #'reader-scroll-down)
+    (define-key map (kbd "j") #'reader-scroll-down-or-next-page)
+    (define-key map (kbd "n") #'reader-scroll-down-or-next-page)
+    (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
 
     (define-key map (kbd "P") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
-    (define-key map (kbd "p") #'reader-scroll-up)
-    (define-key map (kbd "k") #'reader-scroll-up)
-    (define-key map (kbd "C-p") #'reader-scroll-up)
+    (define-key map (kbd "p") #'reader-scroll-up-or-prev-page)
+    (define-key map (kbd "k") #'reader-scroll-up-or-prev-page)
+    (define-key map (kbd "C-p") #'reader-scroll-up-or-prev-page)
 
     (define-key map (kbd "h") #'reader-scroll-left)
     (define-key map (kbd "l") #'reader-scroll-right)
