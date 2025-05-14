@@ -103,7 +103,7 @@ void register_module_func(
 }
 
 /**
- * svg2elisp - Create an Elisp image object from raw SVG data
+ * svg2elisp_image - Create an Elisp image object from raw SVG data
  * @env: Emacs environment pointer
  * @svg_data: SVG data that is to be rendered as image, should usually be from
  * the DocState.
