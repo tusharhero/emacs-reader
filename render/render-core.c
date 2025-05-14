@@ -691,7 +691,7 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (page_number > 1 && page_number < (state->pagecount - 1)) {
     state->current_page_number = page_number;
-    if (render_page(state, state->current_page_number) == EXIT_SUCCESS) {
+    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value current_image_data = svg2elisp_image(
           env, state, state->current_svg_data, state->current_svg_size);
       emacs_value overlay_put_args[3] = {
