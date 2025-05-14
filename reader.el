@@ -40,12 +40,12 @@
   :prefix "reader-"
   :group 'custom)
 
-(defcustom reader-enlarge-factor 1.10
+(defcustom reader-enlarge-factor 1.25
   "The fractional amount by which the page would be enlarged."
   :group 'reader
   :type 'number)
 
-(defcustom reader-shrink-factor 0.90
+(defcustom reader-shrink-factor 0.75
   "The fractional amount by which the page would be shrinked."
   :group 'reader
   :type 'number)
