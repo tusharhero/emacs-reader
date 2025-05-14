@@ -595,22 +595,21 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state->current_page_number < (state->pagecount - 1)) {
     emacs_value prev_image_data =
-        svg2elisp_image(env, state, state->prev_svg_data,
-    state->prev_svg_size);
+        svg2elisp_image(env, state, state->prev_svg_data, state->prev_svg_size);
 
     emacs_value overlay_put_args[3] = {
         current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
     if (state->current_page_number > 0) {
-      render_page(state, state->prev_page_number);
+      render_pages(state, state->prev_page_number);
       return env->intern(env, "t");
     } else {
       fprintf(stderr, "Already at the first page.\n");
       return env->intern(env, "nil");
     }
   } else {
-    render_page(state, (state->pagecount - 2));
+    render_pages(state, (state->pagecount - 2));
     emacs_value current_image_data = svg2elisp_image(
         env, state, state->current_svg_data, state->current_svg_size);
     emacs_value overlay_put_args[3] = {
