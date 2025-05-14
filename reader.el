@@ -158,8 +158,13 @@ to render the first page and displays it in a new buffer."
   (interactive)
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-up)
-    (when (= prev-scroll (window-vscroll))
-      (reader-previous-page))))
+    (when-let* (((= prev-scroll (window-vscroll)))
+		(image-height (cdr (get-current-doc-image-size)))
+		(pixel-window-height (window-body-height nil t))
+		(bottom-most-scroll-pixel
+		 (- image-height pixel-window-height)))
+      (reader-previous-page)
+      (set-window-vscroll nil bottom-most-scroll-pixel t))))
 
 (defun reader-scroll-down-or-next-page ()
   "Scroll down the current page or go to the next page if can't scroll."
