@@ -9,7 +9,23 @@
 #include <string.h>
 
 int plugin_is_GPL_compatible;
-// Loading a document into MuPDF context, and respective document handlers
+
+/**
+ * load_doc - Initialize MuPDF context and other document essentials
+ * @state: Pointer to a DocState with `.path` set to the document file path.
+ *
+ * Creates a new MuPDF context, registers document handlers, opens the
+ * document at `state->path`, loads its outline (table of contents), and
+ * counts its pages. On success, populates `state->ctx`, `state->doc`,
+ * `state->outline`, and `state->pagecount`.
+ *
+ * On any failure, prints an error to stderr, tears down any partially
+ * created MuPDF objects, and leaves `state` in a clean (NULL)
+ * context/document state.
+ *
+ * Return: EXIT_SUCCESS on success; EXIT_FAILURE if any step fails.
+ */
+
 int load_doc(DocState *state) {
   state->ctx = fz_new_context(NULL, NULL, FZ_STORE_UNLIMITED);
   if (!state->ctx) {
@@ -62,7 +78,30 @@ int load_doc(DocState *state) {
   return EXIT_SUCCESS;
 }
 
-// Load the page, and it’s adjacent ones.
+/**
+ * load_pages - Load the current page (n) and its adjacent pages (n-1, n+1)
+ * into the DocState.
+ * @state:        Pointer to an initialized DocState with a valid context and
+ * open document.
+ * @page_number:  Zero-based index of the page to load as the
+ * `state->current_page`.
+ *
+ * If `page_number > 0`, also loads the previous page into `state->prev_page`;
+ * otherwise sets `state->prev_page` to NULL. If `page_number < state->pagecount
+ * - 1`, loads the next page into `state->next_page`; otherwise sets
+ * `state->next_page` to NULL.
+ *
+ * On any failure during loading, prints an error via stderr containing the
+ * MuPDF caught message, drops the document and context, and returns
+ * EXIT_FAILURE. On success, updates:
+ *   - state->current_page_number, state->current_page
+ *   - state->prev_page_number,    state->prev_page    (or NULL)
+ *   - state->next_page_number,    state->next_page    (or NULL)
+ *
+ * Return: EXIT_SUCCESS if all requested pages are loaded (or skipped at edges);
+ *         EXIT_FAILURE if any fz_load_page call fails.
+ */
+
 int load_pages(DocState *state, int page_number) {
 
   fz_try(state->ctx) {
@@ -112,7 +151,32 @@ int load_pages(DocState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-// Rendering the current page (n) and it’s adjacent ones (n-1, n+1)
+/**
+ * render_pages - Render the current page and its adjacent pages into SVG
+ * buffers.
+ * @state:        Pointer to an initialized DocState containing context,
+ * document, and pagecount.
+ * @page_number:  Zero-based index of the page to render as the
+ * state->current_page.
+ *
+ * Validates the DocState and page_number, then:
+ *   1. Cleans up any existing SVG data in state.
+ *   2. Loads the requested page and its neighbors (prev/next) via load_pages().
+ *   3. Computes the bounding box and dimensions for rendering.
+ *   4. Allocates MuPDF buffers, outputs, and SVG devices for each available
+ * page.
+ *   5. Runs each loaded page through its SVG device to generate SVG content.
+ *   6. Closes and drops all devices and outputs in proper order.
+ *   7. Copies generated SVG bytes into heap-allocated C strings in state:
+ *        - state->current_svg_data / size
+ *        - state->prev_svg_data    / size (or NULL/0 at document start)
+ *        - state->next_svg_data    / size (or NULL/0 at document end)
+ *   8. Cleans up temporary buffers, outputs, and loaded pages.
+ *
+ * On any failure during setup, rendering, or teardown, prints a descriptive
+ * error to stderr (including fz_caught_message), drops any allocated resources,
+ * and returns EXIT_FAILURE. On success, returns EXIT_SUCCESS.
+ */
 
 int render_pages(DocState *state, int page_number) {
   fz_device *prev_dev = NULL;
@@ -382,7 +446,34 @@ int render_pages(DocState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-// Emacs command to load a document file and then render it
+/**
+ * emacs_load_doc - Load a document from Elisp, initialize state, and render
+ * first page.
+ * @env:   The Emacs environment pointer.
+ * @nargs: Number of arguments passed from Elisp (should be 1).
+ * @args:  Array of Elisp argument values; args[0] is the file path string.
+ * @data:  User-supplied callback data (ignored).
+ *
+ * Allocates and resets a new DocState, converts the provided Elisp string in
+ * args[0] to a C string and stores it in state->path. Attempts to open the
+ * document via load_doc(); on success:
+ *   1. Emits debug messages to stderr about load status and page count.
+ *   2. Exposes the total page count to Elisp via set_current_pagecount().
+ *   3. Marks the render status true in Elisp via set_current_render_status().
+ *   4. Creates a buffer-local SVG overlay via init_overlay().
+ *   5. Renders the current page (and neighbors) to SVG via render_pages().
+ *   6. Converts the SVG to an Emacs image object (svg2elisp_image), and
+ * displays it in the overlay using overlay-put.
+ *   7. Wraps the DocState in a user pointer and stores it in the Elisp variable
+ *      `doc-state-ptr` for later access.
+ *
+ * If the path conversion fails, prints an error and returns `nil`.  Any other
+ * failures during loading or rendering emit an error to stderr but still return
+ * `t` to Elisp (the render step logs its own failure).
+ *
+ * Return: Elisp `t` on completion (or `nil` if path conversion failed).
+ */
+
 emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                            void *data) {
   (void)nargs;
@@ -437,7 +528,21 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
-// Emacs command to render the next page
+/**
+ * emacs_next_page - Move to and display the next page in the overlay.
+ * @env:   The Emacs environment pointer.
+ * @nargs: (ignored).
+ * @args:  (ignored).
+ * @data:  (ignored).
+ *
+ * Retrieves the current DocState and overlay, converts the next-page's SVG
+ * data (`state->next_svg_data`) into an Emacs image, and updates the overlay to
+ * display it. If not already at the last page, also advances the DocState’s
+ * page index by calling render_pages() on the next page.
+ *
+ * Return: Elisp `t` on completion.
+ */
+
 emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -462,7 +567,21 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
-// Emacs command to render the previous page
+/**
+ * emacs_prev_page - Move to and display the previous page in the overlay.
+ * @env:   The Emacs environment pointer.
+ * @nargs: (ignored).
+ * @args:  (ignored).
+ * @data:  (ignored).
+ *
+ * Retrieves the current DocState and overlay. If on page > 0, converts the
+ * previous-page's SVG data (`state->prev_svg_data`) into an Emacs image,
+ * updates the overlay, and re-renders pages at state->prev_page_number. If
+ * already at the first page, emits a warning and returns nil.
+ *
+ * Return: Elisp `t` if page moved, `nil` if already at first page.
+ */
+
 emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -503,7 +622,20 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
-// Emacs commad to the first page of the document
+/**
+ * emacs_first_page - Jump to and display the first page of the document.
+ * @env:   The Emacs environment pointer.
+ * @nargs: (ignored).
+ * @args:  (ignored).
+ * @data:  (ignored).
+ *
+ * If not already on page zero, resets state->current_page_number to 0,
+ * re-renders the pages, converts the current-page SVG into an Emacs image,
+ * and updates the overlay. Warns if the first page is already displayed.
+ *
+ * Return: Elisp `t` on success, `nil` if already at the first page.
+ */
+
 emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                              void *data) {
   (void)nargs;
@@ -533,7 +665,20 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
-// Emacs command to go to the last page of the document
+/**
+ * emacs_last_page - Jump to and display the last page of the document.
+ * @env:   The Emacs environment pointer.
+ * @nargs: (ignored).
+ * @args:  (ignored).
+ * @data:  (ignored).
+ *
+ * If not already on the last page, sets state->current_page_number to
+ * pagecount–1, re-renders, converts the SVG, and updates the overlay.
+ * Warns and returns nil if already at end.
+ *
+ * Return: Elisp `t` on success, `nil` if already at the last page.
+ */
+
 emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -563,7 +708,20 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   return env->intern(env, "t");
 }
 
-// Emacs command to go to a specific page of the document
+/**
+ * emacs_goto_page - Jump to a specific page number and display it.
+ * @env:   The Emacs environment pointer.
+ * @nargs: Number of Elisp args (should be 1).
+ * @args:  Array of Elisp argument values; args[0] is desired page index.
+ * @data:  (ignored).
+ *
+ * Extracts the integer page_number from args[0]. If within (1..pagecount-2),
+ * updates state->current_page_number, re-renders that page, converts SVG
+ * to an image, and updates the overlay. Otherwise emits a bounds warning.
+ *
+ * Return: Elisp `t` on success or out-of-bounds (always `t`).
+ */
+
 emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                             void *data) {
   (void)nargs;
@@ -587,6 +745,22 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   }
   return env->intern(env, "t");
 }
+
+/**
+ * emacs_doc_change_page_size - Scale the displayed SVG to a new size.
+ * @env:   The Emacs environment pointer.
+ * @nargs: Number of Elisp args (should be 1).
+ * @args:  Array of Elisp argument values; args[0] is the float scale factor.
+ * @data:  (ignored).
+ *
+ * Retrieves the current DocState and overlay, then:
+ *   - Rebuilds the SVG image plist’s :width, :length, and :scale entries
+ *     by multiplying the original page dimensions by the given factor.
+ *   - Updates the image object via plist-put and setcdr.
+ *   - Re-displays the modified image in the overlay.
+ *
+ * Return: Elisp `t` on completion.
+ */
 
 emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs,
                                        emacs_value *args, void *data) {
@@ -634,6 +808,7 @@ emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs,
   return env->intern(env, "t");
 }
 
+// Entrypoint for the dynamic module
 int emacs_module_init(struct emacs_runtime *runtime) {
   emacs_env *env = runtime->get_environment(runtime);
   if (!env) {
@@ -645,22 +820,16 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 
   register_module_func(env, emacs_load_doc, "load-doc", 1, 1,
                        "Opens a document in Emacs.");
-
   register_module_func(env, emacs_next_page, "next-doc-page", 0, 0,
                        "Go to the next page of the document.");
-
   register_module_func(env, emacs_prev_page, "previous-doc-page", 0, 0,
                        "Go to the previous page of the document.");
-
   register_module_func(env, emacs_first_page, "first-doc-page", 0, 0,
                        "Go to the document's first page.");
-
   register_module_func(env, emacs_last_page, "last-doc-page", 0, 0,
                        "Go to the document's last page.");
-
   register_module_func(env, emacs_goto_page, "goto-doc-page", 1, 1,
                        "Go to page number N of the document");
-
   register_module_func(env, get_current_page_number,
                        "get-current-doc-pagenumber", 0, 0,
                        "Get current page number for the visiting document");

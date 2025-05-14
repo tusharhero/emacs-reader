@@ -181,7 +181,6 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
   return env->make_integer(env, state->current_page_number);
 }
 
-
 /**
  * set_current_render_status - Mark the buffer’s render status as true.
  * @env:    The Emacs environment pointer.
