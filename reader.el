@@ -305,38 +305,50 @@ buffer is already opened and the buffer is not in `reader-mode'."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "<next>") #'reader-next-page)
     (define-key map (kbd "J") #'reader-next-page)
+    (define-key map (kbd "n") #'reader-next-page)
+
     (define-key map (kbd "j") #'reader-scroll-down-or-next-page)
-    (define-key map (kbd "n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<down>") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<wheel-down>") #'reader-scroll-down-or-next-page)
+
     (define-key map (kbd "C-v") #'reader-scroll-down-screenful)
+
     (define-key map (kbd "SPC") #'reader-scroll-down-screenful-or-next-page)
 
     (define-key map (kbd "<prior>") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
-    (define-key map (kbd "p") #'reader-scroll-up-or-prev-page)
+    (define-key map (kbd "p") #'reader-previous-page)
+
     (define-key map (kbd "k") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "C-p") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<up>") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<wheel-up>") #'reader-scroll-up-or-prev-page)
+
     (define-key map (kbd "M-v") #'reader-scroll-up-screenful)
-    (define-key map (kbd "<deletechar>") #'reader-scroll-up-screenful-or-prev-page)
+
+    (define-key map (kbd "DEL") #'reader-scroll-up-screenful-or-prev-page)
     (define-key map (kbd "S-SPC") #'reader-scroll-up-screenful-or-prev-page)
 
     (define-key map (kbd "h") #'reader-scroll-left)
+    (define-key map (kbd "C-b") #'reader-scroll-left)
+
     (define-key map (kbd "l") #'reader-scroll-right)
     (define-key map (kbd "C-f") #'reader-scroll-right)
-    (define-key map (kbd "C-b") #'reader-scroll-left)
 
     (define-key map (kbd "gg") #'reader-first-page)
     (define-key map (kbd "M-<") #'reader-first-page)
+
     (define-key map (kbd "G") #'reader-last-page)
     (define-key map (kbd "M->") #'reader-last-page)
+
     (define-key map (kbd "M-g g") #'reader-goto-page)
     (define-key map (kbd "g n") #'reader-goto-page)
+
     (define-key map (kbd "=") #'reader-enlarge-size)
+
     (define-key map (kbd "-") #'reader-shrink-size)
+
     (define-key map (kbd "Q") #'reader-kill-buffer)
     map)
   "Keymap for reader-mode.")
