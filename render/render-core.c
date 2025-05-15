@@ -447,16 +447,16 @@ int render_pages(DocState *state, int page_number) {
 }
 
 /**
- * emacs_load_doc - Load a document from Elisp, initialize state, and render
+ * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
  * @env:   The Emacs environment pointer.
  * @nargs: Number of arguments passed from Elisp (should be 1).
  * @args:  Array of Elisp argument values; args[0] is the file path string.
  * @data:  User-supplied callback data (ignored).
  *
- * Allocates and resets a new DocState, converts the provided Elisp string in
- * args[0] to a C string and stores it in state->path. Attempts to open the
- * document via load_mupdf_doc(); on success:
+ * Allocates and resets a new DocState, converts the provided Elisp string for
+ * the file path in args[0] to a C string and stores it in state->path. Attempts
+ * to open the document via load_mupdf_doc(); on success:
  *   1. Emits debug messages to stderr about load status and page count.
  *   2. Exposes the total page count to Elisp via set_current_pagecount().
  *   3. Marks the render status true in Elisp via set_current_render_status().
@@ -826,21 +826,54 @@ int emacs_module_init(struct emacs_runtime *runtime) {
 
   // Registrations for the required functions and variables
 
-  register_module_func(env, emacs_load_doc, "load-doc", 1, 1,
-                       "Opens a document in Emacs.");
-  register_module_func(env, emacs_next_page, "next-doc-page", 0, 0,
-                       "Go to the next page of the document.");
-  register_module_func(env, emacs_prev_page, "previous-doc-page", 0, 0,
-                       "Go to the previous page of the document.");
-  register_module_func(env, emacs_first_page, "first-doc-page", 0, 0,
-                       "Go to the document's first page.");
-  register_module_func(env, emacs_last_page, "last-doc-page", 0, 0,
-                       "Go to the document's last page.");
-  register_module_func(env, emacs_goto_page, "goto-doc-page", 1, 1,
-                       "Go to page number N of the document");
+  register_module_func(
+      env, emacs_load_doc, "render-core-load-doc", 1, 1,
+      "Loads a DOC to be rendered in Emacs.  It is wrapped around the Elisp "
+      "function `reader-open-doc'. The function does the following:\n 1. "
+      "Allocates and resets a new DocState\n 2. Attempts to open the document "
+      "through the internal (non-registered) `load_mupdf_doc'.\n 3. Exposes "
+      "the total page count to Elisp\n 4. Create a bufer-local SVG overlay "
+      "through `init_overlay'\n 5. Calls the main `render_page' function to "
+      "render the current page and its adjacent ones.\n 6. Converts the SVG to "
+      "an Emacs image object and displays it in the overlay through "
+      "`overlay-put'.\n 7. Wraps the C pointer for DocState as an user pointer "
+      "and stores it in `doc-state-ptr'.");
+
+  register_module_func(
+      env, emacs_next_page, "render-core-next-page", 0, 0,
+      "Loads and renders the next page of the document.  It is wrapped around "
+      "the Elisp function `reader-next-page'.  Since DocState stores SVG data "
+      "for the previous and next page, all this does is render the data for "
+      "the next page that was rendered and stored in memory previously.");
+
+  register_module_func(
+      env, emacs_prev_page, "render-core-previous-page", 0, 0,
+      "Loads and renders the previous page of the document.  It is wrapped "
+      "around the Elisp function `reader-prev-page'.  Since DocState stores "
+      "SVG data for the previous and next page, all this does is render the "
+      "data for the previous page that was rendered and stored in memory "
+      "previously.");
+
+  register_module_func(
+      env, emacs_first_page, "render-core-first-page", 0, 0,
+      "Loads and renders the first page of the document. It is wrapped around "
+      "`reader-first-page'. It calls `render_pages' with 0 as the argument, "
+      "since MuPDF does 0-indexing.");
+
+  register_module_func(env, emacs_last_page, "render-core-last-page", 0, 0,
+                       "Loads and renders the last page of the document. It is "
+                       "wrapped around `reader-last-page'. It calls "
+                       "`render_pages' with (pagecount - 1) as the argument");
+
+  register_module_func(
+      env, emacs_goto_page, "render-core-goto-page", 1, 1,
+      "Loads and renders the N page number. It is wrapped around "
+      "`reader-goto-page'. It calls `render_pages' with N - 1 as the argument");
+
   register_module_func(env, get_current_page_number,
-                       "get-current-doc-pagenumber", 0, 0,
-                       "Get current page number for the visiting document");
+                       "render-core-get-current-doc-pagenumber", 0, 0,
+                       "Returns the current page number the document is at "
+                       "from DocState as an Elisp value.");
 
   // Register the buffer-local page number
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
@@ -854,6 +887,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   env->funcall(
       env, env->intern(env, "set"), 2,
       (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
+
   // Ensure that the variable stays buffer-local and doesn’t get overriden
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){page_render_status_sym,
@@ -873,8 +907,10 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                &svg_overlay_sym);
 
   register_module_func(
-      env, emacs_doc_change_page_size, "doc-change-page-size", 1, 1,
-      "Scales the current page of the document by a given FACTOR");
+      env, emacs_doc_change_page_size, "render-core-doc-change-page-size", 1, 1,
+      "Scales the current page of the document by a given FACTOR. It "
+      "multiplies the FACTOR with the :width, :height and :scale properties of "
+      "the image, and then renders the scaled image through `overlay-put'.");
 
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-core");

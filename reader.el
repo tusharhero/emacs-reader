@@ -79,10 +79,10 @@ Any other file format would simply not show up as a candidate."
 		(lambda (f)
                   (or (file-directory-p f)
                       (string-match-p rgx f))))))
-    	 (switch-to-buffer (create-file-buffer file))
-	 (insert "\n")
-	 (load-doc (expand-file-name file))
-	 (reader-mode)))
+    (switch-to-buffer (create-file-buffer file))
+    (insert "\n")
+    (render-core-load-doc (expand-file-name file))
+    (reader-mode)))
 
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
@@ -245,7 +245,7 @@ Optionally specify the AMOUNT by which to scroll."
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (load-doc file))
+	  (render-core-load-doc file))
       (message "No file associated with buffer."))))
 
 ;; Define the keymap for reader-mode
