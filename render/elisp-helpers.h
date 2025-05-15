@@ -24,5 +24,6 @@ void set_current_render_status(emacs_env *env);
 void set_current_pagecount(emacs_env *env, DocState *state);
 void init_overlay(emacs_env *env);
 emacs_value get_current_svg_overlay(emacs_env *env);
+void emacs_error(emacs_env *env, char *str);
 
 #endif
