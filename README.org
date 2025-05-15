@@ -74,3 +74,12 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 - =C-v= for scrolling to the end of the page.
 - =SPC=, =S-SPC= , and =DEL= make the above two commands keep scrolling the pages.
 - === and =-= for zooming in and out of the current page.
+
+* How It Works
+This package is entirely distinct from DocView and =pdf-tools= in both its architecture and implementation. It leverages Emacs’ dynamic/native modules which allows it to interoperate with other programming languages outside of its Emacs Lisp environment.
+
+Thus, we rely on the efficient MuPDF library as a shared object with which our dynamic modules work. All the tasks that require manual memory management, efficiently rendering SVGs, and so on are delegated to the C backend, and Emacs takes care of exclusively what it’s good at: displaying produced SVGs and buffer management.
+
+For understanding how dynamic modules work within Emacs, please consult the following article I wrote:
+
+https://www.phimulambda.org/blog/emacs-dynamic-module.html
