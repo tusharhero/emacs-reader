@@ -484,6 +484,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (!elisp_2_c_str(env, args[0], &state->path, &str_length)) {
     emacs_message(env, "Failed to convert Emacs string to C string.");
+    return EMACS_NIL;
   }
 
   if (load_mupdf_doc(state) == EXIT_SUCCESS) {
@@ -519,12 +520,14 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                    (emacs_value[]){doc_state_ptr_sym, user_ptr});
     } else {
       emacs_message(env, "Rendering initial page failed.");
+      return EMACS_NIL;
     }
   } else {
     emacs_message(env, "Loading document failed.");
+    return EMACS_NIL;
   }
 
-  return env->intern(env, "t");
+  return EMACS_T;
 }
 
 /**
@@ -553,6 +556,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state->current_page_number == (state->pagecount - 1)) {
     emacs_message(env, "Already last page!");
+    return EMACS_NIL;
   }
 
   emacs_value next_image_data =
@@ -565,7 +569,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     render_pages(state, state->next_page_number);
   }
 
-  return env->intern(env, "t");
+  return EMACS_T;
 }
 
 /**
@@ -594,6 +598,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state->current_page_number == 0) {
     emacs_message(env, "Already first page!");
+    return EMACS_NIL;
   }
 
   if (state->current_page_number < (state->pagecount - 1)) {
@@ -606,9 +611,10 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
     if (state->current_page_number > 0) {
       render_pages(state, state->prev_page_number);
-      return env->intern(env, "t");
+      return EMACS_T;
     } else {
       emacs_message(env, "Already first page!");
+      return EMACS_NIL;
     }
   } else {
     render_pages(state, (state->pagecount - 2));
@@ -618,7 +624,8 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         current_svg_overlay, env->intern(env, "display"), current_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   }
-  return env->intern(env, "t");
+
+  return EMACS_T;
 }
 
 /**
@@ -646,6 +653,7 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state->current_page_number == 0) {
     emacs_message(env, "Already first page!");
+    return EMACS_NIL;
   }
 
   state->current_page_number = 0;
@@ -658,9 +666,10 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     emacs_message(env, "Already first page!");
+    return EMACS_NIL;
   }
   state->current_page_number = 0;
-  return env->intern(env, "t");
+  return EMACS_T;
 }
 
 /**
@@ -688,6 +697,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state->current_page_number == state->pagecount - 1) {
     emacs_message(env, "Already first page!");
+    return EMACS_NIL;
   }
 
   state->current_page_number = state->pagecount - 1;
@@ -700,9 +710,10 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     emacs_message(env, "Failed to render the last page");
+    return EMACS_NIL;
   }
   state->current_page_number = state->pagecount - 1;
-  return env->intern(env, "t");
+  return EMACS_T;
 }
 
 /**
@@ -738,11 +749,13 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       emacs_message(env, "Page cannot be rendered");
+      return EMACS_NIL;
     }
   } else {
     emacs_message(env, "Provided page number is out of bounds!");
   }
-  return env->intern(env, "t");
+
+  return EMACS_T;
 }
 
 /**
@@ -803,7 +816,7 @@ emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs,
       current_svg_overlay, env->intern(env, "display"), current_image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-  return env->intern(env, "t");
+ return EMACS_T;
 }
 
 // Entrypoint for the dynamic module
