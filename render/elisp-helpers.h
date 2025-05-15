@@ -6,6 +6,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#define EMACS_NIL env->intern(env, "nil")
+#define EMACS_T env->intern(env, "t")
+
 bool elisp_2_c_str(emacs_env *env, emacs_value value, char **buffer,
                    size_t *size);
 void provide(emacs_env *env, const char *value);
