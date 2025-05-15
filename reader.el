@@ -157,8 +157,8 @@ Optionally specify the AMOUNT by which to scroll."
 (defun reader-possible-scroll-down (&optional amount)
   "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
 If none is possible return nil."
-  (let* ((amount (if amount amount 1))
-	 (image-height (cdr (reader--get-current-doc-image-size)))
+  (interactive "p")
+  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (window-height (window-body-height))
 	 (pixel-window-height (window-body-height nil t))
 	 (pixel-per-col (/ pixel-window-height
