@@ -60,8 +60,8 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 *NOTE:* Both of these commands will take a /long/ time, because they’re going to invoke the =make= command which will recursively fetch the submodule and it’s dependencies. *It’ll hang your Emacs for a good ~15-20m, so be careful.*
 
 * Key Bindings
-- =N= or =J= for going to next page
-- =P= or =K= for going to previous page
+- =Page Up= or =J= for going to next page
+- =Page Down= or =K= for going to previous page
 - =j= or =n= for scrolling down.
 - =k= or =p= for scrolling up.
 - =h= or =C-b= for scrolling left.
@@ -70,4 +70,7 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 - =M-<= and =gg= for going to the first page.
 - =M->= and =G= for going to the last page.
 - =M-g g= or =g n= for going to a particular page.
+- =M-v=  for scrolling to the top of the page.
+- =C-v= for scrolling to the end of the page.
+- =SPC=, =S-SPC= , and =DEL= make the above two commands keep scrolling the pages.
 - === and =-= for zooming in and out of the current page.
