@@ -149,26 +149,63 @@ Any other file format would simply not show up as a candidate."
   "Scroll up the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  (let ((vscroll (- (window-vscroll) (if (not amount)
-					 1 amount))))
-    (set-window-vscroll nil vscroll)))
+  (let* ((vscroll (max 0
+		       (- (window-vscroll) (if (not amount)
+					       1 amount))))
+	 (current-vscroll (set-window-vscroll nil vscroll))
+	 (scrolled-amount (- current-vscroll vscroll)))
+    (when (< 0 scrolled-amount) scrolled-amount)))
 
-(defun reader-can-scroll-down-p ()
-  "Non-nil if there's more of the image below the current window bottom."
-  (let ((image-height (cdr (get-current-doc-image-size)))
-        (win-bottom-pos (+ (window-vscroll nil t)
-			   (window-body-height nil t))))
-    (and image-height (< win-bottom-pos image-height))))
+(defun reader-possible-scroll-down (&optional amount)
+  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
+If none is possible return nil."
+  (let* ((amount (if (not amount) 1 amount))
+	 (image-height (cdr (get-current-doc-image-size)))
+	 (window-height (window-body-height))
+	 (pixel-window-height (window-body-height nil t))
+	 (pixel-per-col (/ pixel-window-height
+                           window-height))
+         (pixel-amount (* pixel-per-col amount))
+	 (pixel-current-scroll (window-vscroll nil t))
+	 (pixel-predicted-scroll (+ pixel-current-scroll
+				    pixel-amount))
+         (win-bottom-pos (+ pixel-current-scroll
+			    pixel-window-height))
+	 (predicted-win-bottom-position (+ pixel-predicted-scroll
+					   pixel-window-height)))
+    (if (> predicted-win-bottom-position image-height)
+	(let* ((max-scroll-amount
+		(round (/ (- image-height win-bottom-pos) pixel-per-col))))
+	  (when (< 0 max-scroll-amount)
+	    max-scroll-amount))
+      amount)))
 
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  amount
-  (when-let* (((reader-can-scroll-down-p))
-	      (vscroll (+ (window-vscroll) (if (not amount)
-					       1 amount))))
+  (when-let* ((amount (reader-possible-scroll-down (if (not amount)
+						       1 amount)))
+	      (vscroll (+ (window-vscroll) amount)))
     (set-window-vscroll nil vscroll)))
+
+(defun reader-scroll-up-screenful (&optional amount)
+  "Scroll up the current page by a screenful.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (when (not (reader-scroll-up scroll))
+      (message "Beginning of page"))))
+
+(defun reader-scroll-down-screenful (&optional amount)
+  "Scroll down the current page by a screenful.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (when (not (reader-scroll-down scroll))
+      (message "End of page"))))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
@@ -207,6 +244,22 @@ Optionally specify the AMOUNT by which to scroll."
 	       ;; if succeeds
 	       (reader-next-page))
       (set-window-vscroll nil 0))))
+
+(defun reader-scroll-up-screenful-or-prev-page (&optional amount)
+  "Scroll up the current page by a screenful or go to the previous page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (reader-scroll-up-or-prev-page scroll)))
+
+(defun reader-scroll-down-screenful-or-next-page (&optional amount)
+  "Scroll down the current page by a screenful or go to the next page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (reader-scroll-down-or-next-page scroll)))
 
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
@@ -253,24 +306,26 @@ Optionally specify the AMOUNT by which to scroll."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "N") #'reader-next-page)
     (define-key map (kbd "J") #'reader-next-page)
-    (define-key map (kbd "<next>") #'reader-next-page)
     (define-key map (kbd "j") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
-    (define-key map (kbd "SPC") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<down>") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<wheel-down>") #'reader-scroll-down-or-next-page)
+    (define-key map (kbd "<next>") #'reader-scroll-down-screenful)
+    (define-key map (kbd "C-v") #'reader-scroll-down-screenful)
+    (define-key map (kbd "SPC") #'reader-scroll-down-screenful-or-next-page)
 
     (define-key map (kbd "P") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
-    (define-key map (kbd "<prior>") #'reader-previous-page)
     (define-key map (kbd "p") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "k") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "C-p") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "DEL") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "S-SPC") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<up>") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<wheel-up>") #'reader-scroll-up-or-prev-page)
+    (define-key map (kbd "<prior>") #'reader-scroll-up-screenful)
+    (define-key map (kbd "M-v") #'reader-scroll-up-screenful)
+    (define-key map (kbd "DEL") #'reader-scroll-up-screenful-or-prev-page)
+    (define-key map (kbd "S-SPC") #'reader-scroll-up-screenful-or-prev-page)
 
     (define-key map (kbd "h") #'reader-scroll-left)
     (define-key map (kbd "l") #'reader-scroll-right)
