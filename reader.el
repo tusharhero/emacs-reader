@@ -275,8 +275,8 @@ Optionally specify the AMOUNT by which to scroll."
   "Centers the pages of the document with respect to the WINDOW in which the document is opened."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
-      (let* ((window-width (window-width window))
-	     (pixel-window-width (window-width window t))
+      (let* ((window-width (window-body-width window))
+	     (pixel-window-width (window-body-width window t))
 	     (pixel-per-col (/ pixel-window-width
                                window-width))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
