@@ -1,4 +1,4 @@
-;;; reader.el --- General-purpose Document Viewer -*- lexical-binding: t; -*-
+;;; reader.el --- General-purpose Document Reader -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2025  Divya Ranjan Pattanaik
 
@@ -294,7 +294,8 @@ Optionally specify the AMOUNT by which to scroll."
 	  (set-window-hscroll window scroll-offset))))))
 
 (defun reader--render-buffer ()
-  "Render the document file this buffer is associated with.  It is to be called while a document’s buffer is already opened and the buffer is not in `reader-mode'."
+  "Render the document file this buffer is associated with.  It is to be called while a document’s
+buffer is already opened and the buffer is not in `reader-mode'."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
