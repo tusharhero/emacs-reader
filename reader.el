@@ -160,7 +160,7 @@ If none is possible return nil."
   (interactive "p")
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (window-height (window-body-height))
-	 (pixel-window-height (window-body-height nil t))
+	 (pixel-window-height (window-pixel-height))
 	 (pixel-per-col (/ pixel-window-height
                            window-height))
          (pixel-amount (* pixel-per-col amount))
@@ -228,7 +228,7 @@ Optionally specify the AMOUNT by which to scroll."
     (when-let* (((and (= prev-scroll (window-vscroll))
 		      (reader-previous-page))) ; if succeeds
 		(image-height (cdr (reader--get-current-doc-image-size)))
-		(pixel-window-height (window-body-height nil t))
+		(pixel-window-height (window-pixel-height))
 		(bottom-most-scroll-pixel
 		 (- image-height pixel-window-height)))
       (set-window-vscroll nil bottom-most-scroll-pixel t))))
@@ -276,7 +276,7 @@ Optionally specify the AMOUNT by which to scroll."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
       (let* ((window-width (window-body-width window))
-	     (pixel-window-width (window-body-width window t))
+	     (pixel-window-width (window-pixel-width))
 	     (pixel-per-col (/ pixel-window-width
                                window-width))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
