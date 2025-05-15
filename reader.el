@@ -55,7 +55,7 @@
 
 (defun reader-open-doc ()
   "Open a document for viewing.
-This function calls the C function `load-doc' from the dynamic module
+This function calls the module function `render-core-load-doc' from the dynamic module
 to render the first page and displays it in a new buffer.  The only files
 that can be opened are of the following formats:
 - PDF
@@ -87,9 +87,9 @@ Any other file format would simply not show up as a candidate."
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
   (interactive)
-  (let ((status (next-doc-page)))
+  (let ((status (render-core-next-page)))
     (when status
-      (doc-change-page-size reader-current-doc-scale)
+      (render-core-change-page-size reader-current-doc-scale)
       (reader-center-page)
       (force-mode-line-update t))
     status))
@@ -97,8 +97,8 @@ Any other file format would simply not show up as a candidate."
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
-  (let ((status (previous-doc-page)))
-    (doc-change-page-size reader-current-doc-scale)
+  (let ((status (render-core-prev-page)))
+    (render-core-change-page-size reader-current-doc-scale)
     (reader-center-page)
     (force-mode-line-update t)
     status))
@@ -106,24 +106,24 @@ Any other file format would simply not show up as a candidate."
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
   (interactive)
-  (first-doc-page)
-  (doc-change-page-size reader-current-doc-scale)
+  (render-core-first-page)
+  (render-core-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-last-page ()
   "Go to the last page of the visiting document."
   (interactive)
-  (last-doc-page)
-  (doc-change-page-size reader-current-doc-scale)
+  (render-core-last-page)
+  (render-core-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
 (defun reader-goto-page (n)
   "Go to page number 'N' in the current document."
   (interactive "nPage: ")
-  (goto-doc-page (- n 1)) ; MuPDF does 0-indexing
-  (doc-change-page-size reader-current-doc-scale)
+  (render-core-goto-page (- n 1)) ; MuPDF does 0-indexing
+  (render-core-change-page-size reader-current-doc-scale)
   (reader-center-page)
   (force-mode-line-update t))
 
@@ -131,7 +131,7 @@ Any other file format would simply not show up as a candidate."
   "Enlarge the size of the current page with respect to the `reader-enlarge-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
-    (doc-change-page-size scaling-factor)
+    (render-core-change-page-size scaling-factor)
     (setq reader-current-doc-scale scaling-factor))
   (reader-center-page)
   (force-mode-line-update t))
@@ -140,7 +140,7 @@ Any other file format would simply not show up as a candidate."
   "Shrink the size of the current page with respect to the `reader-shrink-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
-    (doc-change-page-size scaling-factor)
+    (render-core-change-page-size scaling-factor)
     (setq reader-current-doc-scale scaling-factor))
   (reader-center-page)
   (force-mode-line-update t))
@@ -318,7 +318,7 @@ Keybindings:
   (setq-local mode-line-format
 	      (list
 	       "Page: "
-	       '(:eval (number-to-string (+ 1 (get-current-doc-pagenumber))))
+	       '(:eval (number-to-string (+ 1 (render-core-get-current-pagenumber))))
 	       "/"
 	       '(:eval (number-to-string current-doc-pagecount))
 	       "  "

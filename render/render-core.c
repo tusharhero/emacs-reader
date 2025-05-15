@@ -847,7 +847,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
       "the next page that was rendered and stored in memory previously.");
 
   register_module_func(
-      env, emacs_prev_page, "render-core-previous-page", 0, 0,
+      env, emacs_prev_page, "render-core-prev-page", 0, 0,
       "Loads and renders the previous page of the document.  It is wrapped "
       "around the Elisp function `reader-prev-page'.  Since DocState stores "
       "SVG data for the previous and next page, all this does is render the "
@@ -871,7 +871,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
       "`reader-goto-page'. It calls `render_pages' with N - 1 as the argument");
 
   register_module_func(env, get_current_page_number,
-                       "render-core-get-current-doc-pagenumber", 0, 0,
+                       "render-core-get-current-pagenumber", 0, 0,
                        "Returns the current page number the document is at "
                        "from DocState as an Elisp value.");
 
@@ -907,7 +907,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                &svg_overlay_sym);
 
   register_module_func(
-      env, emacs_doc_change_page_size, "render-core-doc-change-page-size", 1, 1,
+      env, emacs_doc_change_page_size, "render-core-change-page-size", 1, 1,
       "Scales the current page of the document by a given FACTOR. It "
       "multiplies the FACTOR with the :width, :height and :scale properties of "
       "the image, and then renders the scaled image through `overlay-put'.");
