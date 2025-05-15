@@ -149,9 +149,12 @@ Any other file format would simply not show up as a candidate."
   "Scroll up the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  (let ((vscroll (- (window-vscroll) (if (not amount)
-					 1 amount))))
-    (set-window-vscroll nil vscroll)))
+  (let* ((vscroll (max 0
+		       (- (window-vscroll) (if (not amount)
+					       1 amount))))
+	 (current-vscroll (set-window-vscroll nil vscroll))
+	 (scrolled-amount (- current-vscroll vscroll)))
+    (when (< 0 scrolled-amount) scrolled-amount)))
 
 (defun reader-possible-scroll-down (&optional amount)
   "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
