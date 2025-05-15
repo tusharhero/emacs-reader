@@ -150,17 +150,14 @@ Any other file format would simply not show up as a candidate."
   "Scroll up the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  (let* ((vscroll (max 0
-		       (- (window-vscroll) (if (not amount)
-					       1 amount))))
-	 (current-vscroll (set-window-vscroll nil vscroll))
-	 (scrolled-amount (- current-vscroll vscroll)))
-    (when (< 0 scrolled-amount) scrolled-amount)))
+  (let* ((vscroll
+	  (max (- (window-vscroll) amount) 0)))
+    (set-window-vscroll nil vscroll)))
 
 (defun reader-possible-scroll-down (&optional amount)
   "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
 If none is possible return nil."
-  (let* ((amount (if (not amount) 1 amount))
+  (let* ((amount (if amount amount 1))
 	 (image-height (cdr (reader--get-current-doc-image-size)))
 	 (window-height (window-body-height))
 	 (pixel-window-height (window-body-height nil t))
@@ -173,39 +170,41 @@ If none is possible return nil."
          (win-bottom-pos (+ pixel-current-scroll
 			    pixel-window-height))
 	 (predicted-win-bottom-position (+ pixel-predicted-scroll
-					   pixel-window-height)))
-    (if (> predicted-win-bottom-position image-height)
-	(let* ((max-scroll-amount
-		(round (/ (- image-height win-bottom-pos) pixel-per-col))))
-	  (when (< 0 max-scroll-amount)
-	    max-scroll-amount))
+					   pixel-window-height))
+	 (scroll-p (> predicted-win-bottom-position image-height)))
+    (if scroll-p
+	(let* ((pixel-max-scroll-amount (- image-height win-bottom-pos))
+	       (max-scroll-amount
+		(round (/ pixel-max-scroll-amount pixel-per-col))))
+	  max-scroll-amount)
       amount)))
 
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  (when-let* ((amount (reader-possible-scroll-down (if (not amount)
-						       1 amount)))
-	      (vscroll (+ (window-vscroll) amount)))
+  (let* ((amount (reader-possible-scroll-down amount))
+	 (vscroll (+ (window-vscroll) amount)))
     (set-window-vscroll nil vscroll)))
 
-(defun reader-scroll-up-screenful (&optional amount)
-  "Scroll up the current page by a screenful.
-Optionally specify the AMOUNT by which to scroll."
-  (interactive "p")
-  (let ((scroll (- (window-body-height)
+(defun reader-scroll-up-screenful ()
+  "Scroll up the current page by a screenful."
+  (interactive)
+  (let ((prev-scroll (window-vscroll))
+	(amount (- (window-body-height)
 		   next-screen-context-lines)))
-    (when (not (reader-scroll-up scroll))
+    (when (= prev-scroll
+	     (reader-scroll-up amount))
       (message "Beginning of page"))))
 
-(defun reader-scroll-down-screenful (&optional amount)
-  "Scroll down the current page by a screenful.
-Optionally specify the AMOUNT by which to scroll."
-  (interactive "p")
-  (let ((scroll (- (window-body-height)
+(defun reader-scroll-down-screenful ()
+  "Scroll down the current page by a screenful."
+  (interactive)
+  (let ((prev-scroll (window-vscroll))
+	(amount (- (window-body-height)
 		   next-screen-context-lines)))
-    (when (not (reader-scroll-down scroll))
+    (when (= prev-scroll
+	     (reader-scroll-down amount))
       (message "End of page"))))
 
 (defun reader-scroll-left ()
@@ -227,8 +226,7 @@ Optionally specify the AMOUNT by which to scroll."
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-up amount)
     (when-let* (((and (= prev-scroll (window-vscroll))
-		      ;; if succeeds
-		      (reader-previous-page)))
+		      (reader-previous-page))) ; if succeeds
 		(image-height (cdr (reader--get-current-doc-image-size)))
 		(pixel-window-height (window-body-height nil t))
 		(bottom-most-scroll-pixel
@@ -242,8 +240,7 @@ Optionally specify the AMOUNT by which to scroll."
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-down amount)
     (when (and (= prev-scroll (window-vscroll))
-	       ;; if succeeds
-	       (reader-next-page))
+	       (reader-next-page)) ; if succeeds
       (set-window-vscroll nil 0))))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional amount)
