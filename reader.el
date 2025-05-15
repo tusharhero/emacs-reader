@@ -242,6 +242,22 @@ Optionally specify the AMOUNT by which to scroll."
 	       (reader-next-page))
       (set-window-vscroll nil 0))))
 
+(defun reader-scroll-up-screenful-or-prev-page (&optional amount)
+  "Scroll up the current page by a screenful or go to the previous page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (reader-scroll-up-or-prev-page scroll)))
+
+(defun reader-scroll-down-screenful-or-next-page (&optional amount)
+  "Scroll down the current page by a screenful or go to the next page if can't scroll.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (reader-scroll-down-or-next-page scroll)))
+
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
   (interactive)
@@ -290,23 +306,23 @@ Optionally specify the AMOUNT by which to scroll."
     (define-key map (kbd "j") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "n") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
-    (define-key map (kbd "SPC") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<down>") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<wheel-down>") #'reader-scroll-down-or-next-page)
     (define-key map (kbd "<next>") #'reader-scroll-down-screenful)
     (define-key map (kbd "C-v") #'reader-scroll-down-screenful)
+    (define-key map (kbd "SPC") #'reader-scroll-down-screenful-or-next-page)
 
     (define-key map (kbd "P") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
     (define-key map (kbd "p") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "k") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "C-p") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "DEL") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "S-SPC") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<up>") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<wheel-up>") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<prior>") #'reader-scroll-up-screenful)
     (define-key map (kbd "M-v") #'reader-scroll-up-screenful)
+    (define-key map (kbd "DEL") #'reader-scroll-up-screenful-or-prev-page)
+    (define-key map (kbd "S-SPC") #'reader-scroll-up-screenful-or-prev-page)
 
     (define-key map (kbd "h") #'reader-scroll-left)
     (define-key map (kbd "l") #'reader-scroll-right)
