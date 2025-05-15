@@ -253,17 +253,12 @@ emacs_value get_current_svg_overlay(emacs_env *env) {
 }
 
 /**
- * emacs_error - Signal an Emacs Lisp error with a formatted string.
+ * emacs_message - Print a message in Emacs with the given string
  * @env:    The Emacs environment pointer.
- * @str:    Null-terminated C string containing the error message.
- *
- * Constructs an Emacs Lisp string from `str` and invokes the `error` special
- * form in Emacs, causing a non-local exit. Control does not return to this
- * function; Emacs handles the error (e.g., via `condition-case`).
- *
+ * @str:    Null-terminated C string containing the message.
  */
 
-void emacs_error(emacs_env *env, char *str) {
+void emacs_message(emacs_env *env, char *str) {
   emacs_value el_string = env->make_string(env, str, strlen(str));
-  env->funcall(env, env->intern(env, "error"), 1, &el_string);
+  env->funcall(env, env->intern(env, "message"), 1, &el_string);
 }
