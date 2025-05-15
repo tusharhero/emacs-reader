@@ -4,7 +4,7 @@
 
 ;; Author: Divya Ranjan Pattanaik <divya@subvertising.org>
 ;; Keywords: lisp, files, tools
-;; Version: 0.1.9
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; URL: https://codeberg.org/divyaranjan/emacs-reader
 
