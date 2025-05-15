@@ -652,9 +652,9 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
     emacs_value prev_image_data = svg2elisp_image(
-						  env, state, state->current_svg_data, state->current_svg_size);
+        env, state, state->current_svg_data, state->current_svg_size);
     emacs_value overlay_put_args[3] = {
-      current_svg_overlay, env->intern(env, "display"), prev_image_data};
+        current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     emacs_error(env, "Already first page!");
@@ -687,7 +687,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == state->pagecount - 1) {
-     emacs_error(env, "Already first page!");
+    emacs_error(env, "Already first page!");
   }
 
   state->current_page_number = state->pagecount - 1;
@@ -732,15 +732,15 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     state->current_page_number = page_number;
     if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value current_image_data = svg2elisp_image(
-						       env, state, state->current_svg_data, state->current_svg_size);
+          env, state, state->current_svg_data, state->current_svg_size);
       emacs_value overlay_put_args[3] = {
-	current_svg_overlay, env->intern(env, "display"), current_image_data};
+          current_svg_overlay, env->intern(env, "display"), current_image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       emacs_error(env, "Page cannot be rendered");
     }
   } else {
-     emacs_error(env, "Provided page number is out of bounds!");
+    emacs_error(env, "Provided page number is out of bounds!");
   }
   return env->intern(env, "t");
 }
