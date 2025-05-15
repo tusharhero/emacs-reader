@@ -186,13 +186,23 @@ Optionally specify the AMOUNT by which to scroll."
 	      (vscroll (+ (window-vscroll) amount)))
     (set-window-vscroll nil vscroll)))
 
+(defun reader-scroll-up-screenful (&optional amount)
+  "Scroll up the current page by a screenful.
+Optionally specify the AMOUNT by which to scroll."
+  (interactive "p")
+  (let ((scroll (- (window-body-height)
+		   next-screen-context-lines)))
+    (when (not (reader-scroll-up scroll))
+      (message "Beginning of page"))))
+
 (defun reader-scroll-down-screenful (&optional amount)
   "Scroll down the current page by a screenful.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
-    (reader-scroll-down scroll)))
+    (when (not (reader-scroll-down scroll))
+      (message "End of page"))))
 
 (defun reader-scroll-left ()
   "Scroll to the left of the current page."
@@ -288,7 +298,6 @@ Optionally specify the AMOUNT by which to scroll."
 
     (define-key map (kbd "P") #'reader-previous-page)
     (define-key map (kbd "K") #'reader-previous-page)
-    (define-key map (kbd "<prior>") #'reader-previous-page)
     (define-key map (kbd "p") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "k") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "C-p") #'reader-scroll-up-or-prev-page)
@@ -296,6 +305,8 @@ Optionally specify the AMOUNT by which to scroll."
     (define-key map (kbd "S-SPC") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<up>") #'reader-scroll-up-or-prev-page)
     (define-key map (kbd "<wheel-up>") #'reader-scroll-up-or-prev-page)
+    (define-key map (kbd "<prior>") #'reader-scroll-up-screenful)
+    (define-key map (kbd "M-v") #'reader-scroll-up-screenful)
 
     (define-key map (kbd "h") #'reader-scroll-left)
     (define-key map (kbd "l") #'reader-scroll-right)
