@@ -50,12 +50,13 @@
   :group 'reader
   :type 'number)
 
-(defvar reader-current-doc-scale 1)
+(defvar reader-current-doc-scale 1
+  "The amount of scaling for the current document. Defaults to 1.")
 (make-variable-buffer-local 'reader-current-doc-scale)
 
 (defun reader-open-doc ()
   "Open a document for viewing.
-This function calls the module function `render-core-load-doc' from the dynamic module
+This function calls the module function `reader-dyn--load-doc' from the dynamic module
 to render the first page and displays it in a new buffer.  The only files
 that can be opened are of the following formats:
 - PDF
@@ -81,68 +82,68 @@ Any other file format would simply not show up as a candidate."
                       (string-match-p rgx f))))))
     (switch-to-buffer (create-file-buffer file))
     (insert "\n")
-    (render-core-load-doc (expand-file-name file))
+    (reader-dyn--load-doc (expand-file-name file))
     (reader-mode)))
 
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
   (interactive)
-  (let ((status (render-core-next-page)))
+  (let ((status (reader-dyn--next-page)))
     (when status
-      (render-core-change-page-size reader-current-doc-scale)
-      (reader-center-page)
+      (reader-dyn--scale-page reader-current-doc-scale)
+      (reader--center-page)
       (force-mode-line-update t))
     status))
 
 (defun reader-previous-page ()
   "Go to the previous page of the visiting document."
   (interactive)
-  (let ((status (render-core-prev-page)))
-    (render-core-change-page-size reader-current-doc-scale)
-    (reader-center-page)
+  (let ((status (reader-dyn--prev-page)))
+    (reader-dyn--scale-page reader-current-doc-scale)
+    (reader--center-page)
     (force-mode-line-update t)
     status))
 
 (defun reader-first-page ()
   "Go to the first page of the visiting document."
   (interactive)
-  (render-core-first-page)
-  (render-core-change-page-size reader-current-doc-scale)
-  (reader-center-page)
+  (reader-dyn--first-page)
+  (reader-dyn--scale-page reader-current-doc-scale)
+  (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-last-page ()
   "Go to the last page of the visiting document."
   (interactive)
-  (render-core-last-page)
-  (render-core-change-page-size reader-current-doc-scale)
-  (reader-center-page)
+  (reader-dyn--last-page)
+  (reader-dyn--scale-page reader-current-doc-scale)
+  (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-goto-page (n)
   "Go to page number 'N' in the current document."
   (interactive "nPage: ")
-  (render-core-goto-page (- n 1)) ; MuPDF does 0-indexing
-  (render-core-change-page-size reader-current-doc-scale)
-  (reader-center-page)
+  (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
+  (reader-dyn--scale-page reader-current-doc-scale)
+  (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
   "Enlarge the size of the current page with respect to the `reader-enlarge-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
-    (render-core-change-page-size scaling-factor)
+    (reader-dyn--scale-page scaling-factor)
     (setq reader-current-doc-scale scaling-factor))
-  (reader-center-page)
+  (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-shrink-size ()
   "Shrink the size of the current page with respect to the `reader-shrink-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
-    (render-core-change-page-size scaling-factor)
+    (reader-dyn--scale-page scaling-factor)
     (setq reader-current-doc-scale scaling-factor))
-  (reader-center-page)
+  (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-scroll-up (&optional amount)
@@ -160,7 +161,7 @@ Optionally specify the AMOUNT by which to scroll."
   "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
 If none is possible return nil."
   (let* ((amount (if (not amount) 1 amount))
-	 (image-height (cdr (get-current-doc-image-size)))
+	 (image-height (cdr (reader--get-current-doc-image-size)))
 	 (window-height (window-body-height))
 	 (pixel-window-height (window-body-height nil t))
 	 (pixel-per-col (/ pixel-window-height
@@ -228,7 +229,7 @@ Optionally specify the AMOUNT by which to scroll."
     (when-let* (((and (= prev-scroll (window-vscroll))
 		      ;; if succeeds
 		      (reader-previous-page)))
-		(image-height (cdr (get-current-doc-image-size)))
+		(image-height (cdr (reader--get-current-doc-image-size)))
 		(pixel-window-height (window-body-height nil t))
 		(bottom-most-scroll-pixel
 		 (- image-height pixel-window-height)))
@@ -266,14 +267,14 @@ Optionally specify the AMOUNT by which to scroll."
   (interactive)
   (kill-buffer (current-buffer)))
 
-(defun get-current-doc-image-size ()
+(defun reader--get-current-doc-image-size ()
   "Get the size of the current page's doc image."
-  (let* ((cdr-image (cdr (overlay-get current-svg-overlay 'display)))
+  (let* ((cdr-image (cdr (overlay-get reader-current-svg-overlay 'display)))
 	 (width (plist-get cdr-image :width))
 	 (length (plist-get cdr-image :length)))
     (cons width length)))
 
-(defun reader-center-page (&optional window)
+(defun reader--center-page (&optional window)
   "Centers the pages of the document with respect to the WINDOW in which the document is opened."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
@@ -281,24 +282,24 @@ Optionally specify the AMOUNT by which to scroll."
 	     (pixel-window-width (window-width window t))
 	     (pixel-per-col (/ pixel-window-width
                                window-width))
-	     (doc-image-width (car (get-current-doc-image-size)))
+	     (doc-image-width (car (reader--get-current-doc-image-size)))
 	     (doc-fits-p (> pixel-window-width doc-image-width))
 	     (raw-offset (/ (- pixel-window-width doc-image-width) 2))
 	     (overlay-offset
 	      `(space :width (,(if doc-fits-p raw-offset 0)))))
-        (overlay-put current-svg-overlay 'line-prefix overlay-offset)
+        (overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
 	(when-let* (((not doc-fits-p)) ; scroll to the center of the doc
 		    (scroll-offset
 		     (round (/ (abs raw-offset) pixel-per-col))))
 	  (set-window-hscroll window scroll-offset))))))
 
-(defun reader-render-buffer ()
+(defun reader--render-buffer ()
   "Render the document file this buffer is associated with.  It is to be called while a document’s buffer is already opened and the buffer is not in `reader-mode'."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
         (progn
-	  (render-core-load-doc file))
+	  (reader-dyn--load-doc file))
       (message "No file associated with buffer."))))
 
 ;; Define the keymap for reader-mode
@@ -355,15 +356,15 @@ Keybindings:
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
   ;; Only do this when document is not already rendered
-  (when (not doc-render-status)
-    (reader-render-buffer))
+  (when (not reader-current-doc-render-status)
+    (reader--render-buffer))
 
   (use-local-map reader-mode-map)
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
   ;; Invoke centering every time window's size changes only in reader-mode windows
-  (add-hook 'window-size-change-functions #'reader-center-page nil t))
+  (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
 ;; Modeline for the reader-mode
 (defun reader-mode-line ()
@@ -371,9 +372,9 @@ Keybindings:
   (setq-local mode-line-format
 	      (list
 	       "Page: "
-	       '(:eval (number-to-string (+ 1 (render-core-get-current-pagenumber))))
+	       '(:eval (number-to-string (+ 1 (reader-dyn--current-doc-pagenumber))))
 	       "/"
-	       '(:eval (number-to-string current-doc-pagecount))
+	       '(:eval (number-to-string reader-current-doc-pagecount))
 	       "  "
 	       mode-line-buffer-identification))
   (force-mode-line-update t))

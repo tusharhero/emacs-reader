@@ -465,7 +465,7 @@ int render_pages(DocState *state, int page_number) {
  *   6. Converts the SVG to an Emacs image object (svg2elisp_image), and
  * displays it in the overlay using overlay-put.
  *   7. Wraps the DocState in a user pointer and stores it in the Elisp variable
- *      `doc-state-ptr` for later access.
+ *      `reader-current-doc-state-ptr` for later access.
  *
  * If the path conversion fails, prints an error and returns `nil`.  Any other
  * failures during loading or rendering emit an error to stderr but still return
@@ -515,7 +515,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
       // Create a user pointer and expose it to Emacs in a buffer-local fashion
       emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
-      emacs_value doc_state_ptr_sym = env->intern(env, "doc-state-ptr");
+      emacs_value doc_state_ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
       env->funcall(env, env->intern(env, "set"), 2,
                    (emacs_value[]){doc_state_ptr_sym, user_ptr});
     } else {
@@ -774,7 +774,7 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * Return: Elisp `t` on completion.
  */
 
-emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs,
+emacs_value emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs,
                                        emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
@@ -830,7 +830,7 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Registrations for the required functions and variables
 
   register_module_func(
-      env, emacs_load_doc, "render-core-load-doc", 1, 1,
+      env, emacs_load_doc, "reader-dyn--load-doc", 1, 1,
       "Loads a DOC to be rendered in Emacs.  It is wrapped around the Elisp "
       "function `reader-open-doc'. The function does the following:\n 1. "
       "Allocates and resets a new DocState\n 2. Attempts to open the document "
@@ -840,17 +840,17 @@ int emacs_module_init(struct emacs_runtime *runtime) {
       "render the current page and its adjacent ones.\n 6. Converts the SVG to "
       "an Emacs image object and displays it in the overlay through "
       "`overlay-put'.\n 7. Wraps the C pointer for DocState as an user pointer "
-      "and stores it in `doc-state-ptr'.");
+      "and stores it in `reader-current-doc-state-ptr'.");
 
   register_module_func(
-      env, emacs_next_page, "render-core-next-page", 0, 0,
+      env, emacs_next_page, "reader-dyn--next-page", 0, 0,
       "Loads and renders the next page of the document.  It is wrapped around "
       "the Elisp function `reader-next-page'.  Since DocState stores SVG data "
       "for the previous and next page, all this does is render the data for "
       "the next page that was rendered and stored in memory previously.");
 
   register_module_func(
-      env, emacs_prev_page, "render-core-prev-page", 0, 0,
+      env, emacs_prev_page, "reader-dyn--prev-page", 0, 0,
       "Loads and renders the previous page of the document.  It is wrapped "
       "around the Elisp function `reader-prev-page'.  Since DocState stores "
       "SVG data for the previous and next page, all this does is render the "
@@ -858,59 +858,59 @@ int emacs_module_init(struct emacs_runtime *runtime) {
       "previously.");
 
   register_module_func(
-      env, emacs_first_page, "render-core-first-page", 0, 0,
+      env, emacs_first_page, "reader-dyn--first-page", 0, 0,
       "Loads and renders the first page of the document. It is wrapped around "
       "`reader-first-page'. It calls `render_pages' with 0 as the argument, "
       "since MuPDF does 0-indexing.");
 
-  register_module_func(env, emacs_last_page, "render-core-last-page", 0, 0,
+  register_module_func(env, emacs_last_page, "reader-dyn--last-page", 0, 0,
                        "Loads and renders the last page of the document. It is "
                        "wrapped around `reader-last-page'. It calls "
                        "`render_pages' with (pagecount - 1) as the argument");
 
   register_module_func(
-      env, emacs_goto_page, "render-core-goto-page", 1, 1,
+      env, emacs_goto_page, "reader-dyn--goto-page", 1, 1,
       "Loads and renders the N page number. It is wrapped around "
       "`reader-goto-page'. It calls `render_pages' with N - 1 as the argument");
 
   register_module_func(env, get_current_page_number,
-                       "render-core-get-current-pagenumber", 0, 0,
+                       "reader-dyn--current-doc-pagenumber", 0, 0,
                        "Returns the current page number the document is at "
                        "from DocState as an Elisp value.");
 
   // Register the buffer-local page number
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               (emacs_value[]){env->intern(env, "current-doc-pagecount")});
+               (emacs_value[]){env->intern(env, "reader-current-doc-pagecount")});
 
   // Register the buffer-local variable to indicate whether a buffer has been
   // rendered
-  emacs_value page_render_status_sym = env->intern(env, "doc-render-status");
+  emacs_value page_render_status_sym = env->intern(env, "reader-current-doc-render-status");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &page_render_status_sym);
   env->funcall(
       env, env->intern(env, "set"), 2,
-      (emacs_value[]){page_render_status_sym, env->intern(env, "nil")});
+      (emacs_value[]){page_render_status_sym, EMACS_NIL});
 
   // Ensure that the variable stays buffer-local and doesn’t get overriden
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){page_render_status_sym,
                                env->intern(env, "permanent-local"),
-                               env->intern(env, "t")});
+                               EMACS_T});
 
-  emacs_value doc_state_ptr_sym = env->intern(env, "doc-state-ptr");
+  emacs_value doc_state_ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &doc_state_ptr_sym);
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){doc_state_ptr_sym,
                                env->intern(env, "permanent-local"),
-                               env->intern(env, "t")});
+                               EMACS_T});
 
-  emacs_value svg_overlay_sym = env->intern(env, "current-svg-overlay");
+  emacs_value svg_overlay_sym = env->intern(env, "reader-current-svg-overlay");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &svg_overlay_sym);
 
   register_module_func(
-      env, emacs_doc_change_page_size, "render-core-change-page-size", 1, 1,
+      env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,
       "Scales the current page of the document by a given FACTOR. It "
       "multiplies the FACTOR with the :width, :height and :scale properties of "
       "the image, and then renders the scaled image through `overlay-put'.");
@@ -918,5 +918,6 @@ int emacs_module_init(struct emacs_runtime *runtime) {
   // Provide the current dynamic module as a feature to Emacs
   provide(env, "render-core");
   fprintf(stderr, "Emacs module initialized successfully.\n");
+
   return 0;
 }

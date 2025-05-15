@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 /**
  * elisp_2_c_str - Convert an Elisp string to a C string.
  * @env: Pointer (of type `emacs_env') to the environment of the Emacs runtime
@@ -150,7 +151,7 @@ emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
  */
 
 DocState *get_doc_state_ptr(emacs_env *env) {
-  emacs_value ptr_sym = env->intern(env, "doc-state-ptr");
+  emacs_value ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
   emacs_value ptr =
       env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
   DocState *state = env->get_user_ptr(env, ptr);
@@ -192,7 +193,7 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
  */
 
 void set_current_render_status(emacs_env *env) {
-  emacs_value render_status_var = env->intern(env, "doc-render-status");
+  emacs_value render_status_var = env->intern(env, "reader-doc-render-status");
   env->funcall(env, env->intern(env, "set"), 2,
                (emacs_value[]){render_status_var, env->intern(env, "t")});
 }
@@ -208,7 +209,7 @@ void set_current_render_status(emacs_env *env) {
  */
 
 void set_current_pagecount(emacs_env *env, DocState *state) {
-  emacs_value pagecount_args[2] = {env->intern(env, "current-doc-pagecount"),
+  emacs_value pagecount_args[2] = {env->intern(env, "reader-current-doc-pagecount"),
                                    env->make_integer(env, state->pagecount)};
   env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
@@ -219,7 +220,7 @@ void set_current_pagecount(emacs_env *env, DocState *state) {
  *
  * Calls `point-min` and `point-max` to get buffer bounds, then
  * makes an overlay spanning the entire buffer. Stores the overlay
- * object in the Elisp variable `current-svg-overlay` for later use.
+ * object in the Elisp variable `reader-current-svg-overlay` for later use.
  */
 
 void init_overlay(emacs_env *env) {
@@ -227,7 +228,7 @@ void init_overlay(emacs_env *env) {
   emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
   emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
                                      (emacs_value[]){start, end});
-  emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
+  emacs_value current_overlay_sym = env->intern(env, "reader-current-svg-overlay");
 
   env->funcall(env, env->intern(env, "set"), 2,
                (emacs_value[]){current_overlay_sym, overlay});
@@ -237,7 +238,7 @@ void init_overlay(emacs_env *env) {
  * get_current_svg_overlay - Retrieve the stored SVG overlay object.
  * @env:    The Emacs environment pointer.
  *
- * Looks up the Elisp variable `current-svg-overlay` and returns its
+ * Looks up the Elisp variable `reader-current-svg-overlay` and returns its
  * value, which should be the overlay previously created by `init_overlay`.
  *
  * Return: The Elisp overlay object, or an unbound value if not set.
@@ -245,7 +246,7 @@ void init_overlay(emacs_env *env) {
 
 emacs_value get_current_svg_overlay(emacs_env *env) {
 
-  emacs_value current_overlay_sym = env->intern(env, "current-svg-overlay");
+  emacs_value current_overlay_sym = env->intern(env, "reader-current-svg-overlay");
   emacs_value current_overlay = env->funcall(
       env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
 
