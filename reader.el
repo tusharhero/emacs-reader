@@ -153,9 +153,9 @@ Optionally specify the AMOUNT by which to scroll."
 					 1 amount))))
     (set-window-vscroll nil vscroll)))
 
-(defun reader-can-scroll-down-p (&optional amount)
-  "Non-nil if there's more of the image below the current window bottom.
-Optionally calculate if there is enough to scroll by AMOUNT."
+(defun reader-possible-scroll-down (&optional amount)
+  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
+If none is possible return nil."
   (let* ((amount (if (not amount) 1 amount))
 	 (image-height (cdr (get-current-doc-image-size)))
 	 (window-height (window-body-height))
@@ -163,19 +163,27 @@ Optionally calculate if there is enough to scroll by AMOUNT."
 	 (pixel-per-col (/ pixel-window-height
                            window-height))
          (pixel-amount (* pixel-per-col amount))
-         (win-bottom-pos (+ (window-vscroll nil t)
-			    pixel-amount
-			    pixel-window-height)))
-    (and image-height
-	 (< win-bottom-pos image-height))))
+	 (pixel-current-scroll (window-vscroll nil t))
+	 (pixel-predicted-scroll (+ pixel-current-scroll
+				    pixel-amount))
+         (win-bottom-pos (+ pixel-current-scroll
+			    pixel-window-height))
+	 (predicted-win-bottom-position (+ pixel-predicted-scroll
+					   pixel-window-height)))
+    (if (> predicted-win-bottom-position image-height)
+	(let* ((max-scroll-amount
+		(round (/ (- image-height win-bottom-pos) pixel-per-col))))
+	  (when (< 0 max-scroll-amount)
+	    max-scroll-amount))
+      amount)))
 
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
-  (when-let* (((reader-can-scroll-down-p amount))
-	      (vscroll (+ (window-vscroll) (if (not amount)
-					       1 amount))))
+  (when-let* ((amount (reader-possible-scroll-down (if (not amount)
+						       1 amount)))
+	      (vscroll (+ (window-vscroll) amount)))
     (set-window-vscroll nil vscroll)))
 
 (defun reader-scroll-down-screenful (&optional amount)
