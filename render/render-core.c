@@ -483,8 +483,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   reset_doc_state(state);
 
   if (!elisp_2_c_str(env, args[0], &state->path, &str_length)) {
-    fprintf(stderr, "Failed to convert Emacs string to C string.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Failed to convert Emacs string to C string.");
   }
 
   if (load_mupdf_doc(state) == EXIT_SUCCESS) {
@@ -519,12 +518,10 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       env->funcall(env, env->intern(env, "set"), 2,
                    (emacs_value[]){doc_state_ptr_sym, user_ptr});
     } else {
-      fprintf(stderr, "Rendering initial page failed.\n");
-      return env->intern(env, "nil");
+      emacs_error(env, "Rendering initial page failed.");
     }
   } else {
-    fprintf(stderr, "Loading document failed.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Loading document failed.");
   }
 
   return env->intern(env, "t");
@@ -555,8 +552,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == (state->pagecount - 1)) {
-    fprintf(stderr, "Already at the last page.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Already last page!");
   }
 
   emacs_value next_image_data =
@@ -597,8 +593,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == 0) {
-    fprintf(stderr, "Already at the first page.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Already first page!");
   }
 
   if (state->current_page_number < (state->pagecount - 1)) {
@@ -613,8 +608,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       render_pages(state, state->prev_page_number);
       return env->intern(env, "t");
     } else {
-      fprintf(stderr, "Already at the first page.\n");
-      return env->intern(env, "nil");
+      emacs_error(env, "Already first page!");
     }
   } else {
     render_pages(state, (state->pagecount - 2));
@@ -651,21 +645,19 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == 0) {
-    fprintf(stderr, "Already at the first page.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Already first page!");
   }
 
   state->current_page_number = 0;
 
   if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
     emacs_value prev_image_data = svg2elisp_image(
-        env, state, state->current_svg_data, state->current_svg_size);
+						  env, state, state->current_svg_data, state->current_svg_size);
     emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), prev_image_data};
+      current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
-    fprintf(stderr, "Failed to render the first page.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Already first page!");
   }
   state->current_page_number = 0;
   return env->intern(env, "t");
@@ -695,8 +687,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state->current_page_number == state->pagecount - 1) {
-    fprintf(stderr, "Already at the last page\n");
-    return env->intern(env, "nil");
+     emacs_error(env, "Already first page!");
   }
 
   state->current_page_number = state->pagecount - 1;
@@ -708,8 +699,7 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         current_svg_overlay, env->intern(env, "display"), current_page_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
-    fprintf(stderr, "Failed to render the last page.\n");
-    return env->intern(env, "nil");
+    emacs_error(env, "Failed to render the last page");
   }
   state->current_page_number = state->pagecount - 1;
   return env->intern(env, "t");
@@ -738,18 +728,19 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (page_number > 1 && page_number < (state->pagecount - 1)) {
+  if (page_number >= 0 && page_number <= (state->pagecount - 1)) {
     state->current_page_number = page_number;
     if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
       emacs_value current_image_data = svg2elisp_image(
-          env, state, state->current_svg_data, state->current_svg_size);
+						       env, state, state->current_svg_data, state->current_svg_size);
       emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), current_image_data};
+	current_svg_overlay, env->intern(env, "display"), current_image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
-      fprintf(stderr, "Page number out of bounds");
-      return env->intern(env, "nil");
+      emacs_error(env, "Page cannot be rendered");
     }
+  } else {
+     emacs_error(env, "Provided page number is out of bounds!");
   }
   return env->intern(env, "t");
 }
@@ -776,7 +767,6 @@ emacs_value emacs_doc_change_page_size(emacs_env *env, ptrdiff_t nargs,
   (void)data;
 
   emacs_value scale_factor = args[0];
-
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
