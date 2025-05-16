@@ -36,7 +36,7 @@ Using these formats is heavily discouraged, you should /always/ prefer the above
 + XLSX
 
 * Dependencies
-Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule.
+Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule (More details at #18).
 
 So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the depencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
 
