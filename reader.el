@@ -396,6 +396,7 @@ Keybindings:
   (interactive)
   (setq-local buffer-read-only t
 	      global-linum-mode nil
+	      cursor-type 'hollow
 	      display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
