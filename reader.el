@@ -50,8 +50,8 @@
   :group 'reader
   :type 'number)
 
-(defvar reader-current-doc-scale 1
-  "The amount of scaling for the current document. Defaults to 1.")
+(defvar reader-current-doc-scale 1.0
+  "The amount of scaling for the current document. Defaults to 1.0.")
 (make-variable-buffer-local 'reader-current-doc-scale)
 
 (defun reader-open-doc ()
@@ -150,10 +150,10 @@ Any other file format would simply not show up as a candidate."
 (defun reader-fit-to-height ()
   "Scale the current page so that its height fits perfectly within the window."
   (interactive)
-  (reader-dyn--scale-page 1.0) ; we need to get the image height at 1.0
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (pixel-window-height (window-pixel-height))
-	 (scaling-factor (/ pixel-window-height image-height)))
+	 (unscaled-height (/ image-height reader-current-doc-scale))
+	 (scaling-factor (/ pixel-window-height unscaled-height)))
     (reader-dyn--scale-page scaling-factor)
     (setq reader-current-doc-scale scaling-factor)
     (reader--center-page)
@@ -162,10 +162,10 @@ Any other file format would simply not show up as a candidate."
 (defun reader-fit-to-width ()
   "Scale the current page so that its width fits perfectly within the window."
   (interactive)
-  (reader-dyn--scale-page 1.0) ; we need to get the image width at 1.0
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (pixel-window-width (window-pixel-width))
-	 (scaling-factor (/ pixel-window-width image-width)))
+	 (unscaled-width (/ image-width reader-current-doc-scale))
+	 (scaling-factor (/ pixel-window-width unscaled-width)))
     (reader-dyn--scale-page scaling-factor)
     (setq reader-current-doc-scale scaling-factor)
     (reader--center-page)))
