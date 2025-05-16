@@ -99,9 +99,10 @@ Any other file format would simply not show up as a candidate."
   "Go to the previous page of the visiting document."
   (interactive)
   (let ((status (reader-dyn--prev-page)))
-    (reader-dyn--scale-page reader-current-doc-scale)
-    (reader--center-page)
-    (force-mode-line-update t)
+    (when status
+      (reader-dyn--scale-page reader-current-doc-scale)
+      (reader--center-page)
+      (force-mode-line-update t))
     status))
 
 (defun reader-first-page ()
