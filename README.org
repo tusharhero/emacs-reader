@@ -83,3 +83,12 @@ Thus, we rely on the efficient MuPDF library as a shared object with which our d
 For understanding how dynamic modules work within Emacs, please consult the following article I wrote:
 
 https://www.phimulambda.org/blog/emacs-dynamic-module.html
+
+* Live Streams
+
+I have been streaming the development of this package on [[https://tv.dyne.org/c/phimulambda/][my PeerTube channel: (phi (mu (lambda)))]]
+
+Here are the recordings of the streams:
+
+- [[https://tv.dyne.org/w/8W8o4fWz94bMYVMUWExkX7][Part I: Introduction]]
+- [[https://tv.dyne.org/w/fmJnktiZMjrUKJU2s8Pxkq][Part II: Making Overlays Centered and Zoomable]]
