@@ -6,7 +6,7 @@ LIBMUPDF := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
 
 CC = gcc
 MUPDF_HEADERS = $(MUPDF_DIR)/include/
-CFLAGS = -Wall -Wextra -fPIC -I$(dir $(MUPDF_HEADERS))
+CFLAGS = -Wall -Wextra -fPIC -I$(dir $(MUPDF_HEADERS)) -I/render/emacs-module.h
 LDFLAGS = -L$(dir $(LIBMUPDF)) -lmupdf
 RPATHS = -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
 
