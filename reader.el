@@ -78,8 +78,8 @@ Any other file format would simply not show up as a candidate."
 		"Open document: "
 		nil nil t nil
 		(lambda (f)
-                  (or (file-directory-p f)
-                      (string-match-p rgx f))))))
+		  (or (file-directory-p f)
+		      (string-match-p rgx f))))))
     (switch-to-buffer (create-file-buffer file))
     (insert "\n")
     (reader-dyn--load-doc (expand-file-name file))
@@ -163,12 +163,12 @@ If none is possible return nil."
 	 (window-height (window-body-height))
 	 (pixel-window-height (window-pixel-height))
 	 (pixel-per-col (/ pixel-window-height
-                           window-height))
-         (pixel-amount (* pixel-per-col amount))
+			   window-height))
+	 (pixel-amount (* pixel-per-col amount))
 	 (pixel-current-scroll (window-vscroll nil t))
 	 (pixel-predicted-scroll (+ pixel-current-scroll
 				    pixel-amount))
-         (win-bottom-pos (+ pixel-current-scroll
+	 (win-bottom-pos (+ pixel-current-scroll
 			    pixel-window-height))
 	 (predicted-win-bottom-position (+ pixel-predicted-scroll
 					   pixel-window-height))
@@ -284,13 +284,13 @@ Optionally specify the AMOUNT by which to scroll."
       (let* ((window-width (window-body-width window))
 	     (pixel-window-width (window-pixel-width))
 	     (pixel-per-col (/ pixel-window-width
-                               window-width))
+			       window-width))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
 	     (doc-fits-p (> pixel-window-width doc-image-width))
 	     (raw-offset (/ (- pixel-window-width doc-image-width) 2))
 	     (overlay-offset
 	      `(space :width (,(if doc-fits-p raw-offset 0)))))
-        (overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
+	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
 	(when-let* (((not doc-fits-p)) ; scroll to the center of the doc
 		    (scroll-offset
 		     (round (/ (abs raw-offset) pixel-per-col))))
@@ -302,7 +302,7 @@ buffer is already opened and the buffer is not in `reader-mode'."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
-        (progn
+	(progn
 	  (reader-dyn--load-doc file))
       (message "No file associated with buffer."))))
 
@@ -368,7 +368,7 @@ Keybindings:
   (interactive)
   (setq-local buffer-read-only t
 	      global-linum-mode nil
-              display-line-numbers-mode nil)
+	      display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
   ;; Only do this when document is not already rendered
