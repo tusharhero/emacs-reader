@@ -1,6 +1,6 @@
 #include "elisp-helpers.h"
 #include <assert.h>
-#include <emacs-module.h>
+#include "emacs-module.h"
 #include <mupdf/fitz.h>
 #include <stdbool.h>
 #include <stddef.h>

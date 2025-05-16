@@ -2,7 +2,7 @@
 #define EMACS_HELPERS_H
 
 #include "mupdf-helpers.h"
-#include <emacs-module.h>
+#include "emacs-module.h"
 #include <stdbool.h>
 #include <stddef.h>
 
