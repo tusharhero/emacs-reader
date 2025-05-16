@@ -147,6 +147,29 @@ Any other file format would simply not show up as a candidate."
   (reader--center-page)
   (force-mode-line-update t))
 
+(defun reader-fit-to-height ()
+  "Scale the current page so that its height fits perfectly within the window."
+  (interactive)
+  (reader-dyn--scale-page 1.0) ; we need to get the image height at 1.0
+  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
+	 (pixel-window-height (window-pixel-height))
+	 (scaling-factor (/ pixel-window-height image-height)))
+    (reader-dyn--scale-page scaling-factor)
+    (setq reader-current-doc-scale scaling-factor)
+    (reader--center-page)
+    (set-window-vscroll nil 0)))
+
+(defun reader-fit-to-width ()
+  "Scale the current page so that its width fits perfectly within the window."
+  (interactive)
+  (reader-dyn--scale-page 1.0) ; we need to get the image width at 1.0
+  (let* ((image-width (car (reader--get-current-doc-image-size)))
+	 (pixel-window-width (window-pixel-width))
+	 (scaling-factor (/ pixel-window-width image-width)))
+    (reader-dyn--scale-page scaling-factor)
+    (setq reader-current-doc-scale scaling-factor)
+    (reader--center-page)))
+
 (defun reader-scroll-up (&optional amount)
   "Scroll up the current page.
 Optionally specify the AMOUNT by which to scroll."
@@ -355,6 +378,10 @@ buffer is already opened and the buffer is not in `reader-mode'."
     (define-key map (kbd "=") #'reader-enlarge-size)
 
     (define-key map (kbd "-") #'reader-shrink-size)
+
+    (define-key map (kbd "H") #'reader-fit-to-height)
+
+    (define-key map (kbd "W") #'reader-fit-to-width)
 
     (define-key map (kbd "Q") #'reader-kill-buffer)
     map)
