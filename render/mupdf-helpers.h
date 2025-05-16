@@ -1,4 +1,4 @@
-#ifndef MUDPF_HELPERS_H
+#ifndef MUPDF_HELPERS_H
 #define MUPDF_HELPERS_H
 
 #include <mupdf/fitz.h>
