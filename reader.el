@@ -158,6 +158,7 @@ Optionally specify the AMOUNT by which to scroll."
   "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
 If none is possible return nil."
   (interactive "p")
+  (or amount (setq amount 1))
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (window-height (window-body-height))
 	 (pixel-window-height (window-pixel-height))
@@ -183,6 +184,7 @@ If none is possible return nil."
   "Scroll down the current page.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
+  (or amount (setq amount 1))
   (let* ((amount (reader-possible-scroll-down amount))
 	 (vscroll (+ (window-vscroll) amount)))
     (set-window-vscroll nil vscroll)))
@@ -223,6 +225,7 @@ Optionally specify the AMOUNT by which to scroll."
   "Scroll up the current page or go to the previous page if can't scroll.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
+  (or amount (setq amount 1))
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-up amount)
     (when-let* (((and (= prev-scroll (window-vscroll))
@@ -237,6 +240,7 @@ Optionally specify the AMOUNT by which to scroll."
   "Scroll down the current page or go to the next page if can't scroll.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
+  (or amount (setq amount 1))
   (let* ((prev-scroll (window-vscroll)))
     (reader-scroll-down amount)
     (when (and (= prev-scroll (window-vscroll))
@@ -247,6 +251,7 @@ Optionally specify the AMOUNT by which to scroll."
   "Scroll up the current page by a screenful or go to the previous page if can't scroll.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
+  (or amount (setq amount 1))
   (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
     (reader-scroll-up-or-prev-page scroll)))
@@ -255,6 +260,7 @@ Optionally specify the AMOUNT by which to scroll."
   "Scroll down the current page by a screenful or go to the next page if can't scroll.
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
+  (or amount (setq amount 1))
   (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
     (reader-scroll-down-or-next-page scroll)))
