@@ -75,7 +75,9 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 - =M-v=  for scrolling to the top of the page.
 - =C-v= for scrolling to the end of the page.
 - =SPC=, =S-SPC= , and =DEL= make the above two commands keep scrolling the pages.
-- === and =-= for zooming in and out of the current page.
+- ~=~ and =-= for zooming in and out of the current page.
+- =H= to make the page fit the height of the current window.
+- =W= to make the page fit the width of the current window.
 
 * How It Works
 This package is entirely distinct from DocView and =pdf-tools= in both its architecture and implementation. It leverages Emacs’ dynamic/native modules which allows it to interoperate with other programming languages outside of its Emacs Lisp environment.
