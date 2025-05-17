@@ -407,6 +407,9 @@ Keybindings:
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
 
+  (setq-local bookmark-make-record-function
+	      #'reader-bookmark-make-record)
+
   ;; Only do this when document is not already rendered
   (when (not reader-current-doc-render-status)
     (reader--render-buffer))

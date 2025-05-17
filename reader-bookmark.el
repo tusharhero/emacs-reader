@@ -1,0 +1,56 @@
+;;; reader-bookmark.el --- bookmarks integration for the emacs-reader -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2025  Tushar
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;; Code:
+
+(require 'reader)
+
+(declare-function bookmark-make-record-default
+                  "bookmark" (&optional no-file no-context posn))
+(declare-function bookmark-prop-get "bookmark" (bookmark prop))
+(declare-function bookmark-default-handler "bookmark" (bmk))
+
+(defun reader-bookmark-make-record  ()
+  "Create a bookmark reader doc record."
+  (append (bookmark-make-record-default nil t 1)
+          (list (cons 'page (1+ (reader-dyn--current-doc-pagenumber)))
+                '(handler . reader-bookmark-jump))))
+
+;;;###autoload
+(defun reader-bookmark-jump (bookmark)
+  "The bookmark `handler' function interface for the BOOKMARK with record type returned by `reader-bookmark-make-record'."
+  (let ((page (bookmark-prop-get bookmark 'page))
+        (file (bookmark-prop-get bookmark 'filename))
+        (show-fn-sym (make-symbol "reader-bookmark-after-jump-hook")))
+    (fset show-fn-sym
+          (lambda ()
+            (remove-hook 'bookmark-after-jump-hook show-fn-sym)
+            (unless (derived-mode-p 'reader-mode)
+              (reader-mode))
+	    (with-selected-window
+		(or (get-buffer-window (current-buffer) 0)
+		    (selected-window))
+	      (reader-goto-page page))))
+    (add-hook 'bookmark-after-jump-hook show-fn-sym)
+    (bookmark-default-handler bookmark)))
+
+(put 'reader-bookmark-jump 'bookmark-handler-type "Reader")
+
+(provide 'reader-bookmark)
+;;; reader-bookmark.el ends here
