@@ -37,17 +37,17 @@
   "The bookmark `handler' function interface for the BOOKMARK with record type returned by `reader-bookmark-make-record'."
   (let ((page (bookmark-prop-get bookmark 'page))
         (file (bookmark-prop-get bookmark 'filename))
-        (show-fn-sym (make-symbol "reader-bookmark-after-jump-hook")))
-    (fset show-fn-sym
+        (temp-hook-function 'reader-bookmark-after-jump-hook))
+    (fset temp-hook-function
           (lambda ()
-            (remove-hook 'bookmark-after-jump-hook show-fn-sym)
+            (remove-hook 'bookmark-after-jump-hook temp-hook-function)
             (unless (derived-mode-p 'reader-mode)
               (reader-mode))
 	    (with-selected-window
 		(or (get-buffer-window (current-buffer) 0)
 		    (selected-window))
 	      (reader-goto-page page))))
-    (add-hook 'bookmark-after-jump-hook show-fn-sym)
+    (add-hook 'bookmark-after-jump-hook temp-hook-function)
     (bookmark-default-handler bookmark)))
 
 (put 'reader-bookmark-jump 'bookmark-handler-type "Reader")
