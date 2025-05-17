@@ -97,6 +97,8 @@ Here are the recordings of the streams:
 - [[https://tv.dyne.org/w/8W8o4fWz94bMYVMUWExkX7][Part I: Introduction]]
 - [[https://tv.dyne.org/w/fmJnktiZMjrUKJU2s8Pxkq][Part II: Making Overlays Centered and Zoomable]]
 
+The streams happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the channel on Peertube or my [[https://mathstodon.xyz/@divyaranjan][Mastodon]] to be notified when I stream.
+
 If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on Libera.
 
 * License
