@@ -187,7 +187,13 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
   (void)args;
 
   DocState *state = get_doc_state_ptr(env);
-  return env->make_integer(env, state->current_page_number);
+  if (state) {
+    emacs_value page_number =
+        env->make_integer(env, state->current_page_number);
+    return page_number;
+  } else {
+    return EMACS_NIL;
+  }
 }
 
 /**
