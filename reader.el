@@ -404,6 +404,7 @@ Keybindings:
 	      display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
+
   ;; Only do this when document is not already rendered
   (when (not reader-current-doc-render-status)
     (reader--render-buffer))
@@ -412,6 +413,10 @@ Keybindings:
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
+
+  ;; Initially fit the document to height
+  (reader-fit-to-height)
+
   ;; Invoke centering every time window's size changes only in reader-mode windows
   (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
