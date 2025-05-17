@@ -30,13 +30,19 @@
   "Create a bookmark reader doc record."
   (append (bookmark-make-record-default nil t 1)
           (list (cons 'page (1+ (reader-dyn--current-doc-pagenumber)))
-                '(handler . reader-bookmark-jump))))
+		(cons 'scale reader-current-doc-scale-value)
+		(cons 'hscroll (window-hscroll))
+		(cons 'vscroll (window-hscroll))
+		'(handler . reader-bookmark-jump))))
 
 ;;;###autoload
 (defun reader-bookmark-jump (bookmark)
   "The bookmark `handler' function interface for the BOOKMARK with record type returned by `reader-bookmark-make-record'."
   (let ((page (bookmark-prop-get bookmark 'page))
         (file (bookmark-prop-get bookmark 'filename))
+        (scale (bookmark-prop-get bookmark 'scale))
+	(hscroll (bookmark-prop-get bookmark 'hscroll))
+	(vscroll (bookmark-prop-get bookmark 'vscroll))
         (temp-hook-function 'reader-bookmark-after-jump-hook))
     (fset temp-hook-function
           (lambda ()
@@ -46,7 +52,10 @@
 	    (with-selected-window
 		(or (get-buffer-window (current-buffer) 0)
 		    (selected-window))
-	      (reader-goto-page page))))
+	      (reader-goto-page page)
+	      (reader-doc-scale-page scale)
+	      (set-window-hscroll nil hscroll)
+	      (set-window-vscroll nil vscroll))))
     (add-hook 'bookmark-after-jump-hook temp-hook-function)
     (bookmark-default-handler bookmark)))
 
