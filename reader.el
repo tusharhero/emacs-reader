@@ -50,9 +50,9 @@
   :group 'reader
   :type 'number)
 
-(defvar reader-current-doc-scale 1.0
+(defvar reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
-(make-variable-buffer-local 'reader-current-doc-scale)
+(make-variable-buffer-local 'reader-current-doc-scale-value)
 
 (defun reader-open-doc ()
   "Open a document for viewing.
@@ -90,7 +90,7 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let ((status (reader-dyn--next-page)))
     (when status
-      (reader-doc-scale-page reader-current-doc-scale)
+      (reader-doc-scale-page reader-current-doc-scale-value)
       (reader--center-page)
       (force-mode-line-update t))
     status))
@@ -100,7 +100,7 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let ((status (reader-dyn--prev-page)))
     (when status
-      (reader-doc-scale-page reader-current-doc-scale)
+      (reader-doc-scale-page reader-current-doc-scale-value)
       (reader--center-page)
       (force-mode-line-update t))
     status))
@@ -109,7 +109,7 @@ Any other file format would simply not show up as a candidate."
   "Go to the first page of the visiting document."
   (interactive)
   (reader-dyn--first-page)
-  (reader-doc-scale-page reader-current-doc-scale)
+  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -117,7 +117,7 @@ Any other file format would simply not show up as a candidate."
   "Go to the last page of the visiting document."
   (interactive)
   (reader-dyn--last-page)
-  (reader-doc-scale-page reader-current-doc-scale)
+  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -125,14 +125,14 @@ Any other file format would simply not show up as a candidate."
   "Go to page number 'N' in the current document."
   (interactive "nPage: ")
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
-  (reader-doc-scale-page reader-current-doc-scale)
+  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
   "Enlarge the size of the current page with respect to the `reader-enlarge-factor'."
   (interactive)
-  (let ((scaling-factor (* reader-current-doc-scale reader-enlarge-factor)))
+  (let ((scaling-factor (* reader-current-doc-scale-value reader-enlarge-factor)))
     (reader-doc-scale-page scaling-factor))
   (reader--center-page)
   (force-mode-line-update t))
@@ -140,7 +140,7 @@ Any other file format would simply not show up as a candidate."
 (defun reader-shrink-size ()
   "Shrink the size of the current page with respect to the `reader-shrink-factor'."
   (interactive)
-  (let ((scaling-factor (* reader-current-doc-scale reader-shrink-factor)))
+  (let ((scaling-factor (* reader-current-doc-scale-value reader-shrink-factor)))
     (reader-doc-scale-page scaling-factor))
   (reader--center-page)
   (force-mode-line-update t))
@@ -150,7 +150,7 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (pixel-window-height (window-pixel-height))
-	 (unscaled-height (/ image-height reader-current-doc-scale))
+	 (unscaled-height (/ image-height reader-current-doc-scale-value))
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)
@@ -161,7 +161,7 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (pixel-window-width (window-pixel-width))
-	 (unscaled-width (/ image-width reader-current-doc-scale))
+	 (unscaled-width (/ image-width reader-current-doc-scale-value))
 	 (scaling-factor (/ pixel-window-width unscaled-width)))
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)))
@@ -169,11 +169,11 @@ Any other file format would simply not show up as a candidate."
 (defun reader-doc-scale-page (factor)
   "Scales the page by a given FACTOR.
 
-It calls the module function `reader-current-doc-scale that
+It calls the module function `reader-dyn--scale-page' that
 sets the :width, :height and :scale propoerties of current page’s image.
-It also updates `reader-current-doc-scale' to reflect the new scale."
+It also updates `reader-current-doc-scale-value' to reflect the new scale."
   (reader-dyn--scale-page factor)
-  (setq reader-current-doc-scale factor))
+  (setq reader-current-doc-scale-value factor))
 
 (defun reader-scroll-up (&optional amount)
   "Scroll up the current page.
