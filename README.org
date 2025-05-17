@@ -98,3 +98,13 @@ Here are the recordings of the streams:
 - [[https://tv.dyne.org/w/fmJnktiZMjrUKJU2s8Pxkq][Part II: Making Overlays Centered and Zoomable]]
 
 If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on Libera.
+
+* License
+Since a package for GNU Emacs, it strictly adheres to the GPLv3 license entirely.
+
+The logo of the project was made by the author and is shared under [[http://creativecommons.org/licenses/by-sa/4.0/][CC-BY-SA-4.0]]. The logo uses the following artworks from GNU:
+
+- [[https://www.gnu.org/graphics/heckert_gnu.html][A Bold GNU Head by Aurélio A. Heckert]]
+- [[https://commons.wikimedia.org/wiki/File:Emacs_512.png][Icon for Emacs 23 by Kentaro Ohkouchi]]
+
+The interesting history of different Emacs logos is outlined by Luis Fernandes, in his article on [[https://www.ee.torontomu.ca/~elf/emacs/logo/][The Design of the Emacs Logo]].
