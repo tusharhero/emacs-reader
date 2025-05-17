@@ -50,6 +50,10 @@
   :group 'reader
   :type 'number)
 
+(defvar reader-current-doc-scale-value 1.0
+  "The amount of scaling for the current document. Defaults to 1.0.")
+(make-variable-buffer-local 'reader-current-doc-scale-value)
+
 (defun reader-open-doc ()
   "Open a document for viewing.
 This function calls the module function `reader-dyn--load-doc' from the dynamic module
@@ -86,7 +90,7 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let ((status (reader-dyn--next-page)))
     (when status
-      (reader-dyn--scale-page (reader--get-current-doc-image-scale))
+      (reader-doc-scale-page reader-current-doc-scale-value)
       (reader--center-page)
       (force-mode-line-update t))
     status))
@@ -96,7 +100,7 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let ((status (reader-dyn--prev-page)))
     (when status
-      (reader-dyn--scale-page (reader--get-current-doc-image-scale))
+      (reader-doc-scale-page reader-current-doc-scale-value)
       (reader--center-page)
       (force-mode-line-update t))
     status))
@@ -105,7 +109,7 @@ Any other file format would simply not show up as a candidate."
   "Go to the first page of the visiting document."
   (interactive)
   (reader-dyn--first-page)
-  (reader-dyn--scale-page (reader--get-current-doc-image-scale))
+  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -113,7 +117,7 @@ Any other file format would simply not show up as a candidate."
   "Go to the last page of the visiting document."
   (interactive)
   (reader-dyn--last-page)
-  (reader-dyn--scale-page (reader--get-current-doc-image-scale))
+  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -121,23 +125,23 @@ Any other file format would simply not show up as a candidate."
   "Go to page number 'N' in the current document."
   (interactive "nPage: ")
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
-  (reader-dyn--scale-page (reader--get-current-doc-image-scale))
+  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
   "Enlarge the size of the current page with respect to the `reader-enlarge-factor'."
   (interactive)
-  (let ((scaling-factor (* (reader--get-current-doc-image-scale) reader-enlarge-factor)))
-    (reader-dyn--scale-page scaling-factor))
+  (let ((scaling-factor (* reader-current-doc-scale-value reader-enlarge-factor)))
+    (reader-doc-scale-page scaling-factor))
   (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-shrink-size ()
   "Shrink the size of the current page with respect to the `reader-shrink-factor'."
   (interactive)
-  (let ((scaling-factor (* (reader--get-current-doc-image-scale) reader-shrink-factor)))
-    (reader-dyn--scale-page scaling-factor))
+  (let ((scaling-factor (* reader-current-doc-scale-value reader-shrink-factor)))
+    (reader-doc-scale-page scaling-factor))
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -146,9 +150,9 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (pixel-window-height (window-pixel-height))
-	 (unscaled-height (/ image-height (reader--get-current-doc-image-scale)))
+	 (unscaled-height (/ image-height reader-current-doc-scale-value))
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
-    (reader-dyn--scale-page scaling-factor)
+    (reader-doc-scale-page scaling-factor)
     (reader--center-page)
     (set-window-vscroll nil 0)))
 
@@ -157,10 +161,19 @@ Any other file format would simply not show up as a candidate."
   (interactive)
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (pixel-window-width (window-pixel-width))
-	 (unscaled-width (/ image-width (reader--get-current-doc-image-scale)))
+	 (unscaled-width (/ image-width reader-current-doc-scale-value))
 	 (scaling-factor (/ pixel-window-width unscaled-width)))
-    (reader-dyn--scale-page scaling-factor)
+    (reader-doc-scale-page scaling-factor)
     (reader--center-page)))
+
+(defun reader-doc-scale-page (factor)
+  "Scales the page by a given FACTOR.
+
+It calls the module function `reader-dyn--scale-page' that
+sets the :width, :height and :scale propoerties of current page’s image.
+It also updates `reader-current-doc-scale-value' to reflect the new scale."
+  (reader-dyn--scale-page factor)
+  (setq reader-current-doc-scale-value factor))
 
 (defun reader-scroll-up (&optional amount)
   "Scroll up the current page.
@@ -293,12 +306,6 @@ Optionally specify the AMOUNT by which to scroll."
 	 (length (plist-get cdr-image :length)))
     (cons width length)))
 
-(defun reader--get-current-doc-image-scale ()
-  "Get the scale of the current page's doc image."
-  (let* ((cdr-image (cdr (overlay-get reader-current-svg-overlay 'display)))
-	 (scale (plist-get cdr-image :scale)))
-    (if (equal scale 'default) 1.0 scale)))
-
 (defun reader--center-page (&optional window)
   "Centers the pages of the document with respect to the WINDOW in which the document is opened."
   (with-current-buffer (window-buffer window)
@@ -398,6 +405,7 @@ Keybindings:
 	      display-line-numbers-mode nil)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
+
   ;; Only do this when document is not already rendered
   (when (not reader-current-doc-render-status)
     (reader--render-buffer))
@@ -406,6 +414,10 @@ Keybindings:
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
+
+  ;; Initially fit the document to height
+  (reader-fit-to-height)
+
   ;; Invoke centering every time window's size changes only in reader-mode windows
   (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
