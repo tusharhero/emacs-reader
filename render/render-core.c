@@ -1,6 +1,6 @@
 #include "elisp-helpers.h"
-#include <assert.h>
 #include "emacs-module.h"
+#include <assert.h>
 #include <mupdf/fitz.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -522,7 +522,8 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
       // Create a user pointer and expose it to Emacs in a buffer-local fashion
       emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
-      emacs_value doc_state_ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
+      emacs_value doc_state_ptr_sym =
+          env->intern(env, "reader-current-doc-state-ptr");
       env->funcall(env, env->intern(env, "set"), 2,
                    (emacs_value[]){doc_state_ptr_sym, user_ptr});
     } else {
@@ -607,38 +608,38 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state->current_page_number == 0) {
-    emacs_message(env, "Already first page!");
-    return EMACS_NIL;
-  }
   if (state) {
     if (state->current_page_number == 0) {
       emacs_message(env, "Already first page!");
       return EMACS_NIL;
     }
 
-  if (state->current_page_number < (state->pagecount - 1)) {
-    emacs_value prev_image_data =
-        svg2elisp_image(env, state, state->prev_svg_data, state->prev_svg_size);
+    if (state->current_page_number < (state->pagecount - 1)) {
+      emacs_value prev_image_data = svg2elisp_image(
+          env, state, state->prev_svg_data, state->prev_svg_size);
 
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), prev_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+      emacs_value overlay_put_args[3] = {
+          current_svg_overlay, env->intern(env, "display"), prev_image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-    if (state->current_page_number > 0) {
-      render_pages(state, state->prev_page_number);
-      return EMACS_T;
+      if (state->current_page_number > 0) {
+        render_pages(state, state->prev_page_number);
+        return EMACS_T;
+      } else {
+        emacs_message(env, "Already first page!");
+        return EMACS_NIL;
+      }
     } else {
-      emacs_message(env, "Already first page!");
-      return EMACS_NIL;
+      render_pages(state, (state->pagecount - 2));
+      emacs_value current_image_data = svg2elisp_image(
+          env, state, state->current_svg_data, state->current_svg_size);
+      emacs_value overlay_put_args[3] = {
+          current_svg_overlay, env->intern(env, "display"), current_image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+      return EMACS_T;
     }
   } else {
-    render_pages(state, (state->pagecount - 2));
-    emacs_value current_image_data = svg2elisp_image(
-        env, state, state->current_svg_data, state->current_svg_size);
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), current_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    return EMACS_NIL;
   }
 
   return EMACS_T;
@@ -667,25 +668,30 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state->current_page_number == 0) {
-    emacs_message(env, "Already first page!");
-    return EMACS_NIL;
-  }
   if (state) {
 
-  state->current_page_number = 0;
+    if (state->current_page_number == 0) {
+      emacs_message(env, "Already first page!");
+      return EMACS_NIL;
+    }
 
-  if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-    emacs_value prev_image_data = svg2elisp_image(
-        env, state, state->current_svg_data, state->current_svg_size);
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), prev_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    state->current_page_number = 0;
+
+    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
+      emacs_value prev_image_data = svg2elisp_image(
+          env, state, state->current_svg_data, state->current_svg_size);
+      emacs_value overlay_put_args[3] = {
+          current_svg_overlay, env->intern(env, "display"), prev_image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    } else {
+      emacs_message(env, "Already first page!");
+      return EMACS_NIL;
+    }
+    state->current_page_number = 0;
   } else {
-    emacs_message(env, "Already first page!");
     return EMACS_NIL;
   }
-  state->current_page_number = 0;
+
   return EMACS_T;
 }
 
@@ -712,29 +718,29 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state->current_page_number == state->pagecount - 1) {
-    emacs_message(env, "Already first page!");
-    return EMACS_NIL;
-  }
   if (state) {
     if (state->current_page_number == state->pagecount - 1) {
       emacs_message(env, "Already first page!");
       return EMACS_NIL;
     }
 
-  state->current_page_number = state->pagecount - 1;
+    state->current_page_number = state->pagecount - 1;
 
-  if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-    emacs_value current_page_data = svg2elisp_image(
-        env, state, state->current_svg_data, state->current_svg_size);
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), current_page_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
+      emacs_value current_page_data = svg2elisp_image(
+          env, state, state->current_svg_data, state->current_svg_size);
+      emacs_value overlay_put_args[3] = {
+          current_svg_overlay, env->intern(env, "display"), current_page_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    } else {
+      emacs_message(env, "Failed to render the last page");
+      return EMACS_NIL;
+    }
+    state->current_page_number = state->pagecount - 1;
   } else {
-    emacs_message(env, "Failed to render the last page");
     return EMACS_NIL;
   }
-  state->current_page_number = state->pagecount - 1;
+
   return EMACS_T;
 }
 
@@ -761,14 +767,6 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (page_number >= 0 && page_number <= (state->pagecount - 1)) {
-    state->current_page_number = page_number;
-    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-      emacs_value current_image_data = svg2elisp_image(
-          env, state, state->current_svg_data, state->current_svg_size);
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), current_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   if (state) {
     if (page_number >= 0 && page_number <= (state->pagecount - 1)) {
       state->current_page_number = page_number;
@@ -784,11 +782,11 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         return EMACS_NIL;
       }
     } else {
-      emacs_message(env, "Page cannot be rendered");
+      emacs_message(env, "Provided page number is out of bounds!");
       return EMACS_NIL;
     }
   } else {
-    emacs_message(env, "Provided page number is out of bounds!");
+    return EMACS_NIL;
   }
 
   return EMACS_T;
@@ -811,7 +809,7 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  */
 
 emacs_value emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs,
-                                       emacs_value *args, void *data) {
+                                 emacs_value *args, void *data) {
   (void)nargs;
   (void)data;
 
@@ -919,31 +917,31 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                        "from DocState as an Elisp value.");
 
   // Register the buffer-local page number
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               (emacs_value[]){env->intern(env, "reader-current-doc-pagecount")});
+  env->funcall(
+      env, env->intern(env, "make-variable-buffer-local"), 1,
+      (emacs_value[]){env->intern(env, "reader-current-doc-pagecount")});
 
   // Register the buffer-local variable to indicate whether a buffer has been
   // rendered
-  emacs_value page_render_status_sym = env->intern(env, "reader-current-doc-render-status");
+  emacs_value page_render_status_sym =
+      env->intern(env, "reader-current-doc-render-status");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &page_render_status_sym);
-  env->funcall(
-      env, env->intern(env, "set"), 2,
-      (emacs_value[]){page_render_status_sym, EMACS_NIL});
+  env->funcall(env, env->intern(env, "set"), 2,
+               (emacs_value[]){page_render_status_sym, EMACS_NIL});
 
   // Ensure that the variable stays buffer-local and doesn’t get overriden
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){page_render_status_sym,
-                               env->intern(env, "permanent-local"),
-                               EMACS_T});
+                               env->intern(env, "permanent-local"), EMACS_T});
 
-  emacs_value doc_state_ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
+  emacs_value doc_state_ptr_sym =
+      env->intern(env, "reader-current-doc-state-ptr");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &doc_state_ptr_sym);
   env->funcall(env, env->intern(env, "put"), 3,
                (emacs_value[]){doc_state_ptr_sym,
-                               env->intern(env, "permanent-local"),
-                               EMACS_T});
+                               env->intern(env, "permanent-local"), EMACS_T});
 
   emacs_value svg_overlay_sym = env->intern(env, "reader-current-svg-overlay");
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
