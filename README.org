@@ -41,7 +41,11 @@ Technically the only thing this package depends on is =mupdf=, but for various r
 So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the depencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
 
 * Installation
-For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. The easier way to do this is through the [[https://github.com/radian-software/straight.el][straight]] package manager or Emacs’ built-in =package-vc=. The latter still has some quirks, but here are the recipes for both:
+For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. This is different across platforms:
+
+** GNU/Linux
+
+On GNU/Linux all you need is: =gcc= and =make=. Then you can simply install through the [[https://github.com/radian-software/straight.el][straight]] package manager or Emacs’ built-in =package-vc=. The latter still has some quirks, but here are the recipes for both:
 
 - =use-package= with =package-vc=:
    #+begin_src emacs-lisp
@@ -60,6 +64,28 @@ For now, until the package has been published to GNU ELPA, the only way to insta
    #+end_src
 
 *NOTE:* Both of these commands will take a /long/ time, because they’re going to invoke the =make= command which will recursively fetch the submodule and it’s dependencies. *It’ll hang your Emacs for a good ~15-20m, so be careful.*
+
+** MacOS
+Since MacOS’ package manager Homebrew already has the latest version of MuPDF (1.26.0), you don’t need the submodule at all. You just need to do:
+#+begin_src sh
+  brew install gcc
+  brew install make
+  brew install mupdf
+#+end_src
+
+And then use the straight or package-vc recipe from the GNU/Linux section.
+
+** Windows
+With Windows, things are slightly tricky. The only toolchain where I got it to work is with MSYS2. So, you need to install that and then use MSYS2 to install the following:
+
+#+begin_src shell
+pacman -S make mingw-w64-x86_64-gcc git pkg-config
+#+end_src
+
+After that, you can =git clone --recurse-submodules https://codeberg.org/divyaranjan/emacs-reader.git= and then:
+#+begin_src sh
+make all
+#+end_src
 
 * Key Bindings
 - =Page Up=, =n= or =J= for going to next page
