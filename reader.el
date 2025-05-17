@@ -393,12 +393,12 @@ buffer is already opened and the buffer is not in `reader-mode'."
   "Keymap for reader-mode.")
 
 ;; Define the major mode
-(defun reader-mode ()
+(define-derived-mode reader-mode special-mode "Emacs Reader"
   "Major mode for viewing documents in The Emacs Reader.
 
 Keybindings:
 \\{reader-mode-map}"
-  (interactive)
+  :group 'reader
   (setq-local buffer-read-only t
 	      global-linum-mode nil
 	      cursor-type 'hollow
