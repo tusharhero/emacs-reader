@@ -23,8 +23,10 @@
 (require 'saveplace)
 (require 'reader-bookmark)
 
-(defconst reader--saveplace-key 'reader-bookmark
-  "Key under which reader-mode stores its bookmark record.")
+;; Bookmarks need to be stored inside a vector due to hard-coded logic
+;; within `save-place--normalize-alist'. Specifically, it performs
+;; operations on an element assuming it's a list, and this leads to
+;; issues when we try to use it like a bookmark.
 
 (defun saveplace--reader-find-file (orig-fun &rest args)
   "Advice around `save-place-find-file'.
@@ -32,7 +34,7 @@ Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
   (or save-place-loaded (save-place-load-alist-from-file))
   (if (derived-mode-p 'reader-mode)
       (if-let* ((place (assoc buffer-file-name save-place-alist))
-		(bookmark (cadr place)))
+		(bookmark (aref (cdr place)  0))) ; get back the bookmark
             (reader-bookmark-jump bookmark))
     (apply orig-fun args)))
 
@@ -49,8 +51,9 @@ Saves the place for `reader-mode' buffers or falls back to ORIG-FUN."
                 (assq-delete-all filename save-place-alist))
           (setq save-place-alist
 		(add-to-list 'save-place-alist
-                      `(,filename . (,bookmark))))))
+                      (cons filename (vector bookmark)))))) ; score bookmark inside a vector
     (apply orig-fun args)))
+
 
 (advice-add 'save-place-find-file-hook  :around #'saveplace--reader-find-file)
 (advice-add 'save-place-to-alist   :around #'saveplace--reader-to-alist)
