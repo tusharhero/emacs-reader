@@ -17,16 +17,19 @@
 
 ;;; Commentary:
 
+;; Bookmarks need to be stored inside a vector due to hard-coded logic
+;; within `save-place--normalize-alist'. Specifically, it performs
+;; operations on an element assuming it's a list, and this leads to
+;; issues when we try to use it like a bookmark.
+;;
+;; `saveplace-pdf-view' by Nicolai Singh <nicolaisingh@pm.me> was used
+;; for reference.
+
 ;;; Code:
 
 (require 'bookmark)
 (require 'saveplace)
 (require 'reader-bookmark)
-
-;; Bookmarks need to be stored inside a vector due to hard-coded logic
-;; within `save-place--normalize-alist'. Specifically, it performs
-;; operations on an element assuming it's a list, and this leads to
-;; issues when we try to use it like a bookmark.
 
 (defun reader--saveplace-find-file (orig-fun &rest args)
   "Restores saved place in `reader-mode' buffers or calls ORIG-FUN with ARGS.
