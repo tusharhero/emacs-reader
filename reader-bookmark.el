@@ -20,11 +20,7 @@
 ;;; Code:
 
 (require 'reader)
-
-(declare-function bookmark-make-record-default
-                  "bookmark" (&optional no-file no-context posn))
-(declare-function bookmark-prop-get "bookmark" (bookmark prop))
-(declare-function bookmark-default-handler "bookmark" (bmk))
+(require 'bookmark)
 
 (defun reader-bookmark-make-record  ()
   "Create a bookmark reader doc record."
