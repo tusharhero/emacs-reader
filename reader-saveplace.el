@@ -52,15 +52,14 @@ Advice around `save-place-find-file'. See also `reader--saveplace-to-alist'."
 
 Advice around `save-place-to-alist'."
   (if (derived-mode-p 'reader-mode)
-      (let* ((filename buffer-file-name)
-             (bookmark-record (reader-bookmark-make-record))
-	     (bookmark (cons "reader-saveplace" bookmark-record)))
-        (when filename
-          (setq save-place-alist
-                (assoc-delete-all filename save-place-alist))
-          (setq save-place-alist
-		(add-to-list 'save-place-alist
-                      (cons filename (vector bookmark)))))) ; score bookmark inside a vector
+      (when-let* ((filename buffer-file-name)
+		  (bookmark-record (reader-bookmark-make-record))
+		  (bookmark (cons "reader-saveplace" bookmark-record)))
+        (setq save-place-alist
+              (assoc-delete-all filename save-place-alist))
+        (setq save-place-alist
+	      (add-to-list 'save-place-alist
+			   (cons filename (vector bookmark))))) ; score bookmark inside a vector
     (apply orig-fun args)))
 
 (provide 'reader-saveplace)
