@@ -25,7 +25,7 @@ ifeq ($(PLATFORM),windows)
   MUPDF_LIB := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
   NEED_MUPDF_BUILD := yes
 else ifeq ($(PLATFORM),macos)
-  SHARED_EXT := .dylib
+  SHARED_EXT := .so
   HOMEBREW_PREFIX := $(shell brew --prefix)
   OBJ_EXT := .o
   CC := gcc
