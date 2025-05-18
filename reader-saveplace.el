@@ -57,9 +57,8 @@ Advice around `save-place-to-alist'."
 		  (bookmark (cons "reader-saveplace" bookmark-record)))
         (setq save-place-alist
               (assoc-delete-all filename save-place-alist))
-        (setq save-place-alist
-	      (add-to-list 'save-place-alist
-			   (cons filename (vector bookmark))))) ; score bookmark inside a vector
+	;; score bookmark inside a vector
+	(push (cons filename (vector bookmark)) save-place-alist))
     (apply orig-fun args)))
 
 (provide 'reader-saveplace)
