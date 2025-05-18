@@ -296,3 +296,23 @@ void emacs_message(emacs_env *env, char *str) {
   emacs_value el_string = env->make_string(env, str, strlen(str));
   env->funcall(env, env->intern(env, "message"), 1, &el_string);
 }
+
+/**
+ * permanent_buffer_local_var: Sets a buffer local variable and makes it
+ * permanently local so that it doesn’t get overridden
+ * @env: The Emacs environment pointer.
+ * @symbol: The symbol of the variable to be set
+ */
+
+void permanent_buffer_local_var(emacs_env *env, char* symbol) {
+  emacs_value el_symbol = env->intern(env, symbol);
+  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+               &el_symbol);
+  env->funcall(env, env->intern(env, "set"), 2,
+               (emacs_value[]){el_symbol, EMACS_NIL});
+
+  env->funcall(env, env->intern(env, "put"), 3,
+               (emacs_value[]){
+		 el_symbol,
+		 env->intern(env, "permanent-local"), EMACS_T});
+}
