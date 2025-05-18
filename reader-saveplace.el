@@ -22,7 +22,9 @@
 ;; within `save-place--normalize-alist'. Specifically, it performs
 ;; operations on an element assuming it's a list, and this leads to
 ;; issues when we try to use it like a bookmark.
-;;
+
+;;; Acknowledgements:
+
 ;; `saveplace-pdf-view' by Nicolai Singh <nicolaisingh@pm.me> was used
 ;; for reference.
 
