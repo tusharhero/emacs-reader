@@ -43,9 +43,9 @@
     (switch-to-buffer (current-buffer))
     (unless (derived-mode-p 'reader-mode)
       (reader-mode))
-    (reader--center-page)
     (reader-goto-page page)
     (reader-doc-scale-page scale)
+    (reader--center-page)
     (set-window-hscroll nil hscroll)
     (set-window-vscroll nil vscroll)))
 
