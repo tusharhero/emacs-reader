@@ -14,12 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 #ifndef EMACS_HELPERS_H
 #define EMACS_HELPERS_H
 
-#include "mupdf-helpers.h"
 #include "emacs-module.h"
+#include "mupdf-helpers.h"
 #include <stdbool.h>
 #include <stddef.h>
 
