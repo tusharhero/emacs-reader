@@ -14,6 +14,7 @@ Tushar <tusharhero@sdf.org>:
   edge cases.
 - fixed several errors in centering and scrolling in reader.el
 for the v0.2.0 release
+- Added bookmark and saveplace feature for 0.2.2
 
 
 * Other Contributions (Not Legally Significant)
