@@ -20,9 +20,9 @@ ifeq ($(PLATFORM),windows)
   OBJ_EXT := .obj
   CC := gcc
   CFLAGS += -DWIN32 -msse4.1
-  LDFLAGS := -shared -L$(MUPDF_DIR)/build/shared-release/
+  LDFLAGS := -shared -L"$(MUPDF_DIR)/build/shared-release/"
   RPATHS :=
-  MUPDF_LIB := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
+  MUPDF_LIB := "$(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0"
   NEED_MUPDF_BUILD := yes
 else ifeq ($(PLATFORM),macos)
   SHARED_EXT := .so
@@ -74,7 +74,7 @@ endif
 ifeq ($(NEED_MUPDF_BUILD),yes)
 $(LIBMUPDF):
 	git submodule update --init --recursive
-	$(MAKE) -C $(MUPDF_DIR) shared USE_SYSTEM_LIBS=no XCFLAGS="-DLCMS2MT_PREFIX=lcms2mt_ -msse4.1"
+	$(MAKE) -C "$(MUPDF_DIR)" shared USE_SYSTEM_LIBS=no XCFLAGS="-DLCMS2MT_PREFIX=lcms2mt_ -msse4.1"
 endif
 
 # Compile C sources into platform-specific object files
