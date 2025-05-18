@@ -46,14 +46,11 @@ Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
 Saves the place for `reader-mode' buffers or falls back to ORIG-FUN."
   (if (derived-mode-p 'reader-mode)
       (let* ((item     buffer-file-name)
-             (bookmark-alist (funcall #'reader-bookmark-make-record))
+             (bookmark-alist (reader-bookmark-make-record))
              (bookmark (mapcan (lambda (pair) (list (car pair) (cdr pair))) bookmark-alist))
-             (page     (plist-get bookmark 'page))
-             (origin   (plist-get bookmark 'origin)))
-        (when (and item page origin
-                   (not (and (= 1 page)
-                             (= 0 (car origin))
-                             (= 0 (cdr origin)))))
+             (page (bookmark-prop-get bookmark 'page)))
+        (when (and item page
+                   (not (= 1 page)))
           ;; Remove existing entry
           (setq save-place-alist
                 (assq-delete-all item save-place-alist))
