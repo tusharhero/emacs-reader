@@ -16,7 +16,6 @@ MUPDF_DIR := $(SUBMODULE_DIR)/mupdf
 
 # Shared library extension and object file extension per platform
 ifeq ($(PLATFORM),windows)
-  SHARED_EXT := .so
   OBJ_EXT := .obj
   CC := gcc
   CFLAGS += -DWIN32 -msse4.1
@@ -25,7 +24,6 @@ ifeq ($(PLATFORM),windows)
   MUPDF_LIB := "$(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0"
   NEED_MUPDF_BUILD := yes
 else ifeq ($(PLATFORM),macos)
-  SHARED_EXT := .so
   HOMEBREW_PREFIX := $(shell brew --prefix)
   OBJ_EXT := .o
   CC := gcc
@@ -35,7 +33,6 @@ else ifeq ($(PLATFORM),macos)
   MUPDF_LIB := /opt/homebrew/lib/libmupdf.26.dylib
   NEED_MUPDF_BUILD := no
 else
-  SHARED_EXT := .so
   OBJ_EXT := .o
   CC := gcc
   CFLAGS += -DLINUX
@@ -46,12 +43,12 @@ else
 endif
 
 # Module filenames and library paths
-LIB_NAME := render-core$(SHARED_EXT)
+LIB_NAME := render-core.so
 LIBMUPDF := $(MUPDF_LIB)
 
 # Compiler and headers
 MUPDF_HEADERS := $(MUPDF_DIR)/include/
-CFLAGS += -Wall -Wextra -fPIC -I$(MUPDF_HEADERS) -I$(CURDIR)/render/emacs-module.h
+CFLAGS += -Wall -Wextra -fPIC -I$(MUPDF_HEADERS) -I$(CURDIR)/render/
 
 # Source files and object targets
 SRCS := render/elisp-helpers.c render/mupdf-helpers.c render/render-core.c
