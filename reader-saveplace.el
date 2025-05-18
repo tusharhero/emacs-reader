@@ -31,15 +31,15 @@
 Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
   (or save-place-loaded (save-place-load-alist-from-file))
   (if (derived-mode-p 'reader-mode)
-      (let* ((cell (assoc buffer-file-name save-place-alist))
-	     (cdr-cell (cdr cell))
-	     (aref-cell (aref cdr-cell 0)))
-        (when (and cell
-                   (vectorp cdr-cell)
-                   (assq reader--saveplace-key aref-cell))
-          (funcall #'reader-bookmark-jump
-                   (cdr (assq reader--saveplace-key
-                              aref-cell)))))
+      (if-let* ((cell (assoc buffer-file-name save-place-alist))
+		(cdr-cell (cdr cell))
+		(aref-cell (aref cdr-cell 0)))
+          (when (and cell
+                     (vectorp cdr-cell)
+                     (assq reader--saveplace-key aref-cell))
+            (funcall #'reader-bookmark-jump
+                     (cdr (assq reader--saveplace-key
+				aref-cell)))))
     (apply orig-fun args)))
 
 
