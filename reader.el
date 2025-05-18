@@ -407,6 +407,9 @@ Keybindings:
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
 
+  (setq-local bookmark-make-record-function
+	      #'reader-bookmark-make-record)
+
   ;; Only do this when document is not already rendered
   (when (not reader-current-doc-render-status)
     (reader--render-buffer))
@@ -436,6 +439,10 @@ Keybindings:
   (force-mode-line-update t))
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
+
+;; see `reader-saveplace' for details.
+(advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
+(advice-add 'save-place-to-alist :around #'reader--saveplace-to-alist)
 
 ;; Automatically load the mode for the supported document formats
 (dolist (pattern '("\\.pdf\\'"

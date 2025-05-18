@@ -1,0 +1,65 @@
+;;; reader-saveplace.el --- Saveplace integration with emacs-reader  -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2025  Divya Ranjan Pattanaik
+;; Copyright (C) 2025  Tushar
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; Bookmarks need to be stored inside a vector due to hard-coded logic
+;; within `save-place--normalize-alist'. Specifically, it performs
+;; operations on an element assuming it's a list, and this leads to
+;; issues when we try to use it like a bookmark.
+
+;;; Acknowledgements:
+
+;; `saveplace-pdf-view' by Nicolai Singh <nicolaisingh@pm.me> was used
+;; for reference.
+
+;;; Code:
+
+(require 'bookmark)
+(require 'saveplace)
+(require 'reader-bookmark)
+
+;;;###autoload
+(defun reader--saveplace-find-file (orig-fun &rest args)
+  "Restores saved place in `reader-mode' buffers or calls ORIG-FUN with ARGS.
+
+Advice around `save-place-find-file'. See also `reader--saveplace-to-alist'."
+  (or save-place-loaded (save-place-load-alist-from-file))
+  (if (derived-mode-p 'reader-mode)
+      (if-let* ((place (assoc buffer-file-name save-place-alist))
+		(bookmark (aref (cdr place)  0))) ; get back the bookmark
+            (reader-bookmark-jump bookmark))
+    (apply orig-fun args)))
+
+;;;###autoload
+(defun reader--saveplace-to-alist (orig-fun &rest args)
+  "Saves place in `reader-mode' buffers or calls ORIG-FUN with ARGS.
+
+Advice around `save-place-to-alist'."
+  (if (derived-mode-p 'reader-mode)
+      (when-let* ((filename buffer-file-name)
+		  (bookmark-record (reader-bookmark-make-record))
+		  (bookmark (cons "reader-saveplace" bookmark-record)))
+        (setq save-place-alist
+              (assoc-delete-all filename save-place-alist))
+	;; score bookmark inside a vector
+	(push (cons filename (vector bookmark)) save-place-alist))
+    (apply orig-fun args)))
+
+(provide 'reader-saveplace)
+;;; reader-saveplace.el ends here
