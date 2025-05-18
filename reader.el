@@ -440,6 +440,10 @@ Keybindings:
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
 
+;; see `reader-saveplace' for details.
+(advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
+(advice-add 'save-place-to-alist :around #'reader--saveplace-to-alist)
+
 ;; Automatically load the mode for the supported document formats
 (dolist (pattern '("\\.pdf\\'"
 		   "\\.epub\\'"
