@@ -933,35 +933,17 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                        "from DocState as an Elisp value.");
 
   // Register the buffer-local page number
-  env->funcall(
-      env, env->intern(env, "make-variable-buffer-local"), 1,
-      (emacs_value[]){env->intern(env, "reader-current-doc-pagecount")});
+  permanent_buffer_local_var(env, "reader-current-doc-pagecount");
 
   // Register the buffer-local variable to indicate whether a buffer has been
   // rendered
-  emacs_value page_render_status_sym =
-      env->intern(env, "reader-current-doc-render-status");
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               &page_render_status_sym);
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){page_render_status_sym, EMACS_NIL});
+  permanent_buffer_local_var(env, "reader-current-doc-render-status");
 
-  // Ensure that the variable stays buffer-local and doesn’t get overriden
-  env->funcall(env, env->intern(env, "put"), 3,
-               (emacs_value[]){page_render_status_sym,
-                               env->intern(env, "permanent-local"), EMACS_T});
+  // Register the buffer-local value for the DocState user pointer
+  permanent_buffer_local_var(env, "reader-current-doc-state-ptr");
 
-  emacs_value doc_state_ptr_sym =
-      env->intern(env, "reader-current-doc-state-ptr");
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               &doc_state_ptr_sym);
-  env->funcall(env, env->intern(env, "put"), 3,
-               (emacs_value[]){doc_state_ptr_sym,
-                               env->intern(env, "permanent-local"), EMACS_T});
-
-  emacs_value svg_overlay_sym = env->intern(env, "reader-current-svg-overlay");
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               &svg_overlay_sym);
+  // Register the buffer-local value for reader-current-svg-overlay
+  permanent_buffer_local_var(env, "reader-current-svg-overlay");
 
   register_module_func(
       env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,
