@@ -1,0 +1,55 @@
+#+TITLE: Part III: Multi-Threading
+* Core Refactoring & Additional Formats
+
++   *Render Core Refactor:* The biggest architectural shift is the move from a ~render-pdf~ specific system to a more general ~render-core~. This aims to support multiple document formats beyond PDF.
++   *C/Elisp Separation:* A clear separation of concerns between C and Elisp code was implemented. Many helper functions were moved from C to Elisp, improving maintainability.
++   =PdfState->DocState=: A ~DocState~ struct was introduced to hold document-related information, centralizing  state management.
+
+* Scrolling & Navigation
+
++   *Extensive Scrolling Improvements:* A huge amount of work went into scrolling functionality:
+    *   *Screenful Scrolling:* Added screenful scrolling (scrolling by pages/screens).
+    *   *Continuous Scrolling:* Implemented continuous scrolling.
+    *   *Keybindings:* Added numerous keybindings for scrolling (up, down, page up, page down, continuous scrolling).
+    *   *Scrollable Functions:* Added optional amount arguments to scroll functions.
+    *   *Edge Case Handling:* Fixed edge cases in page navigation and scrolling.
+    *   *Scroll to Bottom:* Fixed scrolling to the bottom of the previous page.
+    *   *Scroll Up/Down Functionality* Added functionality to scroll pages up and down.
++   *Page Navigation:* Improved page navigation and handling, including centering after navigation.
+
+*  Scaling & Zooming
+
++   *Scaling Factor Management:* Implemented proper scaling factor management, storing it within the ~DocState~.
++   *Zoom Support:* Added basic zoom support.
++   *Window Resizing:* The window size is now adjusted to match the ~read-pdf-mode~ one.
++   *Consistent Scaling:* Scaling is now consistent when changing pages.
+
+* Documentation & Code Quality
+
++   *Extensive Documentation:* Added documentation to many C and Elisp functions.
+  +   *Code Style:* Improved code style with indentation and consistent naming schemes.
++   *Error Handling:* Improved error handling in module functions.
++   *CONTRIBUTORS File:* Updated the CONTRIBUTORS file format and
+added contributors.
+
+*  Build System & Dependencies
+
++   *Makefile:* Updated the Makefile to rely on the in-tree
+~emacs-module.h~.
++ Made the build be cross-platform.
+
+* Integration with Emacs
+
++ Added feature to save pages of document from native Emacs boomarks.
++ Added feature to save the page when Emacs was closed and reopen it (=saveplace=).
+
+* What Lies Ahead for v0.3.0
+
++ Lay the foundations for multi-threading in the backend.
++ Work on persistent errors in centering of the page and scrolling.
++ Make the package ready for ELPA:
+  + Remove the submodule as distributions package latest MuPDF.
+  + Copyright assignments
++ Tentative features:
+  + Basic text selection and search support
+  + Table of Contents with =imenu= integration.
