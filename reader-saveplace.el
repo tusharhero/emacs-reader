@@ -31,15 +31,9 @@
 Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
   (or save-place-loaded (save-place-load-alist-from-file))
   (if (derived-mode-p 'reader-mode)
-      (if-let* ((cell (assoc buffer-file-name save-place-alist))
-		(cdr-cell (cdr cell))
-		(aref-cell (aref cdr-cell 0)))
-          (when (and cell
-                     (vectorp cdr-cell)
-                     (assq reader--saveplace-key aref-cell))
-            (funcall #'reader-bookmark-jump
-                     (cdr (assq reader--saveplace-key
-				aref-cell)))))
+      (if-let* ((place (assoc buffer-file-name save-place-alist))
+		(bookmark (cadr place)))
+            (reader-bookmark-jump bookmark))
     (apply orig-fun args)))
 
 
@@ -48,17 +42,14 @@ Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
 Saves the place for `reader-mode' buffers or falls back to ORIG-FUN."
   (if (derived-mode-p 'reader-mode)
       (let* ((filename buffer-file-name)
-             (bookmark-alist (reader-bookmark-make-record))
-             (bookmark (mapcan (lambda (pair) (list (car pair) (cdr pair))) bookmark-alist))
-             (page (bookmark-prop-get bookmark 'page)))
+             (bookmark-record (reader-bookmark-make-record))
+	     (bookmark (cons "reader-saveplace" bookmark-record)))
         (when filename
-          ;; Remove existing entry
           (setq save-place-alist
                 (assq-delete-all filename save-place-alist))
           (setq save-place-alist
-		(cons (cons filename
-			    (vector `((,reader--saveplace-key . ,bookmark)))))
-                save-place-alist)))
+		(add-to-list 'save-place-alist
+                      `(,filename . (,bookmark))))))
     (apply orig-fun args)))
 
 (advice-add 'save-place-find-file-hook  :around #'saveplace--reader-find-file)
