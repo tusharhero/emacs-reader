@@ -24,15 +24,16 @@
 (require 'reader-bookmark)
 
 (defconst reader--saveplace-key 'reader-bookmark
-  "Key used in `save-place-alist' for reader-mode.")
+  "Key under which reader-mode stores its bookmark record.")
 
 (defun saveplace--reader-find-file (orig-fun &rest args)
   "Advice around `save-place-find-file'.
 Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
+  (or save-place-loaded (save-place-load-alist-from-file))
   (if (derived-mode-p 'reader-mode)
       (let* ((cell (assoc buffer-file-name save-place-alist))
-	    (cdr-cell (cdr cell))
-	    (aref-cell (aref cdr-cell 0)))
+	     (cdr-cell (cdr cell))
+	     (aref-cell (aref cdr-cell 0)))
         (when (and cell
                    (vectorp cdr-cell)
                    (assq reader--saveplace-key aref-cell))
@@ -41,27 +42,26 @@ Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
                               aref-cell)))))
     (apply orig-fun args)))
 
+
 (defun saveplace--reader-to-alist (orig-fun &rest args)
   "Advice around `save-place-to-alist'.
 Saves the place for `reader-mode' buffers or falls back to ORIG-FUN."
   (if (derived-mode-p 'reader-mode)
-      (let* ((item     buffer-file-name)
+      (let* ((filename buffer-file-name)
              (bookmark-alist (reader-bookmark-make-record))
              (bookmark (mapcan (lambda (pair) (list (car pair) (cdr pair))) bookmark-alist))
              (page (bookmark-prop-get bookmark 'page)))
-        (when (and item page
-                   (not (= 1 page)))
+        (when filename
           ;; Remove existing entry
           (setq save-place-alist
-                (assq-delete-all item save-place-alist))
-
-          (push (cons item
-                      (vector `((,reader--saveplace-key . ,bookmark))))
+                (assq-delete-all filename save-place-alist))
+          (setq save-place-alist
+		(cons (cons filename
+			    (vector `((,reader--saveplace-key . ,bookmark)))))
                 save-place-alist)))
     (apply orig-fun args)))
 
-;; Enable advices on the proper functions
-(advice-add 'save-place-find-file-hook :around #'saveplace--reader-find-file)
+(advice-add 'save-place-find-file-hook  :around #'saveplace--reader-find-file)
 (advice-add 'save-place-to-alist   :around #'saveplace--reader-to-alist)
 
 (provide 'reader-saveplace)
