@@ -222,7 +222,7 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
  */
 
 void set_current_render_status(emacs_env *env) {
-  emacs_value render_status_var = env->intern(env, "reader-doc-render-status");
+  emacs_value render_status_var = env->intern(env, "reader-current-doc-render-status");
   env->funcall(env, env->intern(env, "set"), 2,
                (emacs_value[]){render_status_var, env->intern(env, "t")});
 }
