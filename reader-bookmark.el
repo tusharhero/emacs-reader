@@ -28,7 +28,7 @@
           (list (cons 'page (1+ (reader-dyn--current-doc-pagenumber)))
 		(cons 'scale reader-current-doc-scale-value)
 		(cons 'hscroll (window-hscroll))
-		(cons 'vscroll (window-hscroll))
+		(cons 'vscroll (window-vscroll))
 		'(handler . reader-bookmark-jump))))
 
 ;;;###autoload
