@@ -28,9 +28,10 @@
 ;; operations on an element assuming it's a list, and this leads to
 ;; issues when we try to use it like a bookmark.
 
-(defun saveplace--reader-find-file (orig-fun &rest args)
-  "Advice around `save-place-find-file'.
-Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
+(defun reader--saveplace-find-file (orig-fun &rest args)
+  "Restores saved place in `reader-mode' buffers or calls ORIG-FUN with ARGS.
+
+Advice around `save-place-find-file'. See also `reader--saveplace-to-alist'."
   (or save-place-loaded (save-place-load-alist-from-file))
   (if (derived-mode-p 'reader-mode)
       (if-let* ((place (assoc buffer-file-name save-place-alist))
@@ -38,10 +39,12 @@ Restores the saved place for `reader-mode' buffers or falls back to ORIG-FUN."
             (reader-bookmark-jump bookmark))
     (apply orig-fun args)))
 
+(advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
 
-(defun saveplace--reader-to-alist (orig-fun &rest args)
-  "Advice around `save-place-to-alist'.
-Saves the place for `reader-mode' buffers or falls back to ORIG-FUN."
+(defun reader--saveplace-to-alist (orig-fun &rest args)
+  "Saves place in `reader-mode' buffers or calls ORIG-FUN with ARGS.
+
+Advice around `save-place-to-alist'."
   (if (derived-mode-p 'reader-mode)
       (let* ((filename buffer-file-name)
              (bookmark-record (reader-bookmark-make-record))
@@ -54,9 +57,7 @@ Saves the place for `reader-mode' buffers or falls back to ORIG-FUN."
                       (cons filename (vector bookmark)))))) ; score bookmark inside a vector
     (apply orig-fun args)))
 
-
-(advice-add 'save-place-find-file-hook  :around #'saveplace--reader-find-file)
-(advice-add 'save-place-to-alist   :around #'saveplace--reader-to-alist)
+(advice-add 'save-place-to-alist :around #'reader--saveplace-to-alist)
 
 (provide 'reader-saveplace)
 ;;; reader-saveplace.el ends here
