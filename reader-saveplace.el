@@ -57,7 +57,7 @@ Advice around `save-place-to-alist'."
 	     (bookmark (cons "reader-saveplace" bookmark-record)))
         (when filename
           (setq save-place-alist
-                (assq-delete-all filename save-place-alist))
+                (assoc-delete-all filename save-place-alist))
           (setq save-place-alist
 		(add-to-list 'save-place-alist
                       (cons filename (vector bookmark)))))) ; score bookmark inside a vector
