@@ -54,6 +54,14 @@
 (defvar-local reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
 
+;; Setting of `auto-mode-list' fails if not autoloaded.
+;;;###autoload
+(defconst reader-supported-formats (list "pdf" "epub" "mobi"
+					 "fb2" "xps" "cbz"
+					 "docx""pptx" "xlsx"
+					 "odt" "ods" "odp" "odg")
+  "File formats supported by the document reader.")
+
 ;;;###autoload
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.
@@ -73,11 +81,7 @@ The only files that can be opened are of the following formats:
 - ODT/ODS/ODP/ODG
 
 Any other file format will simply not show up as a candidate."
-  (interactive (let* ((extensions '("pdf" "epub" "mobi"
-				    "fb2" "xps" "cbz"
-				    "docx""pptx" "xlsx"
-				    "odt" "ods" "odp" "odg"))
-		      (regexp (concat "\\." (regexp-opt extensions t) "$"))
+  (interactive (let* ((regexp (concat "\\." (regexp-opt reader-supported-formats t) "$"))
 		      (file (read-file-name
 			     "Open document: "
 			     nil nil t nil
@@ -450,22 +454,9 @@ Keybindings:
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
 
-;; Automatically load the mode for the supported document formats
 ;;;###autoload
-(dolist (pattern '("\\.pdf\\'"
-		   "\\.epub\\'"
-		   "\\.odt\\'"
-		   "\\.ods\\'"
-		   "\\.odg\\'"
-		   "\\.odp\\'"
-		   "\\.docx\\'"
-		   "\\.pptx\\'"
-		   "\\.xlsx\\'"
-		   "\\.fb2\\'"
-		   "\\.xps\\'"
-		   "\\.mobi\\'"
-		   "\\.cbz\\'"))
-  (add-to-list 'auto-mode-alist (cons pattern 'reader-mode)))
+(dolist (pattern reader-supported-formats)
+  (add-to-list 'auto-mode-alist (cons (concat "\\." pattern "\\'") 'reader-mode)))
 
 (provide 'reader)
 ;;; reader.el ends here.
