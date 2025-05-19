@@ -55,8 +55,9 @@
   "The amount of scaling for the current document. Defaults to 1.0.")
 (make-variable-buffer-local 'reader-current-doc-scale-value)
 
-(defun reader-open-doc ()
-  "Open a document for viewing.
+(defun reader-open-doc (document)
+  "Open DOCUMENT for viewing.
+
 This function calls the module function `reader-dyn--load-doc' from the dynamic module
 to render the first page and displays it in a new buffer.  The only files
 that can be opened are of the following formats:
@@ -70,21 +71,22 @@ that can be opened are of the following formats:
 - ODT/ODS/ODP/ODG
 
 Any other file format would simply not show up as a candidate."
-  (interactive)
-  (let* ((exts '("pdf" "epub" "mobi" "fb2" "xps" "cbz" "docx"
-		 "pptx" "xlsx" "odt" "ods" "odp" "odg"))
-	 (rgx (concat "\\." (regexp-opt exts t) "$"))
-	 (files (directory-files default-directory nil rgx))
-	 (file (read-file-name
-		"Open document: "
-		nil nil t nil
-		(lambda (f)
-		  (or (file-directory-p f)
-		      (string-match-p rgx f))))))
-    (switch-to-buffer (create-file-buffer file))
-    (insert "\n")
-    (reader-dyn--load-doc (expand-file-name file))
-    (reader-mode)))
+  (interactive (let* ((extensions '("pdf" "epub" "mobi"
+				    "fb2" "xps" "cbz"
+				    "docx""pptx" "xlsx"
+				    "odt" "ods" "odp" "odg"))
+		      (regexp (concat "\\." (regexp-opt extensions t) "$"))
+		      (file (read-file-name
+			     "Open document: "
+			     nil nil t nil
+			     (lambda (f)
+			       (or (file-directory-p f)
+				   (string-match-p regexp f))))))
+		 (list file)))
+  (switch-to-buffer (create-file-buffer document))
+  (insert "\n")
+  (reader-dyn--load-doc (expand-file-name document))
+  (reader-mode))
 
 (defun reader-next-page ()
   "Go to the next page of the visiting document."
