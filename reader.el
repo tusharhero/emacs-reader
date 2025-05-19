@@ -336,62 +336,59 @@ buffer is already opened and the buffer is not in `reader-mode'."
 	  (reader-dyn--load-doc file))
       (message "No file associated with buffer."))))
 
-;; Define the keymap for reader-mode
-(defvar reader-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "<next>") #'reader-next-page)
-    (define-key map (kbd "J") #'reader-next-page)
-    (define-key map (kbd "n") #'reader-next-page)
+(defvar-keymap reader-mode-map
+  :doc "Keymap for `reader-mode'."
+  "<next>"  #'reader-next-page
+  "J"       #'reader-next-page
+  "n"       #'reader-next-page
 
-    (define-key map (kbd "j") #'reader-scroll-down-or-next-page)
-    (define-key map (kbd "C-n") #'reader-scroll-down-or-next-page)
-    (define-key map (kbd "<down>") #'reader-scroll-down-or-next-page)
-    (define-key map (kbd "<wheel-down>") #'reader-scroll-down-or-next-page)
+  "j"       #'reader-scroll-down-or-next-page
+  "C-n"     #'reader-scroll-down-or-next-page
+  "<down>"  #'reader-scroll-down-or-next-page
+  "<wheel-down>" #'reader-scroll-down-or-next-page
 
-    (define-key map (kbd "C-v") #'reader-scroll-down-screenful)
+  "C-v"     #'reader-scroll-down-screenful
 
-    (define-key map (kbd "SPC") #'reader-scroll-down-screenful-or-next-page)
+  "SPC"     #'reader-scroll-down-screenful-or-next-page
 
-    (define-key map (kbd "<prior>") #'reader-previous-page)
-    (define-key map (kbd "K") #'reader-previous-page)
-    (define-key map (kbd "p") #'reader-previous-page)
+  "<prior>" #'reader-previous-page
+  "K"       #'reader-previous-page
+  "p"       #'reader-previous-page
 
-    (define-key map (kbd "k") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "C-p") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "<up>") #'reader-scroll-up-or-prev-page)
-    (define-key map (kbd "<wheel-up>") #'reader-scroll-up-or-prev-page)
+  "k"       #'reader-scroll-up-or-prev-page
+  "C-p"     #'reader-scroll-up-or-prev-page
+  "<up>"    #'reader-scroll-up-or-prev-page
+  "<wheel-up>" #'reader-scroll-up-or-prev-page
 
-    (define-key map (kbd "M-v") #'reader-scroll-up-screenful)
+  "M-v"     #'reader-scroll-up-screenful
 
-    (define-key map (kbd "DEL") #'reader-scroll-up-screenful-or-prev-page)
-    (define-key map (kbd "S-SPC") #'reader-scroll-up-screenful-or-prev-page)
+  "DEL"     #'reader-scroll-up-screenful-or-prev-page
+  "S-SPC"   #'reader-scroll-up-screenful-or-prev-page
 
-    (define-key map (kbd "h") #'reader-scroll-left)
-    (define-key map (kbd "C-b") #'reader-scroll-left)
+  "h"       #'reader-scroll-left
+  "C-b"     #'reader-scroll-left
 
-    (define-key map (kbd "l") #'reader-scroll-right)
-    (define-key map (kbd "C-f") #'reader-scroll-right)
+  "l"       #'reader-scroll-right
+  "C-f"     #'reader-scroll-right
 
-    (define-key map (kbd "gg") #'reader-first-page)
-    (define-key map (kbd "M-<") #'reader-first-page)
+  "g g"      #'reader-first-page
+  "M-<"     #'reader-first-page
 
-    (define-key map (kbd "G") #'reader-last-page)
-    (define-key map (kbd "M->") #'reader-last-page)
+  "G"       #'reader-last-page
+  "M->"     #'reader-last-page
 
-    (define-key map (kbd "M-g g") #'reader-goto-page)
-    (define-key map (kbd "g n") #'reader-goto-page)
+  "M-g g"   #'reader-goto-page
+  "g n"     #'reader-goto-page
 
-    (define-key map (kbd "=") #'reader-enlarge-size)
+  "="       #'reader-enlarge-size
 
-    (define-key map (kbd "-") #'reader-shrink-size)
+  "-"       #'reader-shrink-size
 
-    (define-key map (kbd "H") #'reader-fit-to-height)
+  "H"       #'reader-fit-to-height
 
-    (define-key map (kbd "W") #'reader-fit-to-width)
+  "W"       #'reader-fit-to-width
 
-    (define-key map (kbd "Q") #'reader-kill-buffer)
-    map)
-  "Keymap for reader-mode.")
+  "Q"       #'reader-kill-buffer)
 
 ;; Define the major mode
 (define-derived-mode reader-mode special-mode "Emacs Reader"
