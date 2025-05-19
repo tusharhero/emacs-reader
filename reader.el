@@ -442,14 +442,10 @@ Keybindings:
 ;; Modeline for the reader-mode
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
-  (setq-local mode-line-format
-	      (list
-	       "Page: "
-	       '(:eval (number-to-string (+ 1 (reader-dyn--current-doc-pagenumber))))
-	       "/"
-	       '(:eval (number-to-string reader-current-doc-pagecount))
-	       "  "
-	       mode-line-buffer-identification))
+  (setq-local mode-line-position
+              '(" P" (:eval (number-to-string
+			     (+ 1 (reader-dyn--current-doc-pagenumber))))
+                "/" (:eval (number-to-string reader-current-doc-pagecount))))
   (force-mode-line-update t))
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
