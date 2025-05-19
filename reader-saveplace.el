@@ -61,5 +61,11 @@ Advice around `save-place-to-alist'."
 	(push (cons filename (vector bookmark)) save-place-alist))
     (apply orig-fun args)))
 
+;;;###autoload
+(advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
+
+;;;###autoload
+(advice-add 'save-place-to-alist :around #'reader--saveplace-to-alist)
+
 (provide 'reader-saveplace)
 ;;; reader-saveplace.el ends here

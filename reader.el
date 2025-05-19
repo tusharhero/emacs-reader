@@ -54,6 +54,7 @@
 (defvar-local reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
 
+;;;###autoload
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.
 
@@ -402,7 +403,7 @@ buffer is not in `reader-mode'."
 
   "Q"       #'reader-kill-buffer)
 
-;; Define the major mode
+;;;###autoload
 (define-derived-mode reader-mode special-mode "Emacs Reader"
   "Major mode for viewing documents in The Emacs Reader.
 
@@ -449,11 +450,8 @@ Keybindings:
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
 
-;; see `reader-saveplace' for details.
-(advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
-(advice-add 'save-place-to-alist :around #'reader--saveplace-to-alist)
-
 ;; Automatically load the mode for the supported document formats
+;;;###autoload
 (dolist (pattern '("\\.pdf\\'"
 		   "\\.epub\\'"
 		   "\\.odt\\'"
