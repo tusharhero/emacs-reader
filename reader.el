@@ -58,8 +58,10 @@
   "Open DOCUMENT for viewing.
 
 This function calls the module function `reader-dyn--load-doc' from the dynamic module
-to render the first page and displays it in a new buffer.  The only files
-that can be opened are of the following formats:
+to render the first page and displays it in a new buffer.
+
+The only files that can be opened are of the following formats:
+
 - PDF
 - EPUB
 - MOBI
@@ -69,7 +71,7 @@ that can be opened are of the following formats:
 - DOCX/PPTX/XLSX
 - ODT/ODS/ODP/ODG
 
-Any other file format would simply not show up as a candidate."
+Any other file format will simply not show up as a candidate."
   (interactive (let* ((extensions '("pdf" "epub" "mobi"
 				    "fb2" "xps" "cbz"
 				    "docx""pptx" "xlsx"
@@ -88,7 +90,7 @@ Any other file format would simply not show up as a candidate."
   (reader-mode))
 
 (defun reader-next-page ()
-  "Go to the next page of the visiting document."
+  "Go to the next page of the document."
   (interactive)
   (let ((status (reader-dyn--next-page)))
     (when status
@@ -98,7 +100,7 @@ Any other file format would simply not show up as a candidate."
     status))
 
 (defun reader-previous-page ()
-  "Go to the previous page of the visiting document."
+  "Go to the previous page of the document."
   (interactive)
   (let ((status (reader-dyn--prev-page)))
     (when status
@@ -108,7 +110,7 @@ Any other file format would simply not show up as a candidate."
     status))
 
 (defun reader-first-page ()
-  "Go to the first page of the visiting document."
+  "Go to the first page of the document."
   (interactive)
   (reader-dyn--first-page)
   (reader-doc-scale-page reader-current-doc-scale-value)
@@ -116,7 +118,7 @@ Any other file format would simply not show up as a candidate."
   (force-mode-line-update t))
 
 (defun reader-last-page ()
-  "Go to the last page of the visiting document."
+  "Go to the last page of the document."
   (interactive)
   (reader-dyn--last-page)
   (reader-doc-scale-page reader-current-doc-scale-value)
@@ -125,14 +127,14 @@ Any other file format would simply not show up as a candidate."
 
 (defun reader-goto-page (n)
   "Go to page number 'N' in the current document."
-  (interactive "nPage: ")
+  (interactive "nGoto page: ")
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
   (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
-  "Enlarge the size of the current page with respect to the `reader-enlarge-factor'."
+  "Enlarge the size of the current page by the `reader-enlarge-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale-value reader-enlarge-factor)))
     (reader-doc-scale-page scaling-factor))
@@ -140,7 +142,7 @@ Any other file format would simply not show up as a candidate."
   (force-mode-line-update t))
 
 (defun reader-shrink-size ()
-  "Shrink the size of the current page with respect to the `reader-shrink-factor'."
+  "Shrink the size of the current page by the `reader-shrink-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale-value reader-shrink-factor)))
     (reader-doc-scale-page scaling-factor))
@@ -148,7 +150,7 @@ Any other file format would simply not show up as a candidate."
   (force-mode-line-update t))
 
 (defun reader-fit-to-height ()
-  "Scale the current page so that its height fits perfectly within the window."
+  "Scale the current page to fit its height perfectly within the window."
   (interactive)
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (pixel-window-height (window-pixel-height))
@@ -159,7 +161,7 @@ Any other file format would simply not show up as a candidate."
     (set-window-vscroll nil 0)))
 
 (defun reader-fit-to-width ()
-  "Scale the current page so that its width fits perfectly within the window."
+  "Scale the current page to fit its width perfectly within the window."
   (interactive)
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (pixel-window-width (window-pixel-width))
@@ -172,13 +174,15 @@ Any other file format would simply not show up as a candidate."
   "Scales the page by a given FACTOR.
 
 It calls the module function `reader-dyn--scale-page' that
-sets the :width, :height and :scale propoerties of current page’s image.
+sets the `:width', `:height', and `:scale' properties of current page’s image.
+
 It also updates `reader-current-doc-scale-value' to reflect the new scale."
   (reader-dyn--scale-page factor)
   (setq reader-current-doc-scale-value factor))
 
 (defun reader-scroll-up (&optional amount)
   "Scroll up the current page.
+
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (let* ((vscroll
@@ -186,8 +190,7 @@ Optionally specify the AMOUNT by which to scroll."
     (set-window-vscroll nil vscroll)))
 
 (defun reader-possible-scroll-down (&optional amount)
-  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
-If none is possible return nil."
+  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible."
   (interactive "p")
   (or amount (setq amount 1))
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
@@ -254,6 +257,7 @@ Optionally specify the AMOUNT by which to scroll."
 
 (defun reader-scroll-up-or-prev-page (&optional amount)
   "Scroll up the current page or go to the previous page if can't scroll.
+
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
@@ -269,6 +273,7 @@ Optionally specify the AMOUNT by which to scroll."
 
 (defun reader-scroll-down-or-next-page (&optional amount)
   "Scroll down the current page or go to the next page if can't scroll.
+
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
@@ -280,6 +285,7 @@ Optionally specify the AMOUNT by which to scroll."
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional amount)
   "Scroll up the current page by a screenful or go to the previous page if can't scroll.
+
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
@@ -289,6 +295,7 @@ Optionally specify the AMOUNT by which to scroll."
 
 (defun reader-scroll-down-screenful-or-next-page (&optional amount)
   "Scroll down the current page by a screenful or go to the next page if can't scroll.
+
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
@@ -309,7 +316,9 @@ Optionally specify the AMOUNT by which to scroll."
     (cons width length)))
 
 (defun reader--center-page (&optional window)
-  "Centers the pages of the document with respect to the WINDOW in which the document is opened."
+  "Center the document with respect to WINDOW.
+
+If WINDOW is omitted defaults current window."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
       (let* ((window-width (window-body-width window))
@@ -328,8 +337,10 @@ Optionally specify the AMOUNT by which to scroll."
 	  (set-window-hscroll window scroll-offset))))))
 
 (defun reader--render-buffer ()
-  "Render the document file this buffer is associated with.  It is to be called while a document’s
-buffer is already opened and the buffer is not in `reader-mode'."
+  "Render the document file current buffer is associated with.
+
+It is to be called while a document’s buffer is already opened and the
+buffer is not in `reader-mode'."
   (interactive)
   (let ((file (buffer-file-name (current-buffer))))
     (if file
