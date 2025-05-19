@@ -454,6 +454,13 @@ Keybindings:
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
 
+;; see `reader-saveplace' for details.
+;;;###autoload
+(advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
+
+;;;###autoload
+(advice-add 'save-place-to-alist :around #'reader--saveplace-to-alist)
+
 ;;;###autoload
 (dolist (pattern reader-supported-formats)
   (add-to-list 'auto-mode-alist (cons (concat "\\." pattern "\\'") 'reader-mode)))
