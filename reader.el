@@ -51,9 +51,8 @@
   :group 'reader
   :type 'number)
 
-(defvar reader-current-doc-scale-value 1.0
+(defvar-local reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
-(make-variable-buffer-local 'reader-current-doc-scale-value)
 
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.

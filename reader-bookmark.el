@@ -33,7 +33,7 @@
 
 ;;;###autoload
 (defun reader-bookmark-jump (bookmark)
-  "The bookmark `handler' function interface for the BOOKMARK with record type returned by `reader-bookmark-make-record'."
+  "Handles BOOKMARK for record type returned by `reader-bookmark-make-record'."
   (let ((page (bookmark-prop-get bookmark 'page))
         (file (bookmark-prop-get bookmark 'filename))
         (scale (bookmark-prop-get bookmark 'scale))
