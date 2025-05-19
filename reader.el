@@ -221,6 +221,7 @@ Optionally specify the AMOUNT by which to scroll."
 
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page.
+
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
@@ -266,7 +267,7 @@ Optionally specify the AMOUNT by which to scroll."
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((prev-scroll (window-vscroll)))
+  (let ((prev-scroll (window-vscroll)))
     (reader-scroll-up amount)
     (when-let* (((and (= prev-scroll (window-vscroll))
 		      (reader-previous-page))) ; if succeeds
@@ -282,7 +283,7 @@ Optionally specify the AMOUNT by which to scroll."
 Optionally specify the AMOUNT by which to scroll."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((prev-scroll (window-vscroll)))
+  (let ((prev-scroll (window-vscroll)))
     (reader-scroll-down amount)
     (when (and (= prev-scroll (window-vscroll))
 	       (reader-next-page)) ; if succeeds
@@ -347,11 +348,9 @@ If WINDOW is omitted defaults current window."
 It is to be called while a document’s buffer is already opened and the
 buffer is not in `reader-mode'."
   (interactive)
-  (let ((file (buffer-file-name (current-buffer))))
-    (if file
-	(progn
-	  (reader-dyn--load-doc file))
-      (message "No file associated with buffer."))))
+  (if-let* ((file (buffer-file-name (current-buffer))))
+      (reader-dyn--load-doc file)
+    (message "No file associated with buffer.")))
 
 (defvar-keymap reader-mode-map
   :doc "Keymap for `reader-mode'."
@@ -424,8 +423,7 @@ Keybindings:
   (setq-local bookmark-make-record-function
 	      #'reader-bookmark-make-record)
 
-  ;; Only do this when document is not already rendered
-  (when (not reader-current-doc-render-status)
+  (unless reader-current-doc-render-status
     (reader--render-buffer))
 
   (use-local-map reader-mode-map)
@@ -433,13 +431,10 @@ Keybindings:
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
 
-  ;; Initially fit the document to height
   (reader-fit-to-height)
 
-  ;; Invoke centering every time window's size changes only in reader-mode windows
   (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
-;; Modeline for the reader-mode
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
   (setq-local mode-line-position
