@@ -299,7 +299,7 @@ Optionally specify the WINDOW, defaults to current window."
   (or amount (setq amount 1))
   (let ((prev-scroll (window-vscroll window)))
     (reader-scroll-down amount window)
-    (when (and (= prev-scroll (window-vscroll))
+    (when (and (= prev-scroll (window-vscroll window))
 	       (reader-next-page)) ; if succeeds
       (set-window-vscroll nil 0))))
 
