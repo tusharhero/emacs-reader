@@ -50,7 +50,7 @@ Advice around `save-place-find-file'. See also `reader--saveplace-to-alist'."
 (defun reader--saveplace-to-alist (orig-fun &rest args)
   "Saves place in `reader-mode' buffers or calls ORIG-FUN with ARGS.
 
-Advice around `save-place-to-alist'."
+Advice around `save-place-to-alist'. See also `reader--saveplace-find-file'."
   (if (derived-mode-p 'reader-mode)
       (when-let* ((filename buffer-file-name)
 		  (bookmark-record (reader-bookmark-make-record))

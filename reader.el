@@ -62,6 +62,10 @@
 					 "odt" "ods" "odp" "odg")
   "File formats supported by the document reader.")
 
+(defun reader-current-pagenumber ()
+  "The current page number of the document."
+  (1+ (reader-dyn--current-doc-pagenumber)))
+
 ;;;###autoload
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.
@@ -438,8 +442,7 @@ Keybindings:
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
   (setq-local mode-line-position
-              '(" P" (:eval (number-to-string
-			     (+ 1 (reader-dyn--current-doc-pagenumber))))
+              '(" P" (:eval (number-to-string (reader-current-pagenumber)))
                 "/" (:eval (number-to-string reader-current-doc-pagecount))))
   (force-mode-line-update t))
 

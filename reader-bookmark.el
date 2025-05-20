@@ -25,7 +25,7 @@
 (defun reader-bookmark-make-record  ()
   "Create a bookmark reader doc record."
   (append (bookmark-make-record-default nil t 1)
-          (list (cons 'page (1+ (reader-dyn--current-doc-pagenumber)))
+          (list (cons 'page (reader-current-pagenumber))
 		(cons 'scale reader-current-doc-scale-value)
 		(cons 'hscroll (window-hscroll))
 		(cons 'vscroll (window-vscroll))
