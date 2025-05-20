@@ -44,7 +44,6 @@ So, since you’d be building =mupdf= from source to produce the shared object =
 For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. This is different across platforms:
 
 ** GNU/Linux
-
 On GNU/Linux all you need is: =gcc= and =make=. Then you can simply install through the Emacs’ built-in =package-vc= or the [[https://github.com/radian-software/straight.el][straight]] package manager. The built-in =package-vc= still has some quirks, but here are the recipes for both:
 
 - =use-package= with =package-vc=:
@@ -86,6 +85,33 @@ After that, you can run =git clone --recurse-submodules https://codeberg.org/div
 #+begin_src sh
 make all
 #+end_src
+
+** Manual
+This section is about how to install this package manually. Intended to be used by developers.
+
+After cloning the repository, follow the instructions from the previous section to install dependencies on your respective operating system.
+
+Then, you run =make= in the git repository, as noted earlier this may take a few depending on if it is fetching and building =mupdf=.
+
+After this, you add the path to emacs-reader git repository to =load-path=,
+#+begin_src emacs-lisp
+  (add-to-list 'load-path "/path/to/emacs-reader")
+#+end_src
+
+You can also utilize =use-package= to do the same,
+#+begin_src emacs-lisp
+  (use-package reader
+    :vc t
+    :load-path "/path/to/emacs-reader")
+#+end_src
+
+To test emacs-reader in a default Emacs config, use something like:
+#+begin_src shell
+  emacs -q -L . -l reader.el
+#+end_src
+This command adds the current directory to path, and loads =reader.el=.
+
+This will not work for testing auto loading though. You can try using =package-vc-install-from-checkout= to test that.
 
 * Key Bindings
 - =Page Up=, =n= or =J= for going to next page
@@ -129,7 +155,7 @@ The streams happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the chan
 If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on [[https://libera.chat/][Libera]].
 
 * License
-Licensed under GPLv3, Check [[file:LICENSE][LICENSE]] and [[file:CONTRIBUTORS][CONTRIBUTORS]] for details.
+Licensed under GPLv3. Check [[file:LICENSE][LICENSE]] and [[file:CONTRIBUTORS][CONTRIBUTORS]] for details.
 
 The logo of the project was made by the author and is shared under [[http://creativecommons.org/licenses/by-sa/4.0/][CC-BY-SA-4.0]]. The logo uses the following artworks from GNU:
 
