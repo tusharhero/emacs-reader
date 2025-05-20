@@ -265,7 +265,7 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
   (set-window-hscroll window
-		      (1- (window-hscroll))))
+		      (1- (window-hscroll window))))
 
 (defun reader-scroll-right (window)
   "Scroll to the left of the current page.
@@ -273,7 +273,7 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
   (set-window-hscroll window
-		      (1+ (window-hscroll))))
+		      (1+ (window-hscroll window))))
 
 (defun reader-scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
@@ -301,7 +301,7 @@ Optionally specify the WINDOW, defaults to current window."
     (reader-scroll-down amount window)
     (when (and (= prev-scroll (window-vscroll window))
 	       (reader-next-page)) ; if succeeds
-      (set-window-vscroll nil 0))))
+      (set-window-vscroll window 0))))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional amount window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
