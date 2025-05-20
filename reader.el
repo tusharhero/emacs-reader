@@ -189,26 +189,28 @@ It also updates `reader-current-doc-scale-value' to reflect the new scale."
   (reader-dyn--scale-page factor)
   (setq reader-current-doc-scale-value factor))
 
-(defun reader-scroll-up (&optional amount)
-  "Scroll up the current page.
+(defun reader-scroll-up (&optional amount window)
+  "Scroll up the current page by AMOUNT (1 by default).
 
-Optionally specify the AMOUNT by which to scroll."
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (let* ((vscroll
-	  (max (- (window-vscroll) amount) 0)))
-    (set-window-vscroll nil vscroll)))
+	  (max (- (window-vscroll window) amount) 0)))
+    (set-window-vscroll window vscroll)))
 
-(defun reader-possible-scroll-down (&optional amount)
-  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible."
+(defun reader-possible-scroll-down (&optional amount window)
+  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
+
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
-	 (window-height (window-body-height))
-	 (pixel-window-height (window-pixel-height))
+	 (window-height (window-body-height window))
+	 (pixel-window-height (window-pixel-height window))
 	 (pixel-per-col (/ pixel-window-height
 			   window-height))
 	 (pixel-amount (* pixel-per-col amount))
-	 (pixel-current-scroll (window-vscroll nil t))
+	 (pixel-current-scroll (window-vscroll window t))
 	 (pixel-predicted-scroll (+ pixel-current-scroll
 				    pixel-amount))
 	 (win-bottom-pos (+ pixel-current-scroll
@@ -223,95 +225,131 @@ Optionally specify the AMOUNT by which to scroll."
 	  max-scroll-amount)
       amount)))
 
-(defun reader-scroll-down (&optional amount)
-  "Scroll down the current page.
+(defun reader-scroll-down (&optional amount window)
+  "Scroll down the current page by AMOUNT (1 by default).
 
-Optionally specify the AMOUNT by which to scroll."
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((amount (reader-possible-scroll-down amount))
-	 (vscroll (+ (window-vscroll) amount)))
-    (set-window-vscroll nil vscroll)))
+  (let* ((amount (reader-possible-scroll-down amount window))
+	 (vscroll (+ (window-vscroll window) amount)))
+    (set-window-vscroll window vscroll)))
 
-(defun reader-scroll-up-screenful ()
-  "Scroll up the current page by a screenful."
+(defun reader-scroll-up-screenful (&optional window)
+  "Scroll up the current page by a screenful.
+
+Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (let ((prev-scroll (window-vscroll))
-	(amount (- (window-body-height)
+  (let ((prev-scroll (window-vscroll window))
+	(amount (- (window-body-height window)
 		   next-screen-context-lines)))
     (when (= prev-scroll
-	     (reader-scroll-up amount))
+	     (reader-scroll-up amount window))
       (message "Beginning of page"))))
 
-(defun reader-scroll-down-screenful ()
-  "Scroll down the current page by a screenful."
+(defun reader-scroll-down-screenful (&optional window)
+  "Scroll down the current page by a screenful.
+
+Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (let ((prev-scroll (window-vscroll))
-	(amount (- (window-body-height)
+  (let ((prev-scroll (window-vscroll window))
+	(amount (- (window-body-height window)
 		   next-screen-context-lines)))
     (when (= prev-scroll
-	     (reader-scroll-down amount))
+	     (reader-scroll-down amount window))
       (message "End of page"))))
 
-(defun reader-scroll-left ()
-  "Scroll to the left of the current page."
+(defun reader-scroll-left (&optional window)
+  "Scroll to the left of the current page.
+
+Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (set-window-hscroll nil
+  (set-window-hscroll window
 		      (1- (window-hscroll))))
 
-(defun reader-scroll-right ()
-  "Scroll to the left of the current page."
+(defun reader-scroll-right (window)
+  "Scroll to the left of the current page.
+
+Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (set-window-hscroll nil
+  (set-window-hscroll window
 		      (1+ (window-hscroll))))
 
-(defun reader-scroll-up-or-prev-page (&optional amount)
-  "Scroll up the current page or go to the previous page if can't scroll.
+(defun reader-scroll-up-or-prev-page (&optional amount window)
+  "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
 
-Optionally specify the AMOUNT by which to scroll."
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let ((prev-scroll (window-vscroll)))
+  (let ((prev-scroll (window-vscroll window)))
     (reader-scroll-up amount)
-    (when-let* (((and (= prev-scroll (window-vscroll))
+    (when-let* (((and (= prev-scroll (window-vscroll window))
 		      (reader-previous-page))) ; if succeeds
 		(image-height (cdr (reader--get-current-doc-image-size)))
-		(pixel-window-height (window-pixel-height))
+		(pixel-window-height (window-pixel-height window))
 		(bottom-most-scroll-pixel
 		 (- image-height pixel-window-height)))
-      (set-window-vscroll nil bottom-most-scroll-pixel t))))
+      (set-window-vscroll window bottom-most-scroll-pixel t))))
 
-(defun reader-scroll-down-or-next-page (&optional amount)
-  "Scroll down the current page or go to the next page if can't scroll.
+(defun reader-scroll-down-or-next-page (&optional amount window)
+  "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page.
 
-Optionally specify the AMOUNT by which to scroll."
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let ((prev-scroll (window-vscroll)))
-    (reader-scroll-down amount)
+  (let ((prev-scroll (window-vscroll window)))
+    (reader-scroll-down amount window)
     (when (and (= prev-scroll (window-vscroll))
 	       (reader-next-page)) ; if succeeds
       (set-window-vscroll nil 0))))
 
-(defun reader-scroll-up-screenful-or-prev-page (&optional amount)
-  "Scroll up the current page by a screenful or go to the previous page if can't scroll.
+(defun reader-scroll-up-screenful-or-prev-page (&optional amount window)
+  "Scroll up the current page by screenful, otherwise switch to the previous page.
 
-Optionally specify the AMOUNT by which to scroll."
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let ((scroll (- (window-body-height)
+  (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
-    (reader-scroll-up-or-prev-page scroll)))
+    (reader-scroll-up-or-prev-page scroll window)))
 
-(defun reader-scroll-down-screenful-or-next-page (&optional amount)
-  "Scroll down the current page by a screenful or go to the next page if can't scroll.
+(defun reader-scroll-down-screenful-or-next-page (&optional amount window)
+  "Scroll down the current page by screenful, otherwise switch to the next page.
 
-Optionally specify the AMOUNT by which to scroll."
+Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let ((scroll (- (window-body-height)
+  (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
-    (reader-scroll-down-or-next-page scroll)))
+    (reader-scroll-down-or-next-page scroll window)))
+
+(defun reader-mwheel-scroll-up (event)
+  "Scroll up or switch to the previous page, but also handle mouse EVENT.
+
+See also `reader-scroll-up-or-prev-page'."
+  (interactive "e")
+  (let* ((event-type (car event))
+	 (amount (pcase event-type
+		   ('wheel-up 1)
+		   ('double-wheel-up 2)
+		   ('triple-wheel-up 3)))
+	 (scrolled-window (car (cadr event))))
+    (with-current-buffer (window-buffer scrolled-window)
+      (reader-scroll-up-or-prev-page amount scrolled-window))))
+
+(defun reader-mwheel-scroll-down (event)
+  "Scroll down or switch to the next page, but also handle mouse EVENT.
+
+See also `reader-scroll-down-or-next-page'."
+  (interactive "e")
+  (let* ((event-type (car event))
+	 (amount (pcase event-type
+		   ('wheel-down 1)
+		   ('double-wheel-down 2)
+		   ('triple-wheel-down 3)))
+	 (scrolled-window (car (cadr event))))
+    (with-current-buffer (window-buffer scrolled-window)
+      (reader-scroll-down-or-next-page amount scrolled-window))))
 
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
@@ -328,7 +366,7 @@ Optionally specify the AMOUNT by which to scroll."
 (defun reader--center-page (&optional window)
   "Center the document with respect to WINDOW.
 
-If WINDOW is omitted defaults current window."
+If WINDOW is omitted defaults to current window."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
       (let* ((window-width (window-body-width window))
@@ -365,7 +403,7 @@ buffer is not in `reader-mode'."
   "j"       #'reader-scroll-down-or-next-page
   "C-n"     #'reader-scroll-down-or-next-page
   "<down>"  #'reader-scroll-down-or-next-page
-  "<wheel-down>" #'reader-scroll-down-or-next-page
+  "<wheel-down>" #'reader-mwheel-scroll-down
 
   "C-v"     #'reader-scroll-down-screenful
 
@@ -378,7 +416,7 @@ buffer is not in `reader-mode'."
   "k"       #'reader-scroll-up-or-prev-page
   "C-p"     #'reader-scroll-up-or-prev-page
   "<up>"    #'reader-scroll-up-or-prev-page
-  "<wheel-up>" #'reader-scroll-up-or-prev-page
+  "<wheel-up>" #'reader-mwheel-scroll-up
 
   "M-v"     #'reader-scroll-up-screenful
 
