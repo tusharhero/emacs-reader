@@ -3,7 +3,7 @@
 
 [[file:extras/emacs-reader-logo.png]]
 
-An all-in-one document reader for GNU Emacs, supporting all the major document formats. This package intends to take from =doc-view=, =nov.el=, and =pdf-tools= and make them better. And as such, it is effectively a drop-in replacement for them
+An all-in-one document reader for GNU Emacs, supporting all [[* Supported Formats][major document formats]]. This package intends to take from =doc-view=, =nov.el=, and =pdf-tools= and make them better. And as such, it is effectively a *drop-in replacement* for them
 
 * Screencast
 [[file:extras/emacs-reader-2025-05-14_04.32.41.gif]]
@@ -36,7 +36,7 @@ Using these formats is heavily discouraged, you should /always/ prefer the above
 + XLSX
 
 * Dependencies
-Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule (More details at #18).
+Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule (More details at [[https://codeberg.org/divyaranjan/emacs-reader/issues/18][#18]]).
 
 So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the depencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
 
@@ -45,7 +45,7 @@ For now, until the package has been published to GNU ELPA, the only way to insta
 
 ** GNU/Linux
 
-On GNU/Linux all you need is: =gcc= and =make=. Then you can simply install through the [[https://github.com/radian-software/straight.el][straight]] package manager or Emacs’ built-in =package-vc=. The latter still has some quirks, but here are the recipes for both:
+On GNU/Linux all you need is: =gcc= and =make=. Then you can simply install through the Emacs’ built-in =package-vc= or the [[https://github.com/radian-software/straight.el][straight]] package manager. The built-in =package-vc= still has some quirks, but here are the recipes for both:
 
 - =use-package= with =package-vc=:
    #+begin_src emacs-lisp
@@ -82,7 +82,7 @@ With Windows, things are slightly tricky. The only toolchain where I got it to w
 pacman -S make mingw-w64-x86_64-gcc git pkg-config
 #+end_src
 
-After that, you can =git clone --recurse-submodules https://codeberg.org/divyaranjan/emacs-reader.git= and then:
+After that, you can run =git clone --recurse-submodules https://codeberg.org/divyaranjan/emacs-reader.git= and then:
 #+begin_src sh
 make all
 #+end_src
@@ -101,12 +101,12 @@ make all
 - =M-v=  for scrolling to the top of the page.
 - =C-v= for scrolling to the end of the page.
 - =SPC=, =S-SPC= , and =DEL= make the above two commands keep scrolling the pages.
-- ~=~ and =-= for zooming in and out of the current page.
+- === and =-= for zooming in and out of the current page.
 - =H= to make the page fit the height of the current window.
 - =W= to make the page fit the width of the current window.
 
 * How It Works
-This package is entirely distinct from DocView and =pdf-tools= in both its architecture and implementation. It leverages Emacs’ dynamic/native modules which allows it to interoperate with other programming languages outside of its Emacs Lisp environment.
+This package is entirely distinct from =DocView= and =pdf-tools= in both its architecture and implementation. It leverages Emacs’ dynamic/native modules which allows it to interoperate with other programming languages outside of its Emacs Lisp environment.
 
 Thus, we rely on the efficient MuPDF library as a shared object with which our dynamic modules work. All the tasks that require manual memory management, efficiently rendering SVGs, and so on are delegated to the C backend, and Emacs takes care of exclusively what it’s good at: displaying produced SVGs and buffer management.
 
@@ -122,13 +122,14 @@ Here are the recordings of the streams:
 
 - [[https://tv.dyne.org/w/8W8o4fWz94bMYVMUWExkX7][Part I: Introduction]]
 - [[https://tv.dyne.org/w/fmJnktiZMjrUKJU2s8Pxkq][Part II: Making Overlays Centered and Zoomable]]
+- [[https://tv.dyne.org/w/fsHrNnwYYnnYweArgtBHSe][Part III: Multi-Threading]]
 
-The streams happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the channel on Peertube or my [[https://mathstodon.xyz/@divyaranjan][Mastodon]] to be notified when I stream.
+The streams happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the channel on Peertube or my [[https://mathstodon.xyz/@divyaranjan][Mastodon]] to be notified when I stream. You can also find some stream notes [[file:doc/][here]].
 
-If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on Libera.
+If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on [[https://libera.chat/][Libera]].
 
 * License
-Since a package for GNU Emacs, it strictly adheres to the GPLv3 license entirely.
+Licensed under GPLv3, Check [[file:LICENSE][LICENSE]] and [[file:CONTRIBUTORS][CONTRIBUTORS]] for details.
 
 The logo of the project was made by the author and is shared under [[http://creativecommons.org/licenses/by-sa/4.0/][CC-BY-SA-4.0]]. The logo uses the following artworks from GNU:
 
