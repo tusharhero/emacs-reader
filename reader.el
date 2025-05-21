@@ -400,50 +400,35 @@ buffer is not in `reader-mode'."
   "J"       #'reader-next-page
   "n"       #'reader-next-page
 
-  "j"       #'reader-scroll-down-or-next-page
-  "C-n"     #'reader-scroll-down-or-next-page
-  "<down>"  #'reader-scroll-down-or-next-page
-  "<wheel-down>" #'reader-mwheel-scroll-down
-
-  "C-v"     #'reader-scroll-down-screenful
-
-  "SPC"     #'reader-scroll-down-screenful-or-next-page
-
   "<prior>" #'reader-previous-page
   "K"       #'reader-previous-page
   "p"       #'reader-previous-page
 
-  "k"       #'reader-scroll-up-or-prev-page
-  "C-p"     #'reader-scroll-up-or-prev-page
-  "<up>"    #'reader-scroll-up-or-prev-page
+  "<remap> <previous-line>" #'reader-scroll-up-or-prev-page
+  "<remap> <next-line>" #'reader-scroll-down-or-next-page
+
   "<wheel-up>" #'reader-mwheel-scroll-up
+  "<wheel-down>" #'reader-mwheel-scroll-down
 
-  "M-v"     #'reader-scroll-up-screenful
+  "<remap> <scroll-down-command>" #'reader-scroll-up-screenful
+  "<remap> <scroll-up-command>" #'reader-scroll-down-screenful
 
+  "SPC"     #'reader-scroll-down-screenful-or-next-page
   "DEL"     #'reader-scroll-up-screenful-or-prev-page
   "S-SPC"   #'reader-scroll-up-screenful-or-prev-page
 
-  "h"       #'reader-scroll-left
-  "C-b"     #'reader-scroll-left
+  "<remap> <forward-char>" #'reader-scroll-left
+  "<remap> <backward-char>"  #'reader-scroll-right
 
-  "l"       #'reader-scroll-right
-  "C-f"     #'reader-scroll-right
+  "<remap> <beginning-of-buffer>" #'reader-first-page
+  "<remap> <end-of-buffer>" #'reader-last-page
 
-  "g g"      #'reader-first-page
-  "M-<"     #'reader-first-page
-
-  "G"       #'reader-last-page
-  "M->"     #'reader-last-page
-
-  "M-g g"   #'reader-goto-page
-  "g n"     #'reader-goto-page
+  "<remap> <goto-line>"   #'reader-goto-page
 
   "="       #'reader-enlarge-size
-
   "-"       #'reader-shrink-size
 
   "H"       #'reader-fit-to-height
-
   "W"       #'reader-fit-to-width
 
   "Q"       #'reader-kill-buffer)
