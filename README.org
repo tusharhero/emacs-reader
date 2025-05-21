@@ -111,7 +111,7 @@ To test emacs-reader in a default Emacs config, use something like:
 #+end_src
 This command adds the current directory to path, and loads =reader.el=.
 
-This will not work for testing auto loading though. You can try using =package-vc-install-from-checkout= to test that.
+This will not work for testing auto loading though. You can try using =package-vc-install-from-checkout= to test that. [[https://codeberg.org/attachments/2555c252-0977-484e-b369-38b18a321a48][This video]] demonstrates how to do that.
 
 * Key Bindings
 - =Page Up=, =n= or =J= for going to next page
