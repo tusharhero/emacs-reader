@@ -17,6 +17,6 @@ for the v0.2.0 release
 - Added bookmark and saveplace feature for 0.2.2
 - Fixed autoloading issues
 - Refactored reader.el significantly for readability and extensibility
-
+- Refactor mouse wheel scrolling in reader.el
 
 * Other Contributions (Not Legally Significant)
