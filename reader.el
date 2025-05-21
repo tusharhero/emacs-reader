@@ -259,21 +259,23 @@ Optionally specify the WINDOW, defaults to current window."
 	     (reader-scroll-down amount window))
       (message "End of page"))))
 
-(defun reader-scroll-left (&optional window)
-  "Scroll to the left of the current page.
+(defun reader-scroll-left (&optional amount window)
+  "Scroll to the left of the current page by AMOUNT (or 1).
 
 Optionally specify the WINDOW, defaults to current window."
-  (interactive)
+  (interactive "p")
+  (or amount (setq amount 1))
   (set-window-hscroll window
-		      (1- (window-hscroll window))))
+		      (- (window-hscroll window) amount)))
 
-(defun reader-scroll-right (window)
-  "Scroll to the left of the current page.
+(defun reader-scroll-right (&optional amount window)
+  "Scroll to the left of the current page by AMOUNT (or 1).
 
 Optionally specify the WINDOW, defaults to current window."
-  (interactive)
+  (interactive "p")
+  (or amount (setq amount 1))
   (set-window-hscroll window
-		      (1+ (window-hscroll window))))
+		      (+ amount (window-hscroll window))))
 
 (defun reader-scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
@@ -417,8 +419,8 @@ buffer is not in `reader-mode'."
   "DEL"     #'reader-scroll-up-screenful-or-prev-page
   "S-SPC"   #'reader-scroll-up-screenful-or-prev-page
 
-  "<remap> <forward-char>" #'reader-scroll-left
-  "<remap> <backward-char>"  #'reader-scroll-right
+  "<remap> <forward-char>" #'reader-scroll-right
+  "<remap> <backward-char>"  #'reader-scroll-left
 
   "<remap> <beginning-of-buffer>" #'reader-first-page
   "<remap> <end-of-buffer>" #'reader-last-page
