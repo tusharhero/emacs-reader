@@ -368,21 +368,27 @@ See also `reader-scroll-down-or-next-page'."
 If WINDOW is omitted defaults to current window."
   (with-current-buffer (window-buffer window)
     (when (equal major-mode 'reader-mode)
-      (let* ((window-width (window-body-width window))
-	     (pixel-window-width (window-pixel-width))
-	     (pixel-per-col (/ pixel-window-width
-			       window-width))
+      (let* ((windows (get-buffer-window-list))
+	     (max-window-width
+	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
-	     (doc-fits-p (> pixel-window-width doc-image-width))
-	     (doc-left-offset (- pixel-window-width doc-image-width))
-	     (doc-center-offset (/ doc-left-offset 2))
-	     (overlay-offset
-	      `(space :width (,(if doc-fits-p doc-left-offset 0)))))
-	;; scroll to the left most point to window.
+	     (max-left-offset (- max-window-width doc-image-width))
+	     (overlay-offset `(space :width (,max-left-offset))))
+	;; scroll to the left most point to window of the widest window.
 	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
-	;; scroll back to the center of the doc
-	(let ((scroll-offset (round (/ doc-center-offset pixel-per-col))))
-	  (set-window-hscroll window scroll-offset))))))
+	;; scroll every window back to the center of the doc
+	(mapcar (lambda (window)
+		  (let* ((window-width (window-body-width window))
+			 (pixel-window-width (window-pixel-width window))
+			 (pixel-per-col (/ pixel-window-width
+					   window-width))
+			 (doc-left-offset (- pixel-window-width doc-image-width))
+			 (window-offset (- max-left-offset doc-left-offset))
+			 (doc-center-offset (/ doc-left-offset 2))
+			 (scroll-offset (round (/ (+ doc-center-offset window-offset)
+						  pixel-per-col))))
+		    (set-window-hscroll window scroll-offset)))
+		windows)))))
 
 (defun reader--render-buffer ()
   "Render the document file current buffer is associated with.
