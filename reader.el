@@ -374,13 +374,14 @@ If WINDOW is omitted defaults to current window."
 			       window-width))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
 	     (doc-fits-p (> pixel-window-width doc-image-width))
-	     (raw-offset (/ (- pixel-window-width doc-image-width) 2))
+	     (doc-left-offset (- pixel-window-width doc-image-width))
+	     (doc-center-offset (/ doc-left-offset 2))
 	     (overlay-offset
-	      `(space :width (,(if doc-fits-p raw-offset 0)))))
+	      `(space :width (,(if doc-fits-p doc-left-offset 0)))))
+	;; scroll to the left most point to window.
 	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
-	(when-let* (((not doc-fits-p)) ; scroll to the center of the doc
-		    (scroll-offset
-		     (round (/ (abs raw-offset) pixel-per-col))))
+	;; scroll back to the center of the doc
+	(let ((scroll-offset (round (/ doc-center-offset pixel-per-col))))
 	  (set-window-hscroll window scroll-offset))))))
 
 (defun reader--render-buffer ()
