@@ -104,7 +104,8 @@ Any other file format will simply not show up as a candidate."
   (let ((status (reader-dyn--next-page)))
     (when status
       (reader-doc-scale-page reader-current-doc-scale-value)
-      (reader--center-page))
+      (reader--center-page)
+      (force-mode-line-update t))
     status))
 
 (defun reader-previous-page ()
@@ -113,7 +114,8 @@ Any other file format will simply not show up as a candidate."
   (let ((status (reader-dyn--prev-page)))
     (when status
       (reader-doc-scale-page reader-current-doc-scale-value)
-      (reader--center-page))
+      (reader--center-page)
+      (force-mode-line-update t))
     status))
 
 (defun reader-first-page ()
@@ -137,21 +139,24 @@ Any other file format will simply not show up as a candidate."
   (interactive "nGoto page: ")
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
   (reader-doc-scale-page reader-current-doc-scale-value)
-  (reader--center-page))
+  (reader--center-page)
+  (force-mode-line-update t))
 
 (defun reader-enlarge-size ()
   "Enlarge the size of the current page by the `reader-enlarge-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale-value reader-enlarge-factor)))
     (reader-doc-scale-page scaling-factor))
-  (reader--center-page))
+  (reader--center-page)
+  (force-mode-line-update t))
 
 (defun reader-shrink-size ()
   "Shrink the size of the current page by the `reader-shrink-factor'."
   (interactive)
   (let ((scaling-factor (* reader-current-doc-scale-value reader-shrink-factor)))
     (reader-doc-scale-page scaling-factor))
-  (reader--center-page))
+  (reader--center-page)
+  (force-mode-line-update t))
 
 (defun reader-fit-to-height ()
   "Scale the current page to fit its height perfectly within the window."
@@ -461,7 +466,8 @@ Keybindings:
   "Set custom mode-line interface when reading documents."
   (setq-local mode-line-position
               '(" P" (:eval (number-to-string (reader-current-pagenumber)))
-                "/" (:eval (number-to-string reader-current-doc-pagecount)))))
+                "/" (:eval (number-to-string reader-current-doc-pagecount))))
+  (force-mode-line-update t))
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
 
