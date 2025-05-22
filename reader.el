@@ -399,11 +399,9 @@ buffer is not in `reader-mode'."
 (defvar-keymap reader-mode-map
   :doc "Keymap for `reader-mode'."
   "<next>"  #'reader-next-page
-  "J"       #'reader-next-page
   "n"       #'reader-next-page
 
   "<prior>" #'reader-previous-page
-  "K"       #'reader-previous-page
   "p"       #'reader-previous-page
 
   "<remap> <previous-line>" #'reader-scroll-up-or-prev-page
