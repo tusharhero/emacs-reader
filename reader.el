@@ -367,14 +367,16 @@ See also `reader-scroll-down-or-next-page'."
 
 If WINDOW is omitted defaults to current window."
   (with-current-buffer (window-buffer window)
-    (when (equal major-mode 'reader-mode)
+    (when (eq major-mode 'reader-mode)
       (let* ((windows (get-buffer-window-list))
 	     (max-window-width
 	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
 	     (max-left-offset (- max-window-width doc-image-width))
+	     (max-left-offset (if (< 0 max-left-offset)
+				  max-left-offset 0))
 	     (overlay-offset `(space :width (,max-left-offset))))
-	;; scroll to the left most point to window of the widest window.
+	;; Add prefix until the page is at the leftmost point of the widest window.
 	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
 	;; scroll every window back to the center of the doc
 	(mapcar (lambda (window)
@@ -385,8 +387,8 @@ If WINDOW is omitted defaults to current window."
 			 (doc-left-offset (- pixel-window-width doc-image-width))
 			 (window-offset (- max-left-offset doc-left-offset))
 			 (doc-center-offset (/ doc-left-offset 2))
-			 (scroll-offset (round (/ (+ doc-center-offset window-offset)
-						  pixel-per-col))))
+			 (scroll-offset (round (abs (/ (+ doc-center-offset window-offset)
+						       pixel-per-col)))))
 		    (set-window-hscroll window scroll-offset)))
 		windows)))))
 
