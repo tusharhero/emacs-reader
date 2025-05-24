@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include "render-core.h"
+#include "render-theme.h"
 #include "elisp-helpers.h"
 #include "mupdf-helpers.h"
-#include "render-core.h"
 
 int plugin_is_GPL_compatible;
 
@@ -945,8 +946,13 @@ int emacs_module_init(struct emacs_runtime *runtime) {
       "multiplies the FACTOR with the :width, :height and :scale properties of "
       "the image, and then renders the scaled image through `overlay-put'.");
 
-  // Provide the current dynamic module as a feature to Emacs
-  provide(env, "render-core");
+  register_module_func(env, set_doc_theme, "reader-dyn--set-doc-theme", 2, 2,
+                       "Sets the the theme for the documents rendered by Emacs "
+                       "reader. Currently only sets their FOREGROUND (first "
+                       "arg) and BACKGROUND (second arg).");
+
+      // Provide the current dynamic module as a feature to Emacs
+      provide(env, "render-core");
   fprintf(stderr, "Emacs module initialized successfully.\n");
 
   return 0;
