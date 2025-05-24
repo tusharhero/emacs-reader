@@ -17,10 +17,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mupdf-helpers.h"
-#include <assert.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
 
 /**
  * create_buffers - Creates mupdf buffers (wrappers around dynamic arrays) to be
@@ -198,6 +194,7 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
 
 int doc_page_width(DocState *state) {
   int width = (int)(state->page_bbox.x1 - state->page_bbox.x0);
+
   return width;
 }
 

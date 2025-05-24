@@ -17,12 +17,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "elisp-helpers.h"
-#include "emacs-module.h"
-#include <assert.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 
 /**
  * elisp_2_c_str - Convert an Elisp string to a C string.

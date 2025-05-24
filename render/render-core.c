@@ -15,14 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "elisp-helpers.h"
-#include "emacs-module.h"
-#include <assert.h>
-#include <mupdf/fitz.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "mupdf-helpers.h"
+#include "render-core.h"
 
 int plugin_is_GPL_compatible;
 
