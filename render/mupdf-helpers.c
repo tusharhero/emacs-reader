@@ -277,6 +277,8 @@ void reset_doc_state(DocState *state) {
                       .doc = NULL,
                       .path = NULL,
                       .pagecount = 0,
+                      .svg_background = "white",
+                      .svg_foreground = "black",
                       .current_page_number = 0,
                       .next_page_number = 0,
                       .prev_page_number = 0,
