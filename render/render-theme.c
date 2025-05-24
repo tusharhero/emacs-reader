@@ -15,6 +15,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render-theme.h"
+#include "render-core.h"
 
 /**
  * set_doc_theme - Set the theme for Emacs Reader
@@ -38,6 +39,8 @@ emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     elisp_2_c_str(env, args[0], &state->svg_foreground, &foreground_ln);
     elisp_2_c_str(env, args[1], &state->svg_background, &background_ln);
   }
+
+  render_pages(state, state->current_page_number);
 
   return EMACS_T;
 }
