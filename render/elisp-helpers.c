@@ -134,9 +134,9 @@ emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
   emacs_value image_width = env->make_integer(env, doc_page_width(state));
   emacs_value image_length = env->make_integer(env, doc_page_length(state));
   emacs_value image_background =
-      env->make_string(env, "white", strlen("white"));
+      env->make_string(env, state->svg_background, strlen(state->svg_background));
   emacs_value image_foreground =
-      env->make_string(env, "black", strlen("black"));
+      env->make_string(env, state->svg_foreground, strlen(state->svg_foreground));
 
   emacs_value svg_string = env->make_string(env, svg_data, svg_size);
   emacs_value image_args[11] = {svg_string,
