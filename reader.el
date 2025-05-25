@@ -476,6 +476,14 @@ Keybindings:
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
 
+(define-minor-mode reader-dark-mode
+  "Toggle dark-mode for current reader document."
+  :lighter " Dark"
+  (if reader-dark-mode
+      (reader-dyn--set-doc-theme "white" "black")
+    (reader-dyn--set-doc-theme "black" "white"))
+  (reader-doc-scale-page reader-current-doc-scale-value))
+
 ;; see `reader-saveplace' for details.
 ;;;###autoload
 (advice-add 'save-place-find-file-hook :around #'reader--saveplace-find-file)
