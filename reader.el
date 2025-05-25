@@ -155,6 +155,24 @@ Any other file format will simply not show up as a candidate."
     (reader-doc-scale-page scaling-factor))
   (reader--center-page))
 
+(defun reader--set-window-vscroll (window vscroll &optional pixels-p)
+  "Set amount by which WINDOW should be scrolled vertically to VSCROLL.
+
+if setting VSCROLL makes the document page's top disappear, it sets the
+maximum vertical scroll possible without doing that.
+
+Also see `set-window-vscroll'."
+  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
+	 (window-height (window-body-height window))
+	 (pixel-window-height (window-pixel-height window))
+	 (pixel-per-col (/ pixel-window-height
+			   window-height))
+	 (pixel-vscroll (* pixel-per-col vscroll))
+	 (max-pixel-vscroll (- image-height pixel-window-height))
+	 (corrected-pixel-vscroll (min pixel-vscroll max-pixel-vscroll))
+	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-col)))
+    (set-window-vscroll window corrected-vscroll pixels-p)))
+
 (defun reader-fit-to-height ()
   "Scale the current page to fit its height perfectly within the window."
   (interactive)
@@ -164,7 +182,7 @@ Any other file format will simply not show up as a candidate."
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)
-    (set-window-vscroll nil 0)))
+    (reader--set-window-vscroll nil 0)))
 
 (defun reader-fit-to-width ()
   "Scale the current page to fit its width perfectly within the window."
@@ -191,36 +209,8 @@ It also updates `reader-current-doc-scale-value' to reflect the new scale."
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
-  (let* ((vscroll
-	  (max (- (window-vscroll window) amount) 0)))
-    (set-window-vscroll window vscroll)))
-
-(defun reader-possible-scroll-down (&optional amount window)
-  "Return 1 (or AMOUNT) if that scroll is possible, otherwise return the max possible.
-
-Optionally specify the WINDOW, defaults to current window."
-  (interactive "p")
-  (or amount (setq amount 1))
-  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
-	 (window-height (window-body-height window))
-	 (pixel-window-height (window-pixel-height window))
-	 (pixel-per-col (/ pixel-window-height
-			   window-height))
-	 (pixel-amount (* pixel-per-col amount))
-	 (pixel-current-scroll (window-vscroll window t))
-	 (pixel-predicted-scroll (+ pixel-current-scroll
-				    pixel-amount))
-	 (win-bottom-pos (+ pixel-current-scroll
-			    pixel-window-height))
-	 (predicted-win-bottom-position (+ pixel-predicted-scroll
-					   pixel-window-height))
-	 (scroll-p (> predicted-win-bottom-position image-height)))
-    (if scroll-p
-	(let* ((pixel-max-scroll-amount (- image-height win-bottom-pos))
-	       (max-scroll-amount
-		(round (/ pixel-max-scroll-amount pixel-per-col))))
-	  max-scroll-amount)
-      amount)))
+  (let ((vscroll (- (window-vscroll window) amount)))
+    (reader--set-window-vscroll window vscroll)))
 
 (defun reader-scroll-down (&optional amount window)
   "Scroll down the current page by AMOUNT (1 by default).
@@ -228,9 +218,8 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((amount (reader-possible-scroll-down amount window))
-	 (vscroll (+ (window-vscroll window) amount)))
-    (set-window-vscroll window vscroll)))
+  (let* ((vscroll (+ (window-vscroll window) amount)))
+    (reader--set-window-vscroll window vscroll)))
 
 (defun reader-scroll-up-screenful (&optional window)
   "Scroll up the current page by a screenful.
@@ -288,7 +277,7 @@ Optionally specify the WINDOW, defaults to current window."
 		(pixel-window-height (window-pixel-height window))
 		(bottom-most-scroll-pixel
 		 (- image-height pixel-window-height)))
-      (set-window-vscroll window bottom-most-scroll-pixel t))))
+      (reader--set-window-vscroll window bottom-most-scroll-pixel t))))
 
 (defun reader-scroll-down-or-next-page (&optional amount window)
   "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page.
@@ -300,7 +289,7 @@ Optionally specify the WINDOW, defaults to current window."
     (reader-scroll-down amount window)
     (when (and (= prev-scroll (window-vscroll window))
 	       (reader-next-page)) ; if succeeds
-      (set-window-vscroll window 0))))
+      (reader--set-window-vscroll window 0))))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional amount window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
