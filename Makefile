@@ -24,14 +24,20 @@ ifeq ($(PLATFORM),windows)
   MUPDF_LIB := "$(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0"
   NEED_MUPDF_BUILD := yes
 else ifeq ($(PLATFORM),macos)
-  HOMEBREW_PREFIX := $(shell brew --prefix)
   OBJ_EXT := .o
   CC := gcc
-  CFLAGS += -DMACOS -I/$(HOMEBREW_PREFIX)/include
-  LDFLAGS := -dynamiclib -L$(HOMEBREW_PREFIX)/lib -lmupdf
   RPATHS := -Wl,-rpath,@loader_path/../lib
-  MUPDF_LIB := /opt/homebrew/lib/libmupdf.26.dylib
   NEED_MUPDF_BUILD := no
+  ifneq (,$(shell which port 2>/dev/null))
+    CFLAGS += -DMACOS -I/opt/local/include
+    LDFLAGS := -dynamiclib -L/opt/local/lib -lmupdf
+    MUPDF_LIB := /opt/local/lib/libmupdf.dylib
+  else ifneq (,$(shell which brew 2>/dev/null))
+    HOMEBREW_PREFIX := $(shell brew --prefix)
+    CFLAGS += -DMACOS -I/$(HOMEBREW_PREFIX)/include
+    LDFLAGS := -dynamiclib -L$(HOMEBREW_PREFIX)/lib -lmupdf
+    MUPDF_LIB := /opt/homebrew/lib/libmupdf.26.dylib
+  endif
 else
   OBJ_EXT := .o
   CC := gcc
