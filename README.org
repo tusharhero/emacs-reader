@@ -114,16 +114,16 @@ This command adds the current directory to path, and loads =reader.el=.
 This will not work for testing auto loading though. You can try using =package-vc-install-from-checkout= to test that. [[https://codeberg.org/attachments/2555c252-0977-484e-b369-38b18a321a48][This video]] demonstrates how to do that.
 
 * Key Bindings
-- =Page Up=, =n= or =J= for going to next page
-- =Page Down=, =p= or =K= for going to previous page
-- =j= or =C-n= for scrolling down.
-- =k= or =C-p= for scrolling up.
-- =h= or =C-b= for scrolling left.
-- =l= or =C-f= for scrolling right.
+- =Page Up=, or =n= for going to next page
+- =Page Down=, or  =p=  for going to previous page
+- ==C-n= for scrolling down.
+- =C-p= for scrolling up.
+- =C-b= for scrolling left.
+- =C-f= for scrolling right.
 - =Q= for closing the Emacs Reader buffer.
-- =M-<= and =gg= for going to the first page.
-- =M->= and =G= for going to the last page.
-- =M-g g= or =g n= for going to a particular page.
+- =M-<= for going to the first page.
+- =M->= for going to the last page.
+- =M-g g= for going to a particular page.
 - =M-v=  for scrolling to the top of the page.
 - =C-v= for scrolling to the end of the page.
 - =SPC=, =S-SPC= , and =DEL= make the above two commands keep scrolling the pages.
