@@ -27,7 +27,7 @@
  */
 
 emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-			  void *data) {
+                          void *data) {
   (void)data;
   (void)nargs;
   DocState *state = get_doc_state_ptr(env);
@@ -41,16 +41,15 @@ emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   }
 
   emacs_value current_image_data = svg2elisp_image(
-						   env, state, state->current_svg_data, state->current_svg_size);
+      env, state, state->current_svg_data, state->current_svg_size);
 
   render_pages(state, state->current_page_number);
 
   // Render the themed page on the buffer’s overlay
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
   emacs_value overlay_put_args[3] = {
-    current_svg_overlay, env->intern(env, "display"), current_image_data};
+      current_svg_overlay, env->intern(env, "display"), current_image_data};
   env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-
 
   return EMACS_T;
 }

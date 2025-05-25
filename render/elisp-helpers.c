@@ -133,10 +133,10 @@ emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
                             size_t svg_size) {
   emacs_value image_width = env->make_integer(env, doc_page_width(state));
   emacs_value image_length = env->make_integer(env, doc_page_length(state));
-  emacs_value image_background =
-      env->make_string(env, state->svg_background, strlen(state->svg_background));
-  emacs_value image_foreground =
-      env->make_string(env, state->svg_foreground, strlen(state->svg_foreground));
+  emacs_value image_background = env->make_string(
+      env, state->svg_background, strlen(state->svg_background));
+  emacs_value image_foreground = env->make_string(
+      env, state->svg_foreground, strlen(state->svg_foreground));
 
   emacs_value svg_string = env->make_string(env, svg_data, svg_size);
   emacs_value image_args[11] = {svg_string,
@@ -298,15 +298,14 @@ void emacs_message(emacs_env *env, char *str) {
  * @symbol: The symbol of the variable to be set
  */
 
-void permanent_buffer_local_var(emacs_env *env, char* symbol) {
+void permanent_buffer_local_var(emacs_env *env, char *symbol) {
   emacs_value el_symbol = env->intern(env, symbol);
   env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
                &el_symbol);
   env->funcall(env, env->intern(env, "set"), 2,
                (emacs_value[]){el_symbol, EMACS_NIL});
 
-  env->funcall(env, env->intern(env, "put"), 3,
-               (emacs_value[]){
-		 el_symbol,
-		 env->intern(env, "permanent-local"), EMACS_T});
+  env->funcall(
+      env, env->intern(env, "put"), 3,
+      (emacs_value[]){el_symbol, env->intern(env, "permanent-local"), EMACS_T});
 }

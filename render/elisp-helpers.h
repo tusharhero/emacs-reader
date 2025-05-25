@@ -17,8 +17,8 @@
 #ifndef EMACS_HELPERS_H
 #define EMACS_HELPERS_H
 
-#include "mupdf-helpers.h"
 #include "emacs-module.h"
+#include "mupdf-helpers.h"
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -44,6 +44,6 @@ void set_current_pagecount(emacs_env *env, DocState *state);
 void init_overlay(emacs_env *env);
 emacs_value get_current_svg_overlay(emacs_env *env);
 void emacs_message(emacs_env *env, char *str);
-void permanent_buffer_local_var(emacs_env *env, char* symbol);
+void permanent_buffer_local_var(emacs_env *env, char *symbol);
 
 #endif

@@ -116,7 +116,7 @@ This will not work for testing auto loading though. You can try using =package-v
 * Key Bindings
 - =Page Up=, or =n= for going to next page
 - =Page Down=, or  =p=  for going to previous page
-- ==C-n= for scrolling down.
+- =C-n= for scrolling down.
 - =C-p= for scrolling up.
 - =C-b= for scrolling left.
 - =C-f= for scrolling right.

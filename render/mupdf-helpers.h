@@ -17,10 +17,10 @@
 #ifndef MUPDF_HELPERS_H
 #define MUPDF_HELPERS_H
 
+#include "render-core.h"
 #include <mupdf/fitz.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include "render-core.h"
 
 bool create_buffers(fz_context *ctx, fz_buffer **curr_buf, fz_buffer **prev_buf,
                     fz_buffer **next_buf);

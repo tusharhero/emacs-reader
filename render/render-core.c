@@ -15,9 +15,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render-core.h"
-#include "render-theme.h"
 #include "elisp-helpers.h"
 #include "mupdf-helpers.h"
+#include "render-theme.h"
 
 int plugin_is_GPL_compatible;
 
@@ -951,8 +951,8 @@ int emacs_module_init(struct emacs_runtime *runtime) {
                        "reader. Currently only sets their FOREGROUND (first "
                        "arg) and BACKGROUND (second arg).");
 
-      // Provide the current dynamic module as a feature to Emacs
-      provide(env, "render-core");
+  // Provide the current dynamic module as a feature to Emacs
+  provide(env, "render-core");
   fprintf(stderr, "Emacs module initialized successfully.\n");
 
   return 0;

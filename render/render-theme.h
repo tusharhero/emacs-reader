@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#include "render-core.h"
 #include "elisp-helpers.h"
+#include "render-core.h"
 
 emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
                           void *data);
