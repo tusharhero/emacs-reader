@@ -23,3 +23,7 @@ for the v0.2.0 release
 - Refactored reader's keymap in reader.el
 
 * Other Contributions (Not Legally Significant)
+
+shuxiao9058
+
+- Fixed the MacOS port for the build system
