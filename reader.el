@@ -295,18 +295,24 @@ Optionally specify the WINDOW, defaults to current window."
 (defun reader-scroll-left (&optional amount window)
   "Scroll to the left of the current page by AMOUNT (or 1).
 
+Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (reader--set-window-hscroll window (+ (reader--window-hscroll window) amount)))
+  (when-let (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+	     (hscroll (+ (reader--window-hscroll window) amount)))
+    (reader--set-window-hscroll window hscroll)))
 
 (defun reader-scroll-right (&optional amount window)
-  "Scroll to the left of the current page by AMOUNT (or 1).
+  "Scroll to the right of the current page by AMOUNT (or 1).
 
+Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (reader--set-window-hscroll window (- (reader--window-hscroll window) amount)))
+  (when-let (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+	     (hscroll (- (reader--window-hscroll window) amount)))
+    (reader--set-window-hscroll window hscroll)))
 
 (defun reader-scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
