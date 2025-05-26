@@ -104,7 +104,6 @@ Any other file format will simply not show up as a candidate."
   (let ((status (reader-dyn--next-page)))
     (when status
       (reader-doc-scale-page reader-current-doc-scale-value)
-      (reader--center-page)
       (force-mode-line-update t))
     status))
 
@@ -114,7 +113,6 @@ Any other file format will simply not show up as a candidate."
   (let ((status (reader-dyn--prev-page)))
     (when status
       (reader-doc-scale-page reader-current-doc-scale-value)
-      (reader--center-page)
       (force-mode-line-update t))
     status))
 
