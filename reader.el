@@ -181,6 +181,21 @@ Also see `set-window-vscroll'."
     (cdr (overlay-get reader-current-svg-overlay 'line-prefix))
     :width)))
 
+(defun reader--right-most-window-hscroll (window)
+  "Get the maximum horizontal scroll value for WINDOW.
+
+This position it at the right most point."
+  (let* ((image-width (car (reader--get-current-doc-image-size)))
+	 (line-prefix-width (reader--get-prefix-width))
+	 (window-width (window-body-width window))
+	 (pixel-window-width (window-pixel-width window))
+	 (pixel-per-col (/ pixel-window-width
+			   window-width))
+	 (max-ncol (round (/ (max line-prefix-width
+				  (- image-width pixel-window-width))
+			     pixel-per-col))))
+    max-ncol))
+
 (defun reader--set-window-hscroll (window ncol &optional unconstrained)
   "Set number of columns WINDOW is scrolled from left margin to NCOL.
 
@@ -189,16 +204,13 @@ horizontal scroll possible without doing that. If UNCONSTRAINED is
 non-nil, it allows setting NCOL even if it makes the page disappear.
 
 See also `set-window-hscroll'."
-  (let* ((image-width (car (reader--get-current-doc-image-size)))
-	 (line-prefix-width (reader--get-prefix-width))
+  (let* ((line-prefix-width (reader--get-prefix-width))
 	 (window-width (window-body-width window))
 	 (pixel-window-width (window-pixel-width window))
 	 (pixel-per-col (/ pixel-window-width
 			   window-width))
 	 (calibrated-ncol (round (- (/ line-prefix-width pixel-per-col) ncol)))
-	 (max-ncol (round (/ (max line-prefix-width
-				  (- image-width pixel-window-width))
-			     pixel-per-col)))
+	 (max-ncol (reader--right-most-window-hscroll window))
 	 (ncol (if unconstrained
 		   calibrated-ncol
 		 (min calibrated-ncol max-ncol))))
@@ -313,6 +325,26 @@ Optionally specify the WINDOW, defaults to current window."
   (when-let (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
 	     (hscroll (- (reader--window-hscroll window) amount)))
     (reader--set-window-hscroll window hscroll)))
+
+(defun reader-scroll-left-most (&optional window)
+  "Scroll to the left most point of the current page.
+
+Only scrolls when the document page width is larger then the window width.
+Optionally specify the WINDOW, defaults to current window."
+  (interactive)
+  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+    (reader--set-window-hscroll window 0)))
+
+(defun reader-scroll-right-most (&optional window)
+  "Scroll to the right most point of the current page.
+
+Only scrolls when the document page width is larger then the window width.
+Optionally specify the WINDOW, defaults to current window."
+  (interactive "p")
+  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+    ;; We use `set-window-hscroll' here because we need to go the right
+    ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
+    (set-window-hscroll window (reader--right-most-window-hscroll window))))
 
 (defun reader-scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
@@ -463,6 +495,9 @@ buffer is not in `reader-mode'."
 
   "<remap> <forward-char>" #'reader-scroll-right
   "<remap> <backward-char>"  #'reader-scroll-left
+
+  "<remap> <move-end-of-line>" #'reader-scroll-right-most
+  "<remap> <move-beginning-of-line>" #'reader-scroll-left-most
 
   "<remap> <beginning-of-buffer>" #'reader-first-page
   "<remap> <end-of-buffer>" #'reader-last-page
