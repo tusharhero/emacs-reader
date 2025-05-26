@@ -139,6 +139,23 @@ Any other file format will simply not show up as a candidate."
   (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page))
 
+(defun reader--get-current-doc-image-size ()
+  "Get the size of the current page's doc image."
+  (let* ((cdr-image (cdr (overlay-get reader-current-svg-overlay 'display)))
+	 (width (plist-get cdr-image :width))
+	 (length (plist-get cdr-image :length)))
+    (cons width length)))
+
+(defun reader-doc-scale-page (factor)
+  "Scales the page by a given FACTOR.
+
+It calls the module function `reader-dyn--scale-page' that
+sets the `:width', `:height', and `:scale' properties of current page’s image.
+
+It also updates `reader-current-doc-scale-value' to reflect the new scale."
+  (reader-dyn--scale-page factor)
+  (setq reader-current-doc-scale-value factor))
+
 (defun reader-enlarge-size ()
   "Enlarge the size of the current page by the `reader-enlarge-factor'."
   (interactive)
@@ -152,6 +169,27 @@ Any other file format will simply not show up as a candidate."
   (let ((scaling-factor (* reader-current-doc-scale-value reader-shrink-factor)))
     (reader-doc-scale-page scaling-factor))
   (reader--center-page))
+
+(defun reader-fit-to-height ()
+  "Scale the current page to fit its height perfectly within the window."
+  (interactive)
+  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
+	 (pixel-window-height (window-pixel-height))
+	 (unscaled-height (/ image-height reader-current-doc-scale-value))
+	 (scaling-factor (/ pixel-window-height unscaled-height)))
+    (reader-doc-scale-page scaling-factor)
+    (reader--center-page)
+    (reader--set-window-vscroll nil 0)))
+
+(defun reader-fit-to-width ()
+  "Scale the current page to fit its width perfectly within the window."
+  (interactive)
+  (let* ((image-width (car (reader--get-current-doc-image-size)))
+	 (pixel-window-width (window-pixel-width))
+	 (unscaled-width (/ image-width reader-current-doc-scale-value))
+	 (scaling-factor (/ pixel-window-width unscaled-width)))
+    (reader-doc-scale-page scaling-factor)
+    (reader--center-page)))
 
 (defun reader--set-window-vscroll (window vscroll &optional pixels-p)
   "Set amount by which WINDOW should be scrolled vertically to VSCROLL.
@@ -230,36 +268,31 @@ not return the actual horizontal scroll value; for that, see
 	 (hscroll (round (- (/ line-prefix-width pixel-per-col) (window-hscroll window)))))
     hscroll))
 
-(defun reader-fit-to-height ()
-  "Scale the current page to fit its height perfectly within the window."
-  (interactive)
-  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
-	 (pixel-window-height (window-pixel-height))
-	 (unscaled-height (/ image-height reader-current-doc-scale-value))
-	 (scaling-factor (/ pixel-window-height unscaled-height)))
-    (reader-doc-scale-page scaling-factor)
-    (reader--center-page)
-    (reader--set-window-vscroll nil 0)))
+(defun reader--center-page (&optional window)
+  "Center the document with respect to WINDOW.
 
-(defun reader-fit-to-width ()
-  "Scale the current page to fit its width perfectly within the window."
-  (interactive)
-  (let* ((image-width (car (reader--get-current-doc-image-size)))
-	 (pixel-window-width (window-pixel-width))
-	 (unscaled-width (/ image-width reader-current-doc-scale-value))
-	 (scaling-factor (/ pixel-window-width unscaled-width)))
-    (reader-doc-scale-page scaling-factor)
-    (reader--center-page)))
-
-(defun reader-doc-scale-page (factor)
-  "Scales the page by a given FACTOR.
-
-It calls the module function `reader-dyn--scale-page' that
-sets the `:width', `:height', and `:scale' properties of current page’s image.
-
-It also updates `reader-current-doc-scale-value' to reflect the new scale."
-  (reader-dyn--scale-page factor)
-  (setq reader-current-doc-scale-value factor))
+If WINDOW is omitted defaults to current window."
+  (with-current-buffer (window-buffer window)
+    (when (eq major-mode 'reader-mode)
+      (let* ((windows (get-buffer-window-list))
+	     (max-window-width
+	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
+	     (doc-image-width (car (reader--get-current-doc-image-size)))
+	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
+	     (overlay-offset `(space :width (,max-left-offset))))
+	;; Add prefix until the page is at the leftmost point of the widest window.
+	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
+	;; scroll every window back to the center of the doc
+	(mapcar (lambda (window)
+		  (let* ((window-width (window-body-width window))
+			 (pixel-window-width (window-pixel-width window))
+			 (pixel-per-col (/ pixel-window-width
+					   window-width))
+			 (doc-left-offset (- pixel-window-width doc-image-width))
+			 (doc-center-offset (/ doc-left-offset 2))
+			 (scroll-offset (round (/ doc-center-offset pixel-per-col))))
+		    (reader--set-window-hscroll window scroll-offset t)))
+		windows)))))
 
 (defun reader-scroll-up (&optional amount window)
   "Scroll up the current page by AMOUNT (1 by default).
@@ -426,39 +459,6 @@ See also `reader-scroll-down-or-next-page'."
   "Kill the current buffer and the document."
   (interactive)
   (kill-buffer (current-buffer)))
-
-(defun reader--get-current-doc-image-size ()
-  "Get the size of the current page's doc image."
-  (let* ((cdr-image (cdr (overlay-get reader-current-svg-overlay 'display)))
-	 (width (plist-get cdr-image :width))
-	 (length (plist-get cdr-image :length)))
-    (cons width length)))
-
-(defun reader--center-page (&optional window)
-  "Center the document with respect to WINDOW.
-
-If WINDOW is omitted defaults to current window."
-  (with-current-buffer (window-buffer window)
-    (when (eq major-mode 'reader-mode)
-      (let* ((windows (get-buffer-window-list))
-	     (max-window-width
-	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
-	     (doc-image-width (car (reader--get-current-doc-image-size)))
-	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
-	     (overlay-offset `(space :width (,max-left-offset))))
-	;; Add prefix until the page is at the leftmost point of the widest window.
-	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
-	;; scroll every window back to the center of the doc
-	(mapcar (lambda (window)
-		  (let* ((window-width (window-body-width window))
-			 (pixel-window-width (window-pixel-width window))
-			 (pixel-per-col (/ pixel-window-width
-					   window-width))
-			 (doc-left-offset (- pixel-window-width doc-image-width))
-			 (doc-center-offset (/ doc-left-offset 2))
-			 (scroll-offset (round (/ doc-center-offset pixel-per-col))))
-		    (reader--set-window-hscroll window scroll-offset t)))
-		windows)))))
 
 (defun reader--render-buffer ()
   "Render the document file current buffer is associated with.
