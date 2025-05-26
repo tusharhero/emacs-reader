@@ -191,6 +191,9 @@ It also updates `reader-current-doc-scale-value' to reflect the new scale."
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)))
 
+;; Need because scrolling is possible in the other direction
+;; indefinitely.
+
 (defun reader--set-window-vscroll (window vscroll &optional pixels-p)
   "Set amount by which WINDOW should be scrolled vertically to VSCROLL.
 
@@ -209,6 +212,9 @@ Also see `set-window-vscroll'."
 	 (corrected-pixel-vscroll (min pixel-vscroll max-pixel-vscroll))
 	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-col)))
     (set-window-vscroll window corrected-vscroll pixels-p)))
+
+;; Most of these scrolling functions exist because of our handling of
+;; centering in `reader--center-page'.
 
 (defun reader--get-prefix-width ()
   "Get the line prefix width set by `reader--center-page'."
@@ -268,6 +274,9 @@ not return the actual horizontal scroll value; for that, see
 	 (hscroll (round (- (/ line-prefix-width pixel-per-col) (window-hscroll window)))))
     hscroll))
 
+;; We need to hack involving line-prefix because Emacs' scrolling is
+;; idiosyncratic, and doesn't allow arbitrary scrolling in every
+;; direction.
 (defun reader--center-page (&optional window)
   "Center the document with respect to WINDOW.
 
