@@ -404,14 +404,14 @@ buffer is not in `reader-mode'."
 
 (defvar-keymap reader-mode-map
   :doc "Keymap for `reader-mode'."
-  "<next>"  #'reader-next-page
   "n"       #'reader-next-page
 
-  "<prior>" #'reader-previous-page
   "p"       #'reader-previous-page
 
   "<remap> <previous-line>" #'reader-scroll-up-or-prev-page
   "<remap> <next-line>" #'reader-scroll-down-or-next-page
+  "<remap> <next>" #'reader-scroll-down-or-next-page
+  "<remap> <prior>" #'reader-scroll-down-or-next-page
 
   "<wheel-up>" #'reader-mwheel-scroll-up
   "<wheel-down>" #'reader-mwheel-scroll-down
@@ -432,7 +432,11 @@ buffer is not in `reader-mode'."
   "<remap> <goto-line>"   #'reader-goto-page
 
   "="       #'reader-enlarge-size
+  "+"       #'reader-enlarge-size
+  "C-<wheel-up>" #'reader-enlarge-size
+
   "-"       #'reader-shrink-size
+  "C-<wheel-down>" #'reader-shrink-size
 
   "H"       #'reader-fit-to-height
   "W"       #'reader-fit-to-width
