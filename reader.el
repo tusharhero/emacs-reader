@@ -380,7 +380,7 @@ Optionally specify the WINDOW, defaults to current window."
 
 Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
-  (interactive "p")
+  (interactive)
   (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
     ;; We use `set-window-hscroll' here because we need to go the right
     ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
