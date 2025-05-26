@@ -181,11 +181,12 @@ Also see `set-window-vscroll'."
     (cdr (overlay-get reader-current-svg-overlay 'line-prefix))
     :width)))
 
-(defun reader--set-window-hscroll (window ncol)
+(defun reader--set-window-hscroll (window ncol &optional unconstrained)
   "Set number of columns WINDOW is scrolled from left margin to NCOL.
 
 If setting NCOL makes the document page disappear, it sets the maximum
-horizontal scroll possible without doing that.
+horizontal scroll possible without doing that. If UNCONSTRAINED is
+non-nil, it allows setting NCOL even if it makes the page disappear.
 
 See also `set-window-hscroll'."
   (let* ((image-width (car (reader--get-current-doc-image-size)))
@@ -195,8 +196,12 @@ See also `set-window-hscroll'."
 	 (pixel-per-col (/ pixel-window-width
 			   window-width))
 	 (calibrated-ncol (round (- (/ line-prefix-width pixel-per-col) ncol)))
-	 (max-ncol  (round (/ (max line-prefix-width (- image-width pixel-window-width)) pixel-per-col)))
-	 (ncol (min calibrated-ncol max-ncol )))
+	 (max-ncol (round (/ (max line-prefix-width
+				  (- image-width pixel-window-width))
+			     pixel-per-col)))
+	 (ncol (if unconstrained
+		   calibrated-ncol
+		 (min calibrated-ncol max-ncol))))
     (set-window-hscroll window ncol)
     (reader--window-hscroll window)))
 
@@ -403,9 +408,7 @@ If WINDOW is omitted defaults to current window."
 	     (max-window-width
 	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
-	     (max-left-offset (- max-window-width doc-image-width))
-	     (max-left-offset (if (< 0 max-left-offset)
-				  max-left-offset 0))
+	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
 	     (overlay-offset `(space :width (,max-left-offset))))
 	;; Add prefix until the page is at the leftmost point of the widest window.
 	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
@@ -416,11 +419,9 @@ If WINDOW is omitted defaults to current window."
 			 (pixel-per-col (/ pixel-window-width
 					   window-width))
 			 (doc-left-offset (- pixel-window-width doc-image-width))
-			 (window-offset (- max-left-offset doc-left-offset))
 			 (doc-center-offset (/ doc-left-offset 2))
-			 (scroll-offset (round (abs (/ (+ doc-center-offset window-offset)
-						       pixel-per-col)))))
-		    (set-window-hscroll window scroll-offset)))
+			 (scroll-offset (round (/ doc-center-offset pixel-per-col))))
+		    (reader--set-window-hscroll window scroll-offset t)))
 		windows)))))
 
 (defun reader--render-buffer ()
