@@ -191,6 +191,10 @@ It also updates `reader-current-doc-scale-value' to reflect the new scale."
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)))
 
+(defun reader--get-pixel-per-col (&optional window)
+  "Get the no of pixels per column for WINDOW."
+  (/  (window-pixel-width window) (window-body-width window)))
+
 ;; Need because scrolling is possible in the other direction
 ;; indefinitely.
 
@@ -203,14 +207,12 @@ maximum vertical scroll possible without doing that.
 If PIXELS-P is non-nil, VSCROLL is considered to be in pixels.
 Also see `set-window-vscroll'."
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
-	 (window-height (window-body-height window))
 	 (pixel-window-height (window-pixel-height window))
-	 (pixel-per-col (/ pixel-window-height
-			   window-height))
-	 (pixel-vscroll (* pixel-per-col vscroll))
+	 (pixel-per-line (line-pixel-height))
+	 (pixel-vscroll (* pixel-per-line vscroll))
 	 (max-pixel-vscroll (- image-height pixel-window-height))
 	 (corrected-pixel-vscroll (min pixel-vscroll max-pixel-vscroll))
-	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-col)))
+	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-line)))
     (set-window-vscroll window corrected-vscroll pixels-p)))
 
 ;; Most of these scrolling functions exist because of our handling of
@@ -229,13 +231,10 @@ Also see `set-window-vscroll'."
 This position it at the right most point."
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (line-prefix-width (reader--get-prefix-width))
-	 (window-width (window-body-width window))
 	 (pixel-window-width (window-pixel-width window))
-	 (pixel-per-col (/ pixel-window-width
-			   window-width))
 	 (max-ncol (round (/ (max line-prefix-width
 				  (- image-width pixel-window-width))
-			     pixel-per-col))))
+			     (reader--get-pixel-per-col window)))))
     max-ncol))
 
 (defun reader--set-window-hscroll (window ncol &optional unconstrained)
@@ -247,10 +246,7 @@ non-nil, it allows setting NCOL even if it makes the page disappear.
 
 See also `set-window-hscroll'."
   (let* ((line-prefix-width (reader--get-prefix-width))
-	 (window-width (window-body-width window))
-	 (pixel-window-width (window-pixel-width window))
-	 (pixel-per-col (/ pixel-window-width
-			   window-width))
+	 (pixel-per-col (reader--get-pixel-per-col window))
 	 (calibrated-ncol (round (- (/ line-prefix-width pixel-per-col) ncol)))
 	 (max-ncol (reader--right-most-window-hscroll window))
 	 (ncol (if unconstrained
@@ -267,10 +263,7 @@ This correctly handles the prefix width set by reader documents and does
 not return the actual horizontal scroll value; for that, see
 `window-hscroll'."
   (let* ((line-prefix-width (reader--get-prefix-width))
-	 (window-width (window-body-width window))
-	 (pixel-window-width (window-pixel-width window))
-	 (pixel-per-col (/ pixel-window-width
-			   window-width))
+	 (pixel-per-col (reader--get-pixel-per-col window))
 	 (hscroll (round (- (/ line-prefix-width pixel-per-col) (window-hscroll window)))))
     hscroll))
 
@@ -293,10 +286,8 @@ If WINDOW is omitted defaults to current window."
 	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
 	;; scroll every window back to the center of the doc
 	(mapcar (lambda (window)
-		  (let* ((window-width (window-body-width window))
-			 (pixel-window-width (window-pixel-width window))
-			 (pixel-per-col (/ pixel-window-width
-					   window-width))
+		  (let* ((pixel-window-width (window-pixel-width window))
+			 (pixel-per-col (reader--get-pixel-per-col window))
 			 (doc-left-offset (- pixel-window-width doc-image-width))
 			 (doc-center-offset (/ doc-left-offset 2))
 			 (scroll-offset (round (/ doc-center-offset pixel-per-col))))
