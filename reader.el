@@ -158,9 +158,10 @@ Any other file format will simply not show up as a candidate."
 (defun reader--set-window-vscroll (window vscroll &optional pixels-p)
   "Set amount by which WINDOW should be scrolled vertically to VSCROLL.
 
-if setting VSCROLL makes the document page's top disappear, it sets the
+If setting VSCROLL makes the document page's top disappear, it sets the
 maximum vertical scroll possible without doing that.
 
+If PIXELS-P is non-nil, VSCROLL is considered to be in pixels.
 Also see `set-window-vscroll'."
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (window-height (window-body-height window))
@@ -172,6 +173,47 @@ Also see `set-window-vscroll'."
 	 (corrected-pixel-vscroll (min pixel-vscroll max-pixel-vscroll))
 	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-col)))
     (set-window-vscroll window corrected-vscroll pixels-p)))
+
+(defun reader--get-prefix-width ()
+  "Get the line prefix width set by `reader--center-page'."
+  (car
+   (plist-get
+    (cdr (overlay-get reader-current-svg-overlay 'line-prefix))
+    :width)))
+
+(defun reader--set-window-hscroll (window ncol)
+  "Set number of columns WINDOW is scrolled from left margin to NCOL.
+
+If setting NCOL makes the document page disappear, it sets the maximum
+horizontal scroll possible without doing that.
+
+See also `set-window-hscroll'."
+  (let* ((image-width (car (reader--get-current-doc-image-size)))
+	 (line-prefix-width (reader--get-prefix-width))
+	 (window-width (window-body-width window))
+	 (pixel-window-width (window-pixel-width window))
+	 (pixel-per-col (/ pixel-window-width
+			   window-width))
+	 (calibrated-ncol (round (- (/ line-prefix-width pixel-per-col) ncol)))
+	 (max-ncol  (round (/ (max line-prefix-width (- image-width pixel-window-width)) pixel-per-col)))
+	 (ncol (min calibrated-ncol max-ncol )))
+    (set-window-hscroll window ncol)
+    (reader--window-hscroll window)))
+
+(defun reader--window-hscroll (window)
+  "Return the number of columns by which WINDOW is scrolled from left margin.
+WINDOW must be a live window and defaults to the selected one.
+
+This correctly handles the prefix width set by reader documents and does
+not return the actual horizontal scroll value; for that, see
+`window-hscroll'."
+  (let* ((line-prefix-width (reader--get-prefix-width))
+	 (window-width (window-body-width window))
+	 (pixel-window-width (window-pixel-width window))
+	 (pixel-per-col (/ pixel-window-width
+			   window-width))
+	 (hscroll (round (- (/ line-prefix-width pixel-per-col) (window-hscroll window)))))
+    hscroll))
 
 (defun reader-fit-to-height ()
   "Scale the current page to fit its height perfectly within the window."
@@ -251,8 +293,7 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (set-window-hscroll window
-		      (- (window-hscroll window) amount)))
+  (reader--set-window-hscroll window (+ (reader--window-hscroll window) amount)))
 
 (defun reader-scroll-right (&optional amount window)
   "Scroll to the left of the current page by AMOUNT (or 1).
@@ -260,8 +301,7 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (set-window-hscroll window
-		      (+ amount (window-hscroll window))))
+  (reader--set-window-hscroll window (- (reader--window-hscroll window) amount)))
 
 (defun reader-scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
@@ -294,7 +334,8 @@ Optionally specify the WINDOW, defaults to current window."
 (defun reader-scroll-up-screenful-or-prev-page (&optional amount window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to current window.
+AMOUNT is the number of lines to scroll (optionally)."
   (interactive "p")
   (or amount (setq amount 1))
   (let ((scroll (- (window-body-height window)
@@ -304,7 +345,8 @@ Optionally specify the WINDOW, defaults to current window."
 (defun reader-scroll-down-screenful-or-next-page (&optional amount window)
   "Scroll down the current page by screenful, otherwise switch to the next page.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to current window.
+AMOUNT is the number of lines to scroll (optionally)."
   (interactive "p")
   (or amount (setq amount 1))
   (let ((scroll (- (window-body-height window)
