@@ -464,6 +464,34 @@ See also `reader-scroll-down-or-next-page'."
     (with-current-buffer (window-buffer scrolled-window)
       (reader-scroll-down-or-next-page amount scrolled-window))))
 
+(defun reader-mwheel-scroll-left (event)
+  "Scroll to the left, but also handle mouse EVENT.
+
+See also `reader-scroll-left'."
+  (interactive "e")
+  (let* ((event-type (car event))
+	 (amount (pcase event-type
+		   ('wheel-up 1)
+		   ('double-wheel-up 2)
+		   ('triple-wheel-up 3)))
+	 (scrolled-window (car (cadr event))))
+    (with-current-buffer (window-buffer scrolled-window)
+      (reader-scroll-left amount scrolled-window))))
+
+(defun reader-mwheel-scroll-right (event)
+  "Scroll to the right, but also handle mouse EVENT.
+
+See also `reader-scroll-up-right'."
+  (interactive "e")
+  (let* ((event-type (car event))
+	 (amount (pcase event-type
+		   ('wheel-up 1)
+		   ('double-wheel-up 2)
+		   ('triple-wheel-up 3)))
+	 (scrolled-window (car (cadr event))))
+    (with-current-buffer (window-buffer scrolled-window)
+      (reader-scroll-right amount scrolled-window))))
+
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
   (interactive)
@@ -492,6 +520,9 @@ buffer is not in `reader-mode'."
 
   "<wheel-up>" #'reader-mwheel-scroll-up
   "<wheel-down>" #'reader-mwheel-scroll-down
+
+  "S-<wheel-up>" #'reader-mwheel-scroll-left
+  "S-<wheel-down>" #'reader-mwheel-scroll-right
 
   "<remap> <scroll-down-command>" #'reader-scroll-up-screenful
   "<remap> <scroll-up-command>" #'reader-scroll-down-screenful
