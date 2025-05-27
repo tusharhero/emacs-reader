@@ -70,21 +70,11 @@
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.
 
-This function calls the module function `reader-dyn--load-doc' from the dynamic module
-to render the first page and displays it in a new buffer.
+This function calls the module function `reader-dyn--load-doc' from the
+dynamic module to render the first page and displays it in a new buffer.
 
-The only files that can be opened are of the following formats:
-
-- PDF
-- EPUB
-- MOBI
-- FB2
-- XPS/OpenXPS
-- CBZ
-- DOCX/PPTX/XLSX
-- ODT/ODS/ODP/ODG
-
-Any other file format will simply not show up as a candidate."
+The only formats that can be opened `reader-supported-formats', any
+other file format will simply not show up as a candidate."
   (interactive (let* ((regexp (concat "\\." (regexp-opt reader-supported-formats t) "$"))
 		      (file (read-file-name
 			     "Open document: "
@@ -133,7 +123,7 @@ Any other file format will simply not show up as a candidate."
   (force-mode-line-update t))
 
 (defun reader-goto-page (n)
-  "Go to page number 'N' in the current document."
+  "Go to page number N in the current document."
   (interactive "nGoto page: ")
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
   (reader-doc-scale-page reader-current-doc-scale-value)
@@ -148,9 +138,6 @@ Any other file format will simply not show up as a candidate."
 
 (defun reader-doc-scale-page (factor)
   "Scales the page by a given FACTOR.
-
-It calls the module function `reader-dyn--scale-page' that
-sets the `:width', `:height', and `:scale' properties of current page’s image.
 
 It also updates `reader-current-doc-scale-value' to reflect the new scale."
   (reader-dyn--scale-page factor)
@@ -193,10 +180,10 @@ It also updates `reader-current-doc-scale-value' to reflect the new scale."
 
 (defun reader--get-pixel-per-col (&optional window)
   "Get the no of pixels per column for WINDOW."
-  (/  (window-pixel-width window) (window-body-width window)))
+  (/ (window-pixel-width window) (window-body-width window)))
 
-;; Need because scrolling is possible in the other direction
-;; indefinitely.
+;; We need to do this because scrolling is possible in one direction
+;; (downwards) indefinitely.
 
 (defun reader--set-window-vscroll (window vscroll &optional pixels-p)
   "Set amount by which WINDOW should be scrolled vertically to VSCROLL.
@@ -218,8 +205,8 @@ Also see `set-window-vscroll'."
 			(if pixels-p corrected-pixel-vscroll corrected-vscroll)
 			pixels-p)))
 
-;; Most of these scrolling functions exist because of our handling of
-;; centering in `reader--center-page'.
+;; Most of the scrolling functions here exist because of our handling
+;; of centering in `reader--center-page'.
 
 (defun reader--get-prefix-width ()
   "Get the line prefix width set by `reader--center-page'."
@@ -231,7 +218,7 @@ Also see `set-window-vscroll'."
 (defun reader--right-most-window-hscroll (window)
   "Get the maximum horizontal scroll value for WINDOW.
 
-This position it at the right most point."
+This position is at the rightmost point."
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (line-prefix-width (reader--get-prefix-width))
 	 (pixel-window-width (window-pixel-width window))
@@ -270,7 +257,7 @@ not return the actual horizontal scroll value; for that, see
 	 (hscroll (round (- (/ line-prefix-width pixel-per-col) (window-hscroll window)))))
     hscroll))
 
-;; We need to hack involving line-prefix because Emacs' scrolling is
+;; We need this hack involving line-prefix because Emacs' scrolling is
 ;; idiosyncratic, and doesn't allow arbitrary scrolling in every
 ;; direction.
 (defun reader--center-page (&optional window)
@@ -285,7 +272,7 @@ If WINDOW is omitted defaults to current window."
 	     (doc-image-width (car (reader--get-current-doc-image-size)))
 	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
 	     (overlay-offset `(space :width (,max-left-offset))))
-	;; Add prefix until the page is at the leftmost point of the widest window.
+	;; Add prefix so that the page is at the leftmost point of the widest window.
 	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
 	;; scroll every window back to the center of the doc
 	(mapcar (lambda (window)
