@@ -29,6 +29,14 @@ typedef enum {
     PAGE_STATUS_ERROR
 } PageStatus;
 
+typedef struct {
+    int page_num;
+    char *svg_data;
+    size_t svg_size;
+    PageStatus status;
+    pthread_mutex_t mutex;
+} CachedPage;
+
 // DocState
 typedef struct {
   fz_context *ctx;
