@@ -214,7 +214,9 @@ Also see `set-window-vscroll'."
 	 (max-pixel-vscroll (- image-height pixel-window-height))
 	 (corrected-pixel-vscroll (min pixel-vscroll max-pixel-vscroll))
 	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-col)))
-    (set-window-vscroll window corrected-vscroll pixels-p)))
+    (set-window-vscroll window
+			(if pixels-p corrected-pixel-vscroll corrected-vscroll)
+			pixels-p)))
 
 ;; Most of these scrolling functions exist because of our handling of
 ;; centering in `reader--center-page'.
@@ -300,6 +302,7 @@ If WINDOW is omitted defaults to current window."
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
+    (or amount (setq amount 1))
   (let ((vscroll (- (window-vscroll window) amount)))
     (reader--set-window-vscroll window vscroll)))
 
