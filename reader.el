@@ -303,8 +303,9 @@ If WINDOW is omitted defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
     (or amount (setq amount 1))
-  (let ((vscroll (- (window-vscroll window) amount)))
-    (reader--set-window-vscroll window vscroll)))
+    (let* ((prev-scroll (window-vscroll window))
+	   (vscroll (- prev-scroll amount)))
+    (- prev-scroll (reader--set-window-vscroll window vscroll))))
 
 (defun reader-scroll-down (&optional amount window)
   "Scroll down the current page by AMOUNT (1 by default).
@@ -312,19 +313,18 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((vscroll (+ (window-vscroll window) amount)))
-    (reader--set-window-vscroll window vscroll)))
+  (let* ((prev-scroll (window-vscroll window))
+	 (vscroll (+ prev-scroll amount)))
+    (- (reader--set-window-vscroll window vscroll) prev-scroll)))
 
 (defun reader-scroll-up-screenful (&optional window)
   "Scroll up the current page by a screenful.
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (let ((prev-scroll (window-vscroll window))
-	(amount (- (window-body-height window)
+  (let ((amount (- (window-body-height window)
 		   next-screen-context-lines)))
-    (when (= prev-scroll
-	     (reader-scroll-up amount window))
+    (when (= 0 (reader-scroll-up amount window))
       (message "Beginning of page"))))
 
 (defun reader-scroll-down-screenful (&optional window)
@@ -332,11 +332,9 @@ Optionally specify the WINDOW, defaults to current window."
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (let ((prev-scroll (window-vscroll window))
-	(amount (- (window-body-height window)
+  (let ((amount (- (window-body-height window)
 		   next-screen-context-lines)))
-    (when (= prev-scroll
-	     (reader-scroll-down amount window))
+    (when (= 0 (reader-scroll-down amount window))
       (message "End of page"))))
 
 (defun reader-scroll-left (&optional amount window)
@@ -346,9 +344,10 @@ Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
-	     (hscroll (+ (reader--window-hscroll window) amount)))
-    (reader--set-window-hscroll window hscroll)))
+  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+	     (prev-scroll (reader--window-hscroll window))
+	     (hscroll (+ prev-scroll amount)))
+    (- (reader--set-window-hscroll window hscroll) prev-scroll)))
 
 (defun reader-scroll-right (&optional amount window)
   "Scroll to the right of the current page by AMOUNT (or 1).
@@ -357,9 +356,10 @@ Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
-	     (hscroll (- (reader--window-hscroll window) amount)))
-    (reader--set-window-hscroll window hscroll)))
+  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+	      (prev-scroll (reader--window-hscroll window))
+	     (hscroll (- prev-scroll amount)))
+    (- prev-scroll (reader--set-window-hscroll window hscroll))))
 
 (defun reader-scroll-left-most (&optional window)
   "Scroll to the left most point of the current page.
@@ -387,15 +387,13 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let ((prev-scroll (window-vscroll window)))
-    (reader-scroll-up amount)
-    (when-let* (((and (= prev-scroll (window-vscroll window))
-		      (reader-previous-page))) ; if succeeds
-		(image-height (cdr (reader--get-current-doc-image-size)))
-		(pixel-window-height (window-pixel-height window))
-		(bottom-most-scroll-pixel
-		 (- image-height pixel-window-height)))
-      (reader--set-window-vscroll window bottom-most-scroll-pixel t))))
+  (when-let* (((and (= 0 (reader-scroll-up amount))
+		    (reader-previous-page))) ; if succeeds
+	      (image-height (cdr (reader--get-current-doc-image-size)))
+	      (pixel-window-height (window-pixel-height window))
+	      (bottom-most-scroll-pixel
+	       (- image-height pixel-window-height)))
+    (reader--set-window-vscroll window bottom-most-scroll-pixel t)))
 
 (defun reader-scroll-down-or-next-page (&optional amount window)
   "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page.
@@ -403,11 +401,9 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (let ((prev-scroll (window-vscroll window)))
-    (reader-scroll-down amount window)
-    (when (and (= prev-scroll (window-vscroll window))
+    (when (and (= 0 (reader-scroll-down amount window))
 	       (reader-next-page)) ; if succeeds
-      (reader--set-window-vscroll window 0))))
+      (reader--set-window-vscroll window 0)))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional amount window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
@@ -476,7 +472,7 @@ See also `reader-scroll-left'."
 (defun reader-mwheel-scroll-right (event)
   "Scroll to the right, but also handle mouse EVENT.
 
-See also `reader-scroll-up-right'."
+See also `reader-scroll-right'."
   (interactive "e")
   (let* ((event-type (car event))
 	 (amount (pcase event-type
