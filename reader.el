@@ -208,11 +208,12 @@ If PIXELS-P is non-nil, VSCROLL is considered to be in pixels.
 Also see `set-window-vscroll'."
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (pixel-window-height (window-pixel-height window))
-	 (pixel-per-line (line-pixel-height))
-	 (pixel-vscroll (* pixel-per-line vscroll))
+	 (window-height (window-body-height window))
+	 (pixel-per-col (/ pixel-window-height window-height))
+	 (pixel-vscroll (* pixel-per-col vscroll))
 	 (max-pixel-vscroll (- image-height pixel-window-height))
 	 (corrected-pixel-vscroll (min pixel-vscroll max-pixel-vscroll))
-	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-line)))
+	 (corrected-vscroll (/ corrected-pixel-vscroll pixel-per-col)))
     (set-window-vscroll window corrected-vscroll pixels-p)))
 
 ;; Most of these scrolling functions exist because of our handling of
