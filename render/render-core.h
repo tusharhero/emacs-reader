@@ -20,6 +20,9 @@
 #include "emacs-module.h"
 #include <mupdf/fitz.h>
 
+#define MAX_CACHE_WINDOW 5
+
+
 // DocState
 typedef struct {
   fz_context *ctx;
