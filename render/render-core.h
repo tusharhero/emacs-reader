@@ -22,6 +22,12 @@
 
 #define MAX_CACHE_WINDOW 5
 
+typedef enum {
+    PAGE_STATUS_EMPTY,
+    PAGE_STATUS_RENDERING,
+    PAGE_STATUS_READY,
+    PAGE_STATUS_ERROR
+} PageStatus;
 
 // DocState
 typedef struct {
