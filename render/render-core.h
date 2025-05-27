@@ -41,6 +41,11 @@ typedef struct {
 typedef struct {
   fz_context *ctx;
   fz_document *doc;
+
+  CachedPage prev_cached_pages[MAX_CACHE_WINDOW];
+  CachedPage current_cached_page;
+  CachedPage next_cached_pages[MAX_CACHE_WINDOW];
+
   char *path;
   int pagecount;
   char *svg_background;
