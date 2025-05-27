@@ -392,24 +392,20 @@ Optionally specify the WINDOW, defaults to current window."
 	       (reader-next-page)) ; if succeeds
       (reader--set-window-vscroll window 0)))
 
-(defun reader-scroll-up-screenful-or-prev-page (&optional amount window)
+(defun reader-scroll-up-screenful-or-prev-page (&optional window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
 
-Optionally specify the WINDOW, defaults to current window.
-AMOUNT is the number of lines to scroll (optionally)."
-  (interactive "p")
-  (or amount (setq amount 1))
+Optionally specify the WINDOW, defaults to current window."
+  (interactive)
   (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
     (reader-scroll-up-or-prev-page scroll window)))
 
-(defun reader-scroll-down-screenful-or-next-page (&optional amount window)
+(defun reader-scroll-down-screenful-or-next-page (&optional window)
   "Scroll down the current page by screenful, otherwise switch to the next page.
 
-Optionally specify the WINDOW, defaults to current window.
-AMOUNT is the number of lines to scroll (optionally)."
-  (interactive "p")
-  (or amount (setq amount 1))
+Optionally specify the WINDOW, defaults to current window."
+  (interactive)
   (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
     (reader-scroll-down-or-next-page scroll window)))
