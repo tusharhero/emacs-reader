@@ -17,6 +17,9 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "mupdf-helpers.h"
+#include "render-core.h"
+
+pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
 
 /**
  * create_buffers - Creates mupdf buffers (wrappers around dynamic arrays) to be
@@ -275,6 +278,11 @@ void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
   *state = (DocState){.ctx = NULL,
                       .doc = NULL,
+
+                      .cached_pages_pool = NULL,
+                      .cache_window = NULL,
+                      .current_cached_page = state->cache_window[MAX_CACHE_WINDOW],
+
                       .path = NULL,
                       .pagecount = 0,
                       .svg_background = "white",
@@ -297,4 +305,53 @@ void reset_doc_state(DocState *state) {
                               .y0 = 0.0f,
                           },
                       .outline = NULL};
+}
+
+
+void fail(const char *msg) {
+  fprintf(stderr, "%s\n", msg);
+  abort();
+}
+
+void lock_mutex(void *user, int lock)
+{
+  pthread_mutex_t *mutexes = (pthread_mutex_t *)user;
+  if (pthread_mutex_lock(&mutexes[lock]) != 0)
+    fail("pthread_mutex_lock()");
+}
+
+void unlock_mutex(void *user, int lock)
+{
+  pthread_mutex_t *mutexes = (pthread_mutex_t *)user;
+  if (pthread_mutex_unlock(&mutexes[lock]) != 0)
+    fail("pthread_mutex_unlock()");
+}
+
+void init_main_ctx(DocState *state) {
+  for (int i = 0; i < FZ_LOCK_MAX; ++i) {
+    pthread_mutex_init(&g_mupdf_mutex[i], NULL);
+  }
+
+  state->locks.user = g_mupdf_mutex;
+  state->locks.lock = lock_mutex;
+  state->locks.unlock = unlock_mutex;
+
+  state->ctx = fz_new_context(NULL, &state->locks, FZ_STORE_UNLIMITED);
+  if (!state->ctx) {
+    fprintf(stderr, "Cannot create MuPDF context\n");
+    exit(1);
+  }
+
+  fz_register_document_handlers(state->ctx);
+}
+
+void open_document(DocState *state) {
+  state->doc = fz_open_document(state->ctx, state->path);
+  state->outline = fz_load_outline(state->ctx, state->doc);
+  state->pagecount = fz_count_pages(state->ctx, state->doc);
+
+  if (!state->doc) {
+    fprintf(stderr, "Could not open document\n");
+    exit(1);
+  }
 }

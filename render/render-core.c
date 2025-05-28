@@ -18,7 +18,6 @@
 #include "elisp-helpers.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
-#include <cstddef>
 #include <pthread.h>
 #include <stdlib.h>
 #include <string.h>
