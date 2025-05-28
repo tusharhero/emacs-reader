@@ -43,9 +43,8 @@ typedef struct {
   fz_context *ctx;
   fz_document *doc;
 
-  CachedPage prev_cached_pages[MAX_CACHE_WINDOW];
-  CachedPage current_cached_page;
-  CachedPage next_cached_pages[MAX_CACHE_WINDOW];
+  CachedPage **cached_pages_pool;
+  CachedPage *cache_window[MAX_CACHE_SIZE];
 
   char *path;
   int pagecount;
