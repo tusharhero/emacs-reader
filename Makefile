@@ -41,8 +41,8 @@ else ifeq ($(PLATFORM),macos)
 else
   OBJ_EXT := .o
   CC := gcc
-  CFLAGS += -DLINUX
-  LDFLAGS := -shared -L$(MUPDF_DIR)/build/shared-release -lmupdf
+  CFLAGS += -DLINUX -ggdb3 -pthread
+  LDFLAGS := -shared -L$(MUPDF_DIR)/build/shared-release -lmupdf -lpthread
   RPATHS := -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
   MUPDF_LIB := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
   NEED_MUPDF_BUILD := yes
