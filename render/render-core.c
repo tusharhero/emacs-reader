@@ -457,6 +457,27 @@ int render_pages(DocState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
+void init_cache_window(DocState *state) {
+  int start = state->current_page_number - MAX_CACHE_WINDOW;
+  int end = state->current_page_number + MAX_CACHE_WINDOW;
+
+  if (start < 0) {
+    start = 0;
+    end = start + MAX_CACHE_SIZE - 1;
+  }
+
+  if (end >= state->pagecount) {
+    end = state->pagecount - 1;
+    start = end - (MAX_CACHE_SIZE - 1);
+    if (start < 0) start = 0;
+  }
+
+  for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
+    int idx = start + 1;
+    state->cache_window[i] = (idx < state->pagecount ? state->cached_pages_pool[idx] : NULL);
+  }
+}
+
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
