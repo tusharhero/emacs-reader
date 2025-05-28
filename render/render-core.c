@@ -478,6 +478,27 @@ void init_cache_window(DocState *state) {
   }
 }
 
+void slide_cache_window_right(DocState *state) {
+
+  int next = state->current_page_number + 1;
+  if (next >= state->pagecount) {
+    fprintf(stderr, "slide_cache_window_right: cannot slide past end (page %d)\n", state->current_page_number);
+    return;
+  }
+
+  state->current_page_number = next;
+
+  // Shift pointers left by one slot
+  memmove(state->cache_window, state->cache_window + 1, (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
+
+  // Compute the new page index at right edge
+  int new_idx = next + MAX_CACHE_WINDOW;
+  if (new_idx < state->pagecount) {
+    state->cache_window[MAX_CACHE_SIZE - 1] = state->cached_pages_pool[new_idx];
+  } else {
+    state->cache_window[MAX_CACHE_SIZE - 1] = NULL;
+  }
+}
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
