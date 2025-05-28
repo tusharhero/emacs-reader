@@ -523,6 +523,16 @@ void slide_cache_window_left(DocState *state) {
   }
 }
 
+void ensure_page_cache(CachedPage *cp) {
+  if (!cp) return;
+    pthread_mutex_lock(&cp->mutex);
+    if (cp->status == PAGE_STATUS_EMPTY) {
+        cp->status = PAGE_STATUS_RENDERING;
+        // simulate load (e.g., fetch or parse SVG)
+        cp->status = PAGE_STATUS_READY;
+    }
+    pthread_mutex_unlock(&cp->mutex);
+}
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
