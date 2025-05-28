@@ -16,9 +16,11 @@
 
 #include "render-core.h"
 #include "elisp-helpers.h"
+#include "emacs-module.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -473,43 +475,36 @@ void *render_page_thread(void *arg) {
   fz_context *ctx = fz_clone_context(state->ctx);
 
   pthread_mutex_lock(&cp->mutex);
+
   if (cp->status == PAGE_STATUS_EMPTY) {
     cp->status = PAGE_STATUS_RENDERING;
-    /* pthread_mutex_unlock(&cp->mutex); */
 
-    pthread_mutex_lock(&cp->mutex);
-
-    fz_try(ctx) {
-      loaded_page = fz_load_page(ctx, state->doc, cp->page_num);
-    }
+    fz_try(ctx) { loaded_page = fz_load_page(ctx, state->doc, cp->page_num); }
     fz_catch(ctx) {
-      fprintf(stderr, "Cannot loa pages: %s\n", fz_caught_message(state->ctx));
-      fz_drop_document(ctx, state->doc);
+      fprintf(stderr, "Cannot load pages: %s\n", fz_caught_message(state->ctx));
       fz_drop_context(ctx);
     }
 
-    fz_rect page_bbox = fz_bound_page(ctx, loaded_page);
-    float page_width = page_bbox.x1 - state->page_bbox.x0;
-    float page_height = page_bbox.y1 - state->page_bbox.y0;
+    state->page_bbox = fz_bound_page(ctx, loaded_page);
+    float page_width = state->page_bbox.x1 - state->page_bbox.x0;
+    float page_height = state->page_bbox.y1 - state->page_bbox.y0;
 
     fz_try(ctx) {
       curr_buf = fz_new_buffer(ctx, 1024);
       curr_out = fz_new_output_with_buffer(ctx, curr_buf);
       curr_dev =
-        fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
+	fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
     }
     fz_catch(ctx) {
       fprintf(stderr, "Failed to create resources for current page: %s\n",
-	      fz_caught_message(ctx));
+              fz_caught_message(ctx));
       if (curr_dev)
-	fz_drop_device(ctx, curr_dev);
+        fz_drop_device(ctx, curr_dev);
       if (curr_out)
-	fz_drop_output(ctx, curr_out);
+        fz_drop_output(ctx, curr_out);
       if (curr_buf)
-	fz_drop_buffer(ctx, curr_buf);
-      fz_drop_document(ctx, state->doc);
+        fz_drop_buffer(ctx, curr_buf);
       fz_drop_context(ctx);
-      return EXIT_FAILURE;
     }
 
     fz_try(ctx) { fz_run_page(ctx, loaded_page, curr_dev, fz_identity, NULL); }
@@ -532,96 +527,142 @@ void *render_page_thread(void *arg) {
       fz_drop_output(ctx, curr_out);
       fz_drop_buffer(ctx, curr_buf);
     }
+
+    cp->svg_size = curr_buf->len;
+    cp->svg_data = (char *)malloc(cp->svg_size + 1);
+
+    memcpy(cp->svg_data, curr_buf->data, cp->svg_size);
+    cp->svg_data[cp->svg_size] = '\0';
+
+    curr_out = NULL;
+    fz_drop_buffer(ctx, curr_buf);
+    curr_buf = NULL;
+    fz_drop_page(ctx, loaded_page);
   }
-
-  cp->svg_size = curr_buf->len;
-  cp->svg_data = (char *)malloc(cp->svg_size + 1);
-
-  memcpy(cp->svg_data, curr_buf->data, cp->svg_size);
-  cp->svg_data[cp->svg_size] = '\0';
-
-  fz_drop_document(ctx, state->doc);
-  curr_out = NULL;
-  fz_drop_buffer(ctx, curr_buf);
-  curr_buf = NULL;
-  fz_drop_page(ctx, loaded_page);
   pthread_mutex_unlock(&cp->mutex);
+
   return NULL;
 }
 
-void async_render(CachedPage *cp) {
+void async_render(DocState *state, CachedPage *cp) {
   if (!cp)
     return;
   pthread_t th;
-  pthread_create(&th, NULL, render_page_thread, cp);
-  pthread_detach(th);
+
+  render_thread_args *render_args = malloc(sizeof(render_thread_args));
+  render_args->state = state;
+  render_args->cp = cp;
+
+  int err = pthread_create(&th, NULL, render_page_thread, render_args);
+  if (err) {
+    fprintf(stderr, "Failed to create render thread: %d\n", err);
+    free(render_args);
+    return;
+  }
+  pthread_join(th, NULL);
 }
 
-void init_cache_window(DocState *state) {
-  int start = state->current_page_number - MAX_CACHE_WINDOW;
-  int end = state->current_page_number + MAX_CACHE_WINDOW;
+void build_cache_window(DocState *state, int n) {
+  int start, end;
+  int pagecount = state->pagecount;
 
-  if (start < 0) {
+  if (n < MAX_CACHE_WINDOW) {
     start = 0;
-    end = start + MAX_CACHE_SIZE - 1;
-  }
-
-  if (end >= state->pagecount) {
-    end = state->pagecount - 1;
-    start = end - (MAX_CACHE_SIZE - 1);
+    end = n + MAX_CACHE_WINDOW;
+    if (end >= pagecount)
+      end = pagecount - 1;
+  } else if (n > (pagecount - 1) - MAX_CACHE_WINDOW) {
+    end = pagecount - 1;
+    start = n - MAX_CACHE_WINDOW;
     if (start < 0)
       start = 0;
+  } else {
+    start = n - MAX_CACHE_WINDOW;
+    end = n + MAX_CACHE_WINDOW;
   }
+
+  state->current_page_number = 0;
+  state->current_window_index = n - start;
 
   for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
-    int idx = start + 1;
-    state->cache_window[i] =
-      (idx < state->pagecount ? state->cached_pages_pool[idx] : NULL);
-    async_render(state->cache_window[i]);
+    int idx = start + i;
+    if (idx < pagecount && idx <= end) {
+      CachedPage *cp = state->cached_pages_pool[idx];
+      state->cache_window[i] = cp;
+
+      if (cp->status == PAGE_STATUS_EMPTY) {
+        render_thread_args *render_args = malloc(sizeof(render_thread_args));
+        render_args->state = state;
+        render_args->cp = cp;
+        pthread_mutex_init(&render_args->cp->mutex, NULL);
+        async_render(state, cp);
+      }
+    } else {
+      state->cache_window[i] = NULL;
+    }
   }
+
+  state->current_cached_page = state->cache_window[state->current_window_index];
 }
 
-void slide_cache_window_right(DocState *state) {
+bool slide_cache_window_forward(DocState *state) {
+  int n = state->current_page_number;
+  int pagecount = state->pagecount;
 
-  int next = state->current_page_number + 1;
-  if (next >= state->pagecount) {
+  if (n >= state->pagecount) {
     fprintf(stderr,
-            "slide_cache_window_right: cannot slide past end (page %d)\n",
-            state->current_page_number);
-    return;
+	    "slide_cache_window_right: cannot slide past end (page %d)\n",
+	    n);
+    return false;
+  }
+  n = ++state->current_page_number;
+
+  if (n - MAX_CACHE_WINDOW >= 0 && n + MAX_CACHE_WINDOW < pagecount) {
+    memmove(&state->cache_window[0], &state->cache_window[1],
+            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+
+    CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
+    state->cache_window[MAX_CACHE_SIZE - 1] = cp;
+    if (cp->status == PAGE_STATUS_EMPTY) {
+      async_render(state, cp);
+    }
+    state->current_window_index = MAX_CACHE_WINDOW;
+  } else {
+    build_cache_window(state, n);
   }
 
-  state->current_page_number = next;
-
-  // Shift pointers left by one slot
-  memmove(state->cache_window, state->cache_window + 1,
-          (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
-
-  // Compute the new page index at right edge
-  int new_idx = next + MAX_CACHE_WINDOW;
-  state->cache_window[MAX_CACHE_SIZE - 1] =
-    (new_idx < state->pagecount ? state->cached_pages_pool[new_idx] : NULL);
-  async_render(state->cache_window[MAX_CACHE_SIZE - 1]);
+  state->current_cached_page = state->cache_window[state->current_window_index];
+  return true;
 }
 
-void slide_cache_window_left(DocState *state) {
-  int prev = state->current_page_number - 1;
-  if (prev < 0) {
+bool slide_cache_window_backward(DocState *state) {
+  int n = --state->current_page_number;
+
+  if (n < 0) {
     fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
-            state->current_page_number);
-    return;
+	    state->current_page_number);
+    return false;
   }
 
-  state->current_page_number = prev;
+  int pagecount = state->pagecount;
 
-  memmove(state->cache_window + 1, state->cache_window, (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
+  if (n - MAX_CACHE_WINDOW >= 0 && n + MAX_CACHE_WINDOW < pagecount) {
+    memmove(&state->cache_window[1], &state->cache_window[0],
+            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-  int new_idx = prev - MAX_CACHE_WINDOW;
-  state->cache_window[0] =
-    (new_idx >= 0 ? state->cached_pages_pool[new_idx] : NULL);
-  async_render(state->cache_window[0]);
+    CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
+    state->cache_window[0] = cp;
+    if (cp->status == PAGE_STATUS_EMPTY) {
+      async_render(state, cp);
+    }
+    state->current_window_index = MAX_CACHE_WINDOW;
+  } else {
+    build_cache_window(state, n);
+  }
+
+  state->current_cached_page = state->cache_window[state->current_window_index];
+  return true;
 }
-
 
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
@@ -671,46 +712,42 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     return EMACS_NIL;
   }
 
-  if (load_mupdf_doc(state) == EXIT_SUCCESS) {
-    fprintf(stderr, "%s loaded successfully with %d pages.\n", state->path,
-            state->pagecount);
-    fprintf(stderr,
-            "State after loading the document: ctx=%p, doc=%p, pagecount=%d, "
-            "current_page=%d\n",
-            state->ctx, state->doc, state->pagecount,
-            state->current_page_number);
+  init_main_ctx(state); // Creates mupdf context with locks
+  open_document(state); // Opens the doc and sets pagecount
 
-    set_current_pagecount(env, state);
-    set_current_render_status(env);
-    init_overlay(env);
-    emacs_value current_svg_overlay = get_current_svg_overlay(env);
+  state->cached_pages_pool =
+      malloc(state->pagecount * sizeof(*state->cached_pages_pool));
+  CachedPage *block = calloc(state->pagecount, sizeof *block);
 
-    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-
-      // Take the SVG data from DocState and create an SVG image of it as a Lisp
-      // Object.
-      emacs_value current_image_data = svg2elisp_image(
-          env, state, state->current_svg_data, state->current_svg_size);
-
-      // Render the created image on the buffer’s overlay
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), current_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-
-      // Create a user pointer and expose it to Emacs in a buffer-local fashion
-      emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
-      emacs_value doc_state_ptr_sym =
-          env->intern(env, "reader-current-doc-state-ptr");
-      env->funcall(env, env->intern(env, "set"), 2,
-                   (emacs_value[]){doc_state_ptr_sym, user_ptr});
-    } else {
-      emacs_message(env, "Rendering initial page failed.");
-      return EMACS_NIL;
-    }
-  } else {
-    emacs_message(env, "Loading document failed.");
-    return EMACS_NIL;
+  for (int i = 0; i < state->pagecount; ++i) {
+    state->cached_pages_pool[i] = &block[i];
+    state->cached_pages_pool[i]->page_num = i;
   }
+
+  build_cache_window(state, state->current_page_number);
+
+  set_current_pagecount(env, state);
+  set_current_render_status(env);
+  init_overlay(env);
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+
+  CachedPage *cp = state->current_cached_page;
+
+  emacs_value current_image_data =
+    svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+
+  // Render the created image on the buffer’s overlay
+  emacs_value overlay_put_args[3] = {
+      current_svg_overlay, env->intern(env, "display"), current_image_data};
+  env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
+  // Create a user pointer and expose it to Emacs in a buffer-local fashion
+  emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
+  emacs_value doc_state_ptr_sym =
+      env->intern(env, "reader-current-doc-state-ptr");
+  env->funcall(env, env->intern(env, "set"), 2,
+               (emacs_value[]){doc_state_ptr_sym, user_ptr});
+
   return EMACS_T;
 }
 
@@ -744,14 +781,18 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       return EMACS_NIL;
     }
 
-    emacs_value next_image_data =
-        svg2elisp_image(env, state, state->next_svg_data, state->next_svg_size);
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), next_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    if (slide_cache_window_forward(state)) {
+      state->current_page_number++;
+      CachedPage *cp = state->current_cached_page;
 
-    if (state->current_page_number < (state->pagecount - 1)) {
-      render_pages(state, state->next_page_number);
+      emacs_value next_image_data =
+	svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+
+      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){env->intern(env, "test-next-image"), next_image_data});
+
+      emacs_value overlay_put_args[3] = {
+	current_svg_overlay, env->intern(env, "display"), next_image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     }
   } else {
     return EMACS_NIL;
