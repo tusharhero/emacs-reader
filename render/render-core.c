@@ -469,12 +469,14 @@ void init_cache_window(DocState *state) {
   if (end >= state->pagecount) {
     end = state->pagecount - 1;
     start = end - (MAX_CACHE_SIZE - 1);
-    if (start < 0) start = 0;
+    if (start < 0)
+      start = 0;
   }
 
   for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
     int idx = start + 1;
-    state->cache_window[i] = (idx < state->pagecount ? state->cached_pages_pool[idx] : NULL);
+    state->cache_window[i] =
+        (idx < state->pagecount ? state->cached_pages_pool[idx] : NULL);
   }
 }
 
@@ -482,14 +484,17 @@ void slide_cache_window_right(DocState *state) {
 
   int next = state->current_page_number + 1;
   if (next >= state->pagecount) {
-    fprintf(stderr, "slide_cache_window_right: cannot slide past end (page %d)\n", state->current_page_number);
+    fprintf(stderr,
+            "slide_cache_window_right: cannot slide past end (page %d)\n",
+            state->current_page_number);
     return;
   }
 
   state->current_page_number = next;
 
   // Shift pointers left by one slot
-  memmove(state->cache_window, state->cache_window + 1, (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
+  memmove(state->cache_window, state->cache_window + 1,
+          (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
 
   // Compute the new page index at right edge
   int new_idx = next + MAX_CACHE_WINDOW;
@@ -499,11 +504,13 @@ void slide_cache_window_right(DocState *state) {
     state->cache_window[MAX_CACHE_SIZE - 1] = NULL;
   }
 }
+
 void slide_cache_window_left(DocState *state) {
   int prev = state->current_page_number - 1;
   if (prev < 0) {
-        fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",state->current_page_number);
-        return;
+    fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
+            state->current_page_number);
+    return;
   }
 
   state->current_page_number = prev;
@@ -604,7 +611,6 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     emacs_message(env, "Loading document failed.");
     return EMACS_NIL;
   }
-
   return EMACS_T;
 }
 
