@@ -18,6 +18,7 @@
 #define RENDER_CORE_H
 
 #include "emacs-module.h"
+#include <pthread.h>
 #include <mupdf/fitz.h>
 
 #define MAX_CACHE_SIZE 11
@@ -65,6 +66,12 @@ typedef struct {
   fz_rect page_bbox;
   fz_outline *outline;
 } DocState;
+
+
+typedef struct {
+  DocState *state;
+  CachedPage *cp;
+} render_thread_args;
 
 // Function declarations
 int load_mupdf_doc(DocState *state);

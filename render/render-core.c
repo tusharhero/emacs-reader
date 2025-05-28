@@ -18,6 +18,10 @@
 #include "elisp-helpers.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
+#include <cstddef>
+#include <pthread.h>
+#include <stdlib.h>
+#include <string.h>
 
 int plugin_is_GPL_compatible;
 
@@ -533,6 +537,96 @@ void ensure_page_cache(CachedPage *cp) {
     }
     pthread_mutex_unlock(&cp->mutex);
 }
+
+void *render_page_thread(void *arg) {
+  fz_device *curr_dev = NULL;
+  fz_output *curr_out = NULL;
+  fz_buffer *curr_buf = NULL;
+  fz_page *loaded_page = NULL;
+
+  render_thread_args *args = (render_thread_args *)arg;
+  DocState *state = args->state;
+  CachedPage *cp = args->cp;
+
+  fz_context *ctx = fz_clone_context(state->ctx);
+
+  pthread_mutex_lock(&cp->mutex);
+  if (cp->status == PAGE_STATUS_EMPTY) {
+    cp->status = PAGE_STATUS_RENDERING;
+    /* pthread_mutex_unlock(&cp->mutex); */
+
+    pthread_mutex_lock(&cp->mutex);
+
+    fz_try(ctx) {
+      loaded_page = fz_load_page(ctx, state->doc, cp->page_num);
+    }
+    fz_catch(ctx) {
+      fprintf(stderr, "Cannot loa pages: %s\n", fz_caught_message(state->ctx));
+      fz_drop_document(ctx, state->doc);
+      fz_drop_context(ctx);
+    }
+
+    fz_rect page_bbox = fz_bound_page(ctx, loaded_page);
+    float page_width = page_bbox.x1 - state->page_bbox.x0;
+    float page_height = page_bbox.y1 - state->page_bbox.y0;
+
+    fz_try(ctx) {
+      curr_buf = fz_new_buffer(ctx, 1024);
+      curr_out = fz_new_output_with_buffer(ctx, curr_buf);
+      curr_dev =
+        fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
+    }
+    fz_catch(ctx) {
+      fprintf(stderr, "Failed to create resources for current page: %s\n",
+	      fz_caught_message(ctx));
+      if (curr_dev)
+	fz_drop_device(ctx, curr_dev);
+      if (curr_out)
+	fz_drop_output(ctx, curr_out);
+      if (curr_buf)
+	fz_drop_buffer(ctx, curr_buf);
+      fz_drop_document(ctx, state->doc);
+      fz_drop_context(ctx);
+      return EXIT_FAILURE;
+    }
+
+    fz_try(ctx) { fz_run_page(ctx, loaded_page, curr_dev, fz_identity, NULL); }
+    fz_catch(ctx) {
+      fprintf(stderr, "Cannot run page: %s\n", fz_caught_message(ctx));
+      fz_drop_device(ctx, curr_dev);
+      fz_drop_output(ctx, curr_out);
+      fz_drop_buffer(ctx, curr_buf);
+    }
+
+    fz_try(ctx) {
+      fz_close_device(ctx, curr_dev);
+      fz_drop_device(ctx, curr_dev);
+      curr_dev = NULL;
+      fz_close_output(ctx, curr_out);
+    }
+    fz_catch(ctx) {
+      fprintf(stderr, "Cannot close device: %s\n", fz_caught_message(ctx));
+      fz_drop_device(ctx, curr_dev);
+      fz_drop_output(ctx, curr_out);
+      fz_drop_buffer(ctx, curr_buf);
+    }
+  }
+
+  cp->svg_size = curr_buf->len;
+  cp->svg_data = (char *)malloc(cp->svg_size + 1);
+
+  memcpy(cp->svg_data, curr_buf->data, cp->svg_size);
+  cp->svg_data[cp->svg_size] = '\0';
+
+  fz_drop_document(ctx, state->doc);
+  curr_out = NULL;
+  fz_drop_buffer(ctx, curr_buf);
+  curr_buf = NULL;
+  fz_drop_page(ctx, loaded_page);
+  pthread_mutex_unlock(&cp->mutex);
+  return NULL;
+}
+
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
