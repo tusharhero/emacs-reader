@@ -47,6 +47,7 @@ typedef struct {
 
   CachedPage **cached_pages_pool;
   CachedPage *cache_window[MAX_CACHE_SIZE];
+  int current_window_index;
   CachedPage *current_cached_page;
 
   char *path;
