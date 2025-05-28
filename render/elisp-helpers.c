@@ -153,6 +153,9 @@ emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
   emacs_value image_data =
       env->funcall(env, env->intern(env, "create-image"), 11, image_args);
 
+  env->funcall(env, env->intern(env, "image-flush"), 2,
+  (emacs_value[]){image_data, EMACS_T});
+
   return image_data;
 }
 
