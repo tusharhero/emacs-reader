@@ -18,25 +18,25 @@
 #define RENDER_CORE_H
 
 #include "emacs-module.h"
-#include <pthread.h>
 #include <mupdf/fitz.h>
+#include <pthread.h>
 
 #define MAX_CACHE_SIZE 11
 #define MAX_CACHE_WINDOW (MAX_CACHE_SIZE / 2)
 
 typedef enum {
-    PAGE_STATUS_EMPTY,
-    PAGE_STATUS_RENDERING,
-    PAGE_STATUS_READY,
-    PAGE_STATUS_ERROR
+  PAGE_STATUS_EMPTY,
+  PAGE_STATUS_RENDERING,
+  PAGE_STATUS_READY,
+  PAGE_STATUS_ERROR
 } PageStatus;
 
 typedef struct {
-    int page_num;
-    char *svg_data;
-    size_t svg_size;
-    PageStatus status;
-    pthread_mutex_t mutex;
+  int page_num;
+  char *svg_data;
+  size_t svg_size;
+  PageStatus status;
+  pthread_mutex_t mutex;
 } CachedPage;
 
 // DocState
@@ -69,7 +69,6 @@ typedef struct {
   fz_rect page_bbox;
   fz_outline *outline;
 } DocState;
-
 
 typedef struct {
   DocState *state;

@@ -276,36 +276,35 @@ void drop_all_doc_pages(fz_context *ctx, DocState *state) {
 
 void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
-  *state =
-      (DocState){.ctx = NULL,
-                 .doc = NULL,
+  *state = (DocState){.ctx = NULL,
+                      .doc = NULL,
 
-                 .cached_pages_pool = NULL,
-                 .cache_window = NULL,
-                 .current_cached_page = NULL,
+                      .cached_pages_pool = NULL,
+                      .cache_window = NULL,
+                      .current_cached_page = NULL,
 
-                 .path = NULL,
-                 .pagecount = 0,
-                 .svg_background = "white",
-                 .svg_foreground = "black",
-                 .current_page_number = 0,
-                 .next_page_number = 0,
-                 .prev_page_number = 0,
-                 .current_svg_data = NULL,
-                 .current_svg_size = 0,
-                 .next_svg_data = NULL,
-                 .next_svg_size = 0,
-                 .prev_svg_data = NULL,
-                 .prev_svg_size = 0,
-                 .current_page = NULL,
-                 .prev_page = NULL,
-                 .next_page = NULL,
-                 .page_bbox =
-                     {
-                         .x0 = 0.0f,
-                         .y0 = 0.0f,
-                     },
-                 .outline = NULL};
+                      .path = NULL,
+                      .pagecount = 0,
+                      .svg_background = "white",
+                      .svg_foreground = "black",
+                      .current_page_number = 0,
+                      .next_page_number = 0,
+                      .prev_page_number = 0,
+                      .current_svg_data = NULL,
+                      .current_svg_size = 0,
+                      .next_svg_data = NULL,
+                      .next_svg_size = 0,
+                      .prev_svg_data = NULL,
+                      .prev_svg_size = 0,
+                      .current_page = NULL,
+                      .prev_page = NULL,
+                      .next_page = NULL,
+                      .page_bbox =
+                          {
+                              .x0 = 0.0f,
+                              .y0 = 0.0f,
+                          },
+                      .outline = NULL};
 }
 
 void fail(const char *msg) {

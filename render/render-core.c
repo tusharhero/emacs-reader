@@ -493,7 +493,7 @@ void *render_page_thread(void *arg) {
       curr_buf = fz_new_buffer(ctx, 1024);
       curr_out = fz_new_output_with_buffer(ctx, curr_buf);
       curr_dev =
-	fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
+          fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
     }
     fz_catch(ctx) {
       fprintf(stderr, "Failed to create resources for current page: %s\n",
@@ -611,8 +611,7 @@ bool slide_cache_window_forward(DocState *state) {
 
   if (n >= state->pagecount) {
     fprintf(stderr,
-	    "slide_cache_window_right: cannot slide past end (page %d)\n",
-	    n);
+            "slide_cache_window_right: cannot slide past end (page %d)\n", n);
     return false;
   }
   n = ++state->current_page_number;
@@ -640,7 +639,7 @@ bool slide_cache_window_backward(DocState *state) {
 
   if (n < 0) {
     fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
-	    state->current_page_number);
+            state->current_page_number);
     return false;
   }
 
@@ -788,10 +787,12 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       emacs_value next_image_data =
 	svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
 
-      env->funcall(env, env->intern(env, "set"), 2, (emacs_value[]){env->intern(env, "test-next-image"), next_image_data});
+      env->funcall(env, env->intern(env, "set"), 2,
+                   (emacs_value[]){env->intern(env, "test-next-image"),
+                                   next_image_data});
 
       emacs_value overlay_put_args[3] = {
-	current_svg_overlay, env->intern(env, "display"), next_image_data};
+          current_svg_overlay, env->intern(env, "display"), next_image_data};
       env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     }
   } else {

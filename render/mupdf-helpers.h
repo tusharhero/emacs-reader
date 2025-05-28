@@ -41,13 +41,11 @@ void close_all_devices(fz_context *ctx, fz_device *curr, fz_device *prev,
 int doc_page_width(DocState *state);
 int doc_page_length(DocState *state);
 
-
 void fail(const char *msg);
 void lock_mutex(void *user, int lock);
 void unlock_mutex(void *user, int lock);
 void init_main_ctx(DocState *state);
 void open_document(DocState *state);
-
 
 void clean_up_svg_data(DocState *state);
 void drop_all_doc_pages(fz_context *ctx, DocState *state);
