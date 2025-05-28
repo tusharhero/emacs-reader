@@ -461,83 +461,6 @@ int render_pages(DocState *state, int page_number) {
   return EXIT_SUCCESS;
 }
 
-void init_cache_window(DocState *state) {
-  int start = state->current_page_number - MAX_CACHE_WINDOW;
-  int end = state->current_page_number + MAX_CACHE_WINDOW;
-
-  if (start < 0) {
-    start = 0;
-    end = start + MAX_CACHE_SIZE - 1;
-  }
-
-  if (end >= state->pagecount) {
-    end = state->pagecount - 1;
-    start = end - (MAX_CACHE_SIZE - 1);
-    if (start < 0)
-      start = 0;
-  }
-
-  for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
-    int idx = start + 1;
-    state->cache_window[i] =
-        (idx < state->pagecount ? state->cached_pages_pool[idx] : NULL);
-  }
-}
-
-void slide_cache_window_right(DocState *state) {
-
-  int next = state->current_page_number + 1;
-  if (next >= state->pagecount) {
-    fprintf(stderr,
-            "slide_cache_window_right: cannot slide past end (page %d)\n",
-            state->current_page_number);
-    return;
-  }
-
-  state->current_page_number = next;
-
-  // Shift pointers left by one slot
-  memmove(state->cache_window, state->cache_window + 1,
-          (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
-
-  // Compute the new page index at right edge
-  int new_idx = next + MAX_CACHE_WINDOW;
-  if (new_idx < state->pagecount) {
-    state->cache_window[MAX_CACHE_SIZE - 1] = state->cached_pages_pool[new_idx];
-  } else {
-    state->cache_window[MAX_CACHE_SIZE - 1] = NULL;
-  }
-}
-
-void slide_cache_window_left(DocState *state) {
-  int prev = state->current_page_number - 1;
-  if (prev < 0) {
-    fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
-            state->current_page_number);
-    return;
-  }
-
-  state->current_page_number = prev;
-
-  int new_idx = prev - MAX_CACHE_WINDOW;
-  if (new_idx >= 0) {
-    state->cache_window[0] = state->cached_pages_pool[new_idx];
-  } else {
-    state->cache_window[0] = NULL;
-  }
-}
-
-void ensure_page_cache(CachedPage *cp) {
-  if (!cp) return;
-    pthread_mutex_lock(&cp->mutex);
-    if (cp->status == PAGE_STATUS_EMPTY) {
-        cp->status = PAGE_STATUS_RENDERING;
-        // simulate load (e.g., fetch or parse SVG)
-        cp->status = PAGE_STATUS_READY;
-    }
-    pthread_mutex_unlock(&cp->mutex);
-}
-
 void *render_page_thread(void *arg) {
   fz_device *curr_dev = NULL;
   fz_output *curr_out = NULL;
@@ -626,6 +549,80 @@ void *render_page_thread(void *arg) {
   pthread_mutex_unlock(&cp->mutex);
   return NULL;
 }
+
+void async_render(CachedPage *cp) {
+  if (!cp)
+    return;
+  pthread_t th;
+  pthread_create(&th, NULL, render_page_thread, cp);
+  pthread_detach(th);
+}
+
+void init_cache_window(DocState *state) {
+  int start = state->current_page_number - MAX_CACHE_WINDOW;
+  int end = state->current_page_number + MAX_CACHE_WINDOW;
+
+  if (start < 0) {
+    start = 0;
+    end = start + MAX_CACHE_SIZE - 1;
+  }
+
+  if (end >= state->pagecount) {
+    end = state->pagecount - 1;
+    start = end - (MAX_CACHE_SIZE - 1);
+    if (start < 0)
+      start = 0;
+  }
+
+  for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
+    int idx = start + 1;
+    state->cache_window[i] =
+      (idx < state->pagecount ? state->cached_pages_pool[idx] : NULL);
+    async_render(state->cache_window[i]);
+  }
+}
+
+void slide_cache_window_right(DocState *state) {
+
+  int next = state->current_page_number + 1;
+  if (next >= state->pagecount) {
+    fprintf(stderr,
+            "slide_cache_window_right: cannot slide past end (page %d)\n",
+            state->current_page_number);
+    return;
+  }
+
+  state->current_page_number = next;
+
+  // Shift pointers left by one slot
+  memmove(state->cache_window, state->cache_window + 1,
+          (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
+
+  // Compute the new page index at right edge
+  int new_idx = next + MAX_CACHE_WINDOW;
+  state->cache_window[MAX_CACHE_SIZE - 1] =
+    (new_idx < state->pagecount ? state->cached_pages_pool[new_idx] : NULL);
+  async_render(state->cache_window[MAX_CACHE_SIZE - 1]);
+}
+
+void slide_cache_window_left(DocState *state) {
+  int prev = state->current_page_number - 1;
+  if (prev < 0) {
+    fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
+            state->current_page_number);
+    return;
+  }
+
+  state->current_page_number = prev;
+
+  memmove(state->cache_window + 1, state->cache_window, (MAX_CACHE_SIZE - 1) * sizeof(state->cache_window[0]));
+
+  int new_idx = prev - MAX_CACHE_WINDOW;
+  state->cache_window[0] =
+    (new_idx >= 0 ? state->cached_pages_pool[new_idx] : NULL);
+  async_render(state->cache_window[0]);
+}
+
 
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
