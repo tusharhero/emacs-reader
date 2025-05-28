@@ -499,6 +499,23 @@ void slide_cache_window_right(DocState *state) {
     state->cache_window[MAX_CACHE_SIZE - 1] = NULL;
   }
 }
+void slide_cache_window_left(DocState *state) {
+  int prev = state->current_page_number - 1;
+  if (prev < 0) {
+        fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",state->current_page_number);
+        return;
+  }
+
+  state->current_page_number = prev;
+
+  int new_idx = prev - MAX_CACHE_WINDOW;
+  if (new_idx >= 0) {
+    state->cache_window[0] = state->cached_pages_pool[new_idx];
+  } else {
+    state->cache_window[0] = NULL;
+  }
+}
+
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
