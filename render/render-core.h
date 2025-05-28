@@ -42,10 +42,12 @@ typedef struct {
 // DocState
 typedef struct {
   fz_context *ctx;
+  fz_locks_context locks;
   fz_document *doc;
 
   CachedPage **cached_pages_pool;
   CachedPage *cache_window[MAX_CACHE_SIZE];
+  CachedPage *current_cached_page;
 
   char *path;
   int pagecount;
