@@ -20,7 +20,8 @@
 #include "emacs-module.h"
 #include <mupdf/fitz.h>
 
-#define MAX_CACHE_WINDOW 5
+#define MAX_CACHE_SIZE 11
+#define MAX_CACHE_WINDOW (MAX_CACHE_SIZE / 2)
 
 typedef enum {
     PAGE_STATUS_EMPTY,
