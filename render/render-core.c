@@ -548,6 +548,7 @@ void async_render(DocState *state, CachedPage *cp) {
   if (!cp)
     return;
   pthread_t th;
+  pthread_mutex_init(&cp->mutex, NULL);
 
   render_thread_args *render_args = malloc(sizeof(render_thread_args));
   render_args->state = state;
@@ -594,7 +595,6 @@ void build_cache_window(DocState *state, int n) {
         render_thread_args *render_args = malloc(sizeof(render_thread_args));
         render_args->state = state;
         render_args->cp = cp;
-        pthread_mutex_init(&render_args->cp->mutex, NULL);
         async_render(state, cp);
       }
     } else {
