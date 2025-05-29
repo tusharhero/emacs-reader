@@ -544,9 +544,9 @@ void *render_page_thread(void *arg) {
   return NULL;
 }
 
-void async_render(DocState *state, CachedPage *cp) {
+bool async_render(DocState *state, CachedPage *cp) {
   if (!cp)
-    return;
+    return false;
   pthread_t th;
   pthread_mutex_init(&cp->mutex, NULL);
 
@@ -558,9 +558,12 @@ void async_render(DocState *state, CachedPage *cp) {
   if (err) {
     fprintf(stderr, "Failed to create render thread: %d\n", err);
     free(render_args);
-    return;
+    return false;
   }
   pthread_join(th, NULL);
+
+  cp->status = PAGE_STATUS_READY;
+  return true;
 }
 
 void build_cache_window(DocState *state, int n) {
