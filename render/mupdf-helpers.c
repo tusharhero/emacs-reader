@@ -277,6 +277,7 @@ void drop_all_doc_pages(fz_context *ctx, DocState *state) {
 void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
   *state = (DocState){.ctx = NULL,
+                      .locks = NULL,
                       .doc = NULL,
 
                       .cached_pages_pool = NULL,
