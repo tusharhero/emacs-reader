@@ -585,7 +585,7 @@ void build_cache_window(DocState *state, int n) {
     end = n + MAX_CACHE_WINDOW;
   }
 
-  state->current_page_number = 0;
+  state->current_page_number = n;
   state->current_window_index = n - start;
 
   for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
