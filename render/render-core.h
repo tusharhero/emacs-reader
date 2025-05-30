@@ -39,7 +39,6 @@ typedef struct {
   pthread_mutex_t mutex;
 } CachedPage;
 
-// DocState
 typedef struct {
   fz_context *ctx;
   fz_locks_context locks;
@@ -54,18 +53,7 @@ typedef struct {
   int pagecount;
   char *svg_background;
   char *svg_foreground;
-  int prev_page_number;
   int current_page_number;
-  int next_page_number;
-  char *current_svg_data;
-  size_t current_svg_size;
-  char *next_svg_data;
-  size_t next_svg_size;
-  char *prev_svg_data;
-  size_t prev_svg_size;
-  fz_page *current_page;
-  fz_page *next_page;
-  fz_page *prev_page;
   fz_rect page_bbox;
   fz_outline *outline;
 } DocState;
