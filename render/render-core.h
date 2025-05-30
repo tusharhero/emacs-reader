@@ -63,25 +63,28 @@ typedef struct {
   CachedPage *cp;
 } RenderThreadArgs;
 
-// Function declarations
-int load_mupdf_doc(DocState *state);
-int load_pages(DocState *state, int page_number);
-int render_pages(DocState *state, int page_number);
+void *render_page_thread(void *arg);
+bool async_render(DocState *state, CachedPage *cp);
+void build_cache_window(DocState *state, int n);
+bool slide_cache_window_forward(DocState *state);
+void *async_slide_forward(void *args);
+bool slide_cache_window_backward(DocState *state);
+void *async_slide_backward(void *args);
 
 // Emacs module functions
 emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                           void *data);
+			   void *data);
 emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
+			    void *data);
 emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
+			    void *data);
 emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                             void *data);
+			     void *data);
 emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
+			    void *data);
 emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
+			    void *data);
 emacs_value emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs,
-                                 emacs_value *args, void *data);
+				 emacs_value *args, void *data);
 
 #endif // RENDER_CORE_H
