@@ -18,6 +18,7 @@
 
 #include "mupdf-helpers.h"
 #include "render-core.h"
+#include <stdlib.h>
 
 pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
 
@@ -325,31 +326,36 @@ void unlock_mutex(void *user, int lock) {
     fail("pthread_mutex_unlock()");
 }
 
-void init_main_ctx(DocState *state) {
+int init_main_ctx(DocState *state) {
   for (int i = 0; i < FZ_LOCK_MAX; ++i) {
     pthread_mutex_init(&g_mupdf_mutex[i], NULL);
-  }
-
+   }
   state->locks.user = g_mupdf_mutex;
   state->locks.lock = lock_mutex;
   state->locks.unlock = unlock_mutex;
-
   state->ctx = fz_new_context(NULL, &state->locks, FZ_STORE_UNLIMITED);
-  if (!state->ctx) {
+  fz_register_document_handlers(state->ctx);
+
+  if (!state->ctx){
     fprintf(stderr, "Cannot create MuPDF context\n");
-    exit(1);
+    return EXIT_FAILURE;
   }
 
-  fz_register_document_handlers(state->ctx);
+  return EXIT_SUCCESS;
 }
 
-void open_document(DocState *state) {
-  state->doc = fz_open_document(state->ctx, state->path);
-  state->outline = fz_load_outline(state->ctx, state->doc);
-  state->pagecount = fz_count_pages(state->ctx, state->doc);
+int load_mupdf_doc(DocState *state) {
 
-  if (!state->doc) {
-    fprintf(stderr, "Could not open document\n");
-    exit(1);
+  fz_try(state->ctx) {
+    state->doc = fz_open_document(state->ctx, state->path);
+    state->outline = fz_load_outline(state->ctx, state->doc);
+    state->pagecount = fz_count_pages(state->ctx, state->doc);
   }
+  fz_catch(state->ctx) {
+    fprintf(stderr, "Could not open document\n");
+    fz_drop_context(state->ctx);
+    return EXIT_FAILURE;
+  }
+
+  return EXIT_SUCCESS;
 }
