@@ -606,8 +606,10 @@ emacs_value emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   if (state) {
-    emacs_value current_image_data = svg2elisp_image(
-        env, state, state->current_svg_data, state->current_svg_size);
+    CachedPage *cp = state->current_cached_page;
+
+    emacs_value current_image_data =
+        svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
     emacs_value cdr_current_image_data =
         env->funcall(env, env->intern(env, "cdr"), 1, &current_image_data);
 
@@ -635,6 +637,7 @@ emacs_value emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs,
 
     env->funcall(env, env->intern(env, "setcdr"), 2,
                  (emacs_value[]){current_image_data, modified_cdr});
+
     emacs_value overlay_put_args[3] = {
         current_svg_overlay, env->intern(env, "display"), current_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
