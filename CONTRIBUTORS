@@ -21,6 +21,7 @@ for the v0.2.0 release
 - Major refactor to the page centering logic in reader.el for 0.2.6
 - Implemented the elisp side reader-dark-mode
 - Refactored reader's keymap in reader.el
+- Major refactor to the scrolling logic in reader.el for 0.2.7
 
 * Other Contributions (Not Legally Significant)
 
