@@ -182,19 +182,21 @@ bool slide_cache_window_forward(DocState *state) {
 
   if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
     memmove(&state->cache_window[0], &state->cache_window[1],
-	    sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-    CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
+     CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
     state->cache_window[MAX_CACHE_SIZE - 1] = cp;
+
     if (cp->status == PAGE_STATUS_EMPTY) {
       async_render(state, cp);
     }
+
     state->current_window_index = MAX_CACHE_WINDOW;
-    state->current_cached_page = state->cache_window[state->current_window_index];
   } else {
     build_cache_window(state, n);
-    state->current_cached_page = state->cache_window[state->current_window_index];
   }
+
+  state->current_cached_page = state->cache_window[state->current_window_index];
 
   return true;
 }
