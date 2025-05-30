@@ -302,7 +302,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   }
 
   init_main_ctx(state); // Creates mupdf context with locks
-  open_document(state); // Opens the doc and sets pagecount
+  load_mupdf_doc(state); // Opens the doc and sets pagecount
 
   state->cached_pages_pool =
       malloc(state->pagecount * sizeof(*state->cached_pages_pool));
@@ -321,7 +321,6 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   CachedPage *cp = state->current_cached_page;
-
   emacs_value current_image_data =
     svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
 
