@@ -515,23 +515,19 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
   if (state) {
     if (state->current_page_number == state->pagecount - 1) {
-      emacs_message(env, "Already first page!");
+      emacs_message(env, "Already the last page!");
       return EMACS_NIL;
     }
 
     state->current_page_number = state->pagecount - 1;
+    build_cache_window(state, state->current_page_number);
 
-    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-      emacs_value current_page_data = svg2elisp_image(
-          env, state, state->current_svg_data, state->current_svg_size);
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), current_page_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-    } else {
-      emacs_message(env, "Failed to render the last page");
-      return EMACS_NIL;
-    }
-    state->current_page_number = state->pagecount - 1;
+    CachedPage *last_cp = state->current_cached_page;
+    emacs_value last_image_data =
+        svg2elisp_image(env, state, last_cp->svg_data, last_cp->svg_size);
+    emacs_value overlay_put_args[3] = {
+        current_svg_overlay, env->intern(env, "display"), last_image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
   } else {
     return EMACS_NIL;
   }
