@@ -30,7 +30,7 @@ void *render_page_thread(void *arg) {
   fz_buffer *curr_buf = NULL;
   fz_page *loaded_page = NULL;
 
-  render_thread_args *args = (render_thread_args *)arg;
+  RenderThreadArgs *args = (RenderThreadArgs *)arg;
   DocState *state = args->state;
   CachedPage *cp = args->cp;
 
@@ -112,7 +112,7 @@ bool async_render(DocState *state, CachedPage *cp) {
   pthread_t th;
   pthread_mutex_init(&cp->mutex, NULL);
 
-  render_thread_args *render_args = malloc(sizeof(render_thread_args));
+  RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
   render_args->state = state;
   render_args->cp = cp;
 
@@ -157,7 +157,7 @@ void build_cache_window(DocState *state, int n) {
       state->cache_window[i] = cp;
 
       if (cp->status == PAGE_STATUS_EMPTY) {
-        render_thread_args *render_args = malloc(sizeof(render_thread_args));
+        RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
         render_args->state = state;
         render_args->cp = cp;
         async_render(state, cp);

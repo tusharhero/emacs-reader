@@ -73,7 +73,7 @@ typedef struct {
 typedef struct {
   DocState *state;
   CachedPage *cp;
-} render_thread_args;
+} RenderThreadArgs;
 
 // Function declarations
 int load_mupdf_doc(DocState *state);
