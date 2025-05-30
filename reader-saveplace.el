@@ -43,7 +43,7 @@ Advice around `save-place-find-file'. See also `reader--saveplace-to-alist'."
   (if (derived-mode-p 'reader-mode)
       (if-let* ((place (assoc buffer-file-name save-place-alist))
 		(bookmark (aref (cdr place)  0))) ; get back the bookmark
-            (reader-bookmark-jump bookmark))
+          (reader-bookmark-jump bookmark))
     (apply orig-fun args)))
 
 ;;;###autoload

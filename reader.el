@@ -289,9 +289,9 @@ If WINDOW is omitted defaults to current window."
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
-    (or amount (setq amount 1))
-    (let* ((prev-scroll (window-vscroll window))
-	   (vscroll (- prev-scroll amount)))
+  (or amount (setq amount 1))
+  (let* ((prev-scroll (window-vscroll window))
+	 (vscroll (- prev-scroll amount)))
     (- prev-scroll (reader--set-window-vscroll window vscroll))))
 
 (defun reader-scroll-down (&optional amount window)
@@ -332,8 +332,8 @@ Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
-	     (prev-scroll (reader--window-hscroll window))
-	     (hscroll (+ prev-scroll amount)))
+	      (prev-scroll (reader--window-hscroll window))
+	      (hscroll (+ prev-scroll amount)))
     (- (reader--set-window-hscroll window hscroll) prev-scroll)))
 
 (defun reader-scroll-right (&optional amount window)
@@ -345,7 +345,7 @@ Optionally specify the WINDOW, defaults to current window."
   (or amount (setq amount 1))
   (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
 	      (prev-scroll (reader--window-hscroll window))
-	     (hscroll (- prev-scroll amount)))
+	      (hscroll (- prev-scroll amount)))
     (- prev-scroll (reader--set-window-hscroll window hscroll))))
 
 (defun reader-scroll-left-most (&optional window)
@@ -388,9 +388,9 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-    (when (and (= 0 (reader-scroll-down amount window))
-	       (reader-next-page)) ; if succeeds
-      (reader--set-window-vscroll window 0)))
+  (when (and (= 0 (reader-scroll-down amount window))
+	     (reader-next-page)) ; if succeeds
+    (reader--set-window-vscroll window 0)))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
