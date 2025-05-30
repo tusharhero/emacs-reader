@@ -215,6 +215,7 @@ void *async_slide_forward(void *args) {
 
 bool slide_cache_window_backward(DocState *state) {
   int n = --state->current_page_number;
+  int pagecount = state->pagecount;
 
   if (n < 0) {
     fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
@@ -222,17 +223,18 @@ bool slide_cache_window_backward(DocState *state) {
     return false;
   }
 
-  int pagecount = state->pagecount;
+   if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
 
-  if (n - MAX_CACHE_WINDOW >= 0 && n + MAX_CACHE_WINDOW < pagecount) {
-    memmove(&state->cache_window[1], &state->cache_window[0],
-            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+     memmove(&state->cache_window[1], &state->cache_window[0],
+	     sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-    CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
+CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
     state->cache_window[0] = cp;
+
     if (cp->status == PAGE_STATUS_EMPTY) {
       async_render(state, cp);
     }
+
     state->current_window_index = MAX_CACHE_WINDOW;
   } else {
     build_cache_window(state, n);
