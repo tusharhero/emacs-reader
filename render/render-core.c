@@ -22,6 +22,7 @@
 
 int plugin_is_GPL_compatible;
 
+pthread_mutex_t g_slide_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *render_page_thread(void *arg) {
   fz_device *curr_dev = NULL;
