@@ -609,19 +609,20 @@ void build_cache_window(DocState *state, int n) {
 }
 
 bool slide_cache_window_forward(DocState *state) {
+  ++state->current_page_number;
   int n = state->current_page_number;
+
   int pagecount = state->pagecount;
 
-  if (n >= state->pagecount) {
+  if (state->current_page_number + 1 >= state->pagecount) {
     fprintf(stderr,
             "slide_cache_window_right: cannot slide past end (page %d)\n", n);
     return false;
   }
-  n = ++state->current_page_number;
 
-  if (n - MAX_CACHE_WINDOW >= 0 && n + MAX_CACHE_WINDOW < pagecount) {
+  if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
     memmove(&state->cache_window[0], &state->cache_window[1],
-            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+	    sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
     CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
     state->cache_window[MAX_CACHE_SIZE - 1] = cp;
@@ -629,11 +630,12 @@ bool slide_cache_window_forward(DocState *state) {
       async_render(state, cp);
     }
     state->current_window_index = MAX_CACHE_WINDOW;
+    state->current_cached_page = state->cache_window[state->current_window_index];
   } else {
     build_cache_window(state, n);
+    state->current_cached_page = state->cache_window[state->current_window_index];
   }
 
-  state->current_cached_page = state->cache_window[state->current_window_index];
   return true;
 }
 
