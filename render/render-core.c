@@ -201,6 +201,18 @@ sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
   return true;
 }
 
+void *async_slide_forward(void *args) {
+
+  pthread_mutex_lock(&g_slide_mutex);
+
+  DocState *state = args;
+  slide_cache_window_forward(state);
+
+  pthread_mutex_unlock(&g_slide_mutex);
+
+  return NULL;
+}
+
 bool slide_cache_window_backward(DocState *state) {
   int n = --state->current_page_number;
 
