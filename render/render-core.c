@@ -561,17 +561,14 @@ emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   if (state) {
     if (page_number >= 0 && page_number <= (state->pagecount - 1)) {
       state->current_page_number = page_number;
-      if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-        emacs_value current_image_data = svg2elisp_image(
-            env, state, state->current_svg_data, state->current_svg_size);
-        emacs_value overlay_put_args[3] = {current_svg_overlay,
-                                           env->intern(env, "display"),
-                                           current_image_data};
-        env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-      } else {
-        emacs_message(env, "Page cannot be rendered");
-        return EMACS_NIL;
-      }
+      build_cache_window(state, state->current_page_number);
+
+      CachedPage *cp = state->current_cached_page;
+      emacs_value current_image_data =
+          svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+      emacs_value overlay_put_args[3] = {
+          current_svg_overlay, env->intern(env, "display"), current_image_data};
+      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
     } else {
       emacs_message(env, "Provided page number is out of bounds!");
       return EMACS_NIL;
