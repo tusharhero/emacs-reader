@@ -360,6 +360,7 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
+  pthread_t th;
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
@@ -369,21 +370,20 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       return EMACS_NIL;
     }
 
-    if (slide_cache_window_forward(state)) {
-      state->current_page_number++;
-      CachedPage *cp = state->current_cached_page;
+    // Get the pointer for the next CachedPage in the window
+    CachedPage *next_cp = state->cache_window[state->current_window_index + 1];
 
-      emacs_value next_image_data =
-	svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+    emacs_value next_image_data =
+      svg2elisp_image(env, state, next_cp->svg_data, next_cp->svg_size);
 
-      env->funcall(env, env->intern(env, "set"), 2,
-                   (emacs_value[]){env->intern(env, "test-next-image"),
-                                   next_image_data});
+    emacs_value overlay_put_args[3] = {
+        current_svg_overlay, env->intern(env, "display"), next_image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), next_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-    }
+    pthread_create(&th, NULL, async_slide_forward, state);
+    pthread_detach(th);
+
+    return EMACS_T;
   } else {
     return EMACS_NIL;
   }
