@@ -55,53 +55,53 @@ void *render_page_thread(void *arg) {
       curr_buf = fz_new_buffer(ctx, 1024);
       curr_out = fz_new_output_with_buffer(ctx, curr_buf);
       curr_dev =
-          fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
-    }
-    fz_catch(ctx) {
-      fprintf(stderr, "Failed to create resources for current page: %s\n",
-              fz_caught_message(ctx));
-      if (curr_dev)
-        fz_drop_device(ctx, curr_dev);
-      if (curr_out)
-        fz_drop_output(ctx, curr_out);
-      if (curr_buf)
-        fz_drop_buffer(ctx, curr_buf);
-      fz_drop_context(ctx);
-    }
+	fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
+     }
+     fz_catch(ctx) {
+       fprintf(stderr, "Failed to create resources for current page: %s\n",
+	       fz_caught_message(ctx));
+       if (curr_dev)
+	 fz_drop_device(ctx, curr_dev);
+       if (curr_out)
+	 fz_drop_output(ctx, curr_out);
+       if (curr_buf)
+	 fz_drop_buffer(ctx, curr_buf);
+       fz_drop_context(ctx);
+     }
 
-    fz_try(ctx) { fz_run_page(ctx, loaded_page, curr_dev, fz_identity, NULL); }
-    fz_catch(ctx) {
-      fprintf(stderr, "Cannot run page: %s\n", fz_caught_message(ctx));
-      fz_drop_device(ctx, curr_dev);
-      fz_drop_output(ctx, curr_out);
-      fz_drop_buffer(ctx, curr_buf);
-    }
+     fz_try(ctx) { fz_run_page(ctx, loaded_page, curr_dev, fz_identity, NULL); }
+     fz_catch(ctx) {
+       fprintf(stderr, "Cannot run page: %s\n", fz_caught_message(ctx));
+       fz_drop_device(ctx, curr_dev);
+       fz_drop_output(ctx, curr_out);
+       fz_drop_buffer(ctx, curr_buf);
+     }
 
-    fz_try(ctx) {
-      fz_close_device(ctx, curr_dev);
-      fz_drop_device(ctx, curr_dev);
-      curr_dev = NULL;
-      fz_close_output(ctx, curr_out);
-    }
-    fz_catch(ctx) {
-      fprintf(stderr, "Cannot close device: %s\n", fz_caught_message(ctx));
-      fz_drop_device(ctx, curr_dev);
-      fz_drop_output(ctx, curr_out);
-      fz_drop_buffer(ctx, curr_buf);
-    }
+     fz_try(ctx) {
+       fz_close_device(ctx, curr_dev);
+       fz_drop_device(ctx, curr_dev);
+       curr_dev = NULL;
+       fz_close_output(ctx, curr_out);
+     }
+     fz_catch(ctx) {
+       fprintf(stderr, "Cannot close device: %s\n", fz_caught_message(ctx));
+       fz_drop_device(ctx, curr_dev);
+       fz_drop_output(ctx, curr_out);
+       fz_drop_buffer(ctx, curr_buf);
+     }
 
-    cp->svg_size = curr_buf->len;
-    cp->svg_data = (char *)malloc(cp->svg_size + 1);
+     cp->svg_size = curr_buf->len;
+     cp->svg_data = (char *)malloc(cp->svg_size + 1);
 
-    memcpy(cp->svg_data, curr_buf->data, cp->svg_size);
-    cp->svg_data[cp->svg_size] = '\0';
+     memcpy(cp->svg_data, curr_buf->data, cp->svg_size);
+     cp->svg_data[cp->svg_size] = '\0';
 
-    curr_out = NULL;
-    fz_drop_buffer(ctx, curr_buf);
-    curr_buf = NULL;
-    fz_drop_page(ctx, loaded_page);
-  }
-  pthread_mutex_unlock(&cp->mutex);
+     curr_out = NULL;
+     fz_drop_buffer(ctx, curr_buf);
+     curr_buf = NULL;
+     fz_drop_page(ctx, loaded_page);
+   }
+   pthread_mutex_unlock(&cp->mutex);
 
   return NULL;
 }
