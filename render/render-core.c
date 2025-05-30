@@ -473,17 +473,16 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
     state->current_page_number = 0;
 
-    if (render_pages(state, state->current_page_number) == EXIT_SUCCESS) {
-      emacs_value prev_image_data = svg2elisp_image(
-          env, state, state->current_svg_data, state->current_svg_size);
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), prev_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-    } else {
-      emacs_message(env, "Already first page!");
-      return EMACS_NIL;
-    }
-    state->current_page_number = 0;
+    build_cache_window(state, state->current_page_number);
+    CachedPage *first_cp = state->current_cached_page;
+
+    emacs_value first_image_data =
+        svg2elisp_image(env, state, first_cp->svg_data, first_cp->svg_size);
+
+    emacs_value overlay_put_args[3] = {
+        current_svg_overlay, env->intern(env, "display"), first_image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
   } else {
     return EMACS_NIL;
   }
