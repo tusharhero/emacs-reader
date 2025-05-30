@@ -171,9 +171,7 @@ void build_cache_window(DocState *state, int n) {
 }
 
 bool slide_cache_window_forward(DocState *state) {
-  ++state->current_page_number;
-  int n = state->current_page_number;
-
+  int n = ++state->current_page_number;
   int pagecount = state->pagecount;
 
   if (state->current_page_number + 1 >= state->pagecount) {
