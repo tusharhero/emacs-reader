@@ -412,6 +412,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
+  pthread_t th;
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
@@ -421,30 +422,18 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
       return EMACS_NIL;
     }
 
-    if (state->current_page_number < (state->pagecount - 1)) {
-      emacs_value prev_image_data = svg2elisp_image(
-          env, state, state->prev_svg_data, state->prev_svg_size);
+    CachedPage *prev_cp = state->cache_window[state->current_window_index - 1];
 
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), prev_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    emacs_value prev_image_data =
+        svg2elisp_image(env, state, prev_cp->svg_data, prev_cp->svg_size);
 
-      if (state->current_page_number > 0) {
-        render_pages(state, state->prev_page_number);
-        return EMACS_T;
-      } else {
-        emacs_message(env, "Already first page!");
-        return EMACS_NIL;
-      }
-    } else {
-      render_pages(state, (state->pagecount - 2));
-      emacs_value current_image_data = svg2elisp_image(
-          env, state, state->current_svg_data, state->current_svg_size);
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), current_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-      return EMACS_T;
-    }
+    emacs_value overlay_put_args[3] = {
+        current_svg_overlay, env->intern(env, "display"), prev_image_data};
+    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+
+    pthread_create(&th, NULL, async_slide_backward, state);
+    pthread_detach(th);
+
   } else {
     return EMACS_NIL;
   }
