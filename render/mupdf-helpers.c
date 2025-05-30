@@ -63,29 +63,15 @@ int doc_page_length(DocState *state) {
 void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
   *state = (DocState){.ctx = NULL,
-                      .locks = NULL,
+		      .locks = NULL,
                       .doc = NULL,
-
                       .cached_pages_pool = NULL,
                       .cache_window = NULL,
+                      .current_window_index = 0,
                       .current_cached_page = NULL,
-
-                      .path = NULL,
-                      .pagecount = 0,
                       .svg_background = "white",
                       .svg_foreground = "black",
                       .current_page_number = 0,
-                      .next_page_number = 0,
-                      .prev_page_number = 0,
-                      .current_svg_data = NULL,
-                      .current_svg_size = 0,
-                      .next_svg_data = NULL,
-                      .next_svg_size = 0,
-                      .prev_svg_data = NULL,
-                      .prev_svg_size = 0,
-                      .current_page = NULL,
-                      .prev_page = NULL,
-                      .next_page = NULL,
                       .page_bbox =
                           {
                               .x0 = 0.0f,
@@ -114,14 +100,14 @@ void unlock_mutex(void *user, int lock) {
 int init_main_ctx(DocState *state) {
   for (int i = 0; i < FZ_LOCK_MAX; ++i) {
     pthread_mutex_init(&g_mupdf_mutex[i], NULL);
-   }
+  }
   state->locks.user = g_mupdf_mutex;
   state->locks.lock = lock_mutex;
   state->locks.unlock = unlock_mutex;
   state->ctx = fz_new_context(NULL, &state->locks, FZ_STORE_UNLIMITED);
   fz_register_document_handlers(state->ctx);
 
-  if (!state->ctx){
+  if (!state->ctx) {
     fprintf(stderr, "Cannot create MuPDF context\n");
     return EXIT_FAILURE;
   }
