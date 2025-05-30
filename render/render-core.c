@@ -244,6 +244,15 @@ CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
   return true;
 }
 
+void *async_slide_backward(void *args) {
+  pthread_mutex_lock(&g_slide_mutex);
+  DocState *state = args;
+  slide_cache_window_backward(state);
+  pthread_mutex_unlock(&g_slide_mutex);
+
+  return NULL;
+}
+
 /**
  * emacs_load_doc - Load a document from Emacs, initialize state, and render
  * first page.
