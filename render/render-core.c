@@ -122,26 +122,25 @@ int load_page_dl(DocState *state, CachedPage *cp) {
   return EXIT_SUCCESS;
 }
 
-bool async_render(DocState *state, CachedPage *cp) {
-  if (!cp)
-    return false;
-  pthread_t th;
-  pthread_mutex_init(&cp->mutex, NULL);
+void async_render(DocState *state, CachedPage *cp) {
+  /* if (!cp) */
+  /* return false; */
+  /* pthread_t th; */
 
   RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
   render_args->state = state;
   render_args->cp = cp;
 
-  int err = pthread_create(&th, NULL, render_page_thread, render_args);
-  if (err) {
-    fprintf(stderr, "Failed to create render thread: %d\n", err);
-    free(render_args);
-    return false;
-  }
-  pthread_join(th, NULL);
+  render_page_thread(render_args);
+  /* int err = pthread_create(&th, NULL, render_page_thread, render_args); */
+  /* if (err) { */
+  /*   fprintf(stderr, "Failed to create render thread: %d\n", err); */
+  /*   free(render_args); */
+  /* return false; */
+  /* } */
+  /* pthread_join(th, NULL); */
 
-  cp->status = PAGE_STATUS_READY;
-  return true;
+  /* return th; */
 }
 
 void build_cache_window(DocState *state, int n) {
