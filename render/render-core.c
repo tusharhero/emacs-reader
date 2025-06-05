@@ -36,7 +36,7 @@ void *render_page_thread(void *arg) {
 
   fz_try(ctx) {
     cp->pixmap = fz_new_pixmap_with_bbox(
-					 ctx, fz_device_rgb(ctx), fz_round_rect(state->page_bbox), NULL, 0);
+        ctx, fz_device_rgb(ctx), fz_round_rect(state->page_bbox), NULL, 0);
     fz_clear_pixmap_with_value(ctx, cp->pixmap, 0xff);
 
     dev = fz_new_draw_device(ctx, fz_identity, cp->pixmap);
@@ -165,6 +165,9 @@ void build_cache_window(DocState *state, int n) {
   state->current_page_number = n;
   state->current_window_index = n - start;
 
+  /* pthread_t threads[MAX_CACHE_WINDOW]; */
+  /* int thread_count = 0; */
+
   for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
     int idx = start + i;
     if (idx < pagecount && idx <= end) {
@@ -172,9 +175,11 @@ void build_cache_window(DocState *state, int n) {
       state->cache_window[i] = cp;
 
       if (cp->status == PAGE_STATUS_EMPTY) {
-        RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
-        render_args->state = state;
-        render_args->cp = cp;
+        load_page_dl(state, cp);
+        /* pthread_t th = async_render(state, cp); */
+        /* if (th != 0) { */
+        /*   threads[thread_count++] = th; */
+        /* } */
         async_render(state, cp);
       }
     } else {
@@ -182,12 +187,21 @@ void build_cache_window(DocState *state, int n) {
     }
   }
 
+  /* for (int j = 0; j < thread_count; j++) { */
+  /*   pthread_join(threads[j], NULL); */
+  /* } */
+
+  /* for (int k = 0; k < thread_count; k++) { */
+  /*   CachedPage *cp = state->cache_window[k]; */
+  /* } */
+
   state->current_cached_page = state->cache_window[state->current_window_index];
 }
 
 bool slide_cache_window_forward(DocState *state) {
   int n = ++state->current_page_number;
   int pagecount = state->pagecount;
+  /* pthread_t th; */
 
   if (state->current_page_number + 1 >= state->pagecount) {
     fprintf(stderr,
@@ -197,12 +211,13 @@ bool slide_cache_window_forward(DocState *state) {
 
   if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
     memmove(&state->cache_window[0], &state->cache_window[1],
-sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-     CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
+    CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
     state->cache_window[MAX_CACHE_SIZE - 1] = cp;
 
     if (cp->status == PAGE_STATUS_EMPTY) {
+      load_page_dl(state, cp);
       async_render(state, cp);
     }
 
@@ -227,15 +242,16 @@ bool slide_cache_window_backward(DocState *state) {
     return false;
   }
 
-   if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
+  if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
 
-     memmove(&state->cache_window[1], &state->cache_window[0],
-	     sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+    memmove(&state->cache_window[1], &state->cache_window[0],
+            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
+    CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
     state->cache_window[0] = cp;
 
     if (cp->status == PAGE_STATUS_EMPTY) {
+      load_page_dl(state, cp);
       async_render(state, cp);
     }
 
@@ -296,7 +312,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     return EMACS_NIL;
   }
 
-  init_main_ctx(state); // Creates mupdf context with locks
+  init_main_ctx(state);  // Creates mupdf context with locks
   load_mupdf_doc(state); // Opens the doc and sets pagecount
 
   state->cached_pages_pool =
@@ -306,6 +322,7 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   for (int i = 0; i < state->pagecount; ++i) {
     state->cached_pages_pool[i] = &block[i];
     state->cached_pages_pool[i]->page_num = i;
+    pthread_mutex_init(&state->cached_pages_pool[i]->mutex, NULL);
   }
 
   build_cache_window(state, state->current_page_number);
@@ -316,8 +333,9 @@ emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
   CachedPage *cp = state->current_cached_page;
+
   emacs_value current_image_data =
-    svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+      svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
 
   // Render the created image on the buffer’s overlay
   emacs_value overlay_put_args[3] = {
@@ -355,7 +373,6 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  pthread_t th;
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
@@ -367,22 +384,22 @@ emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
     // Get the pointer for the next CachedPage in the window
     CachedPage *next_cp = state->cache_window[state->current_window_index + 1];
+    fprintf(stderr, "Loading next page %d\n", next_cp->page_num);
 
     emacs_value next_image_data =
-      svg2elisp_image(env, state, next_cp->svg_data, next_cp->svg_size);
+        svg2elisp_image(env, state, next_cp->svg_data, next_cp->svg_size);
 
     emacs_value overlay_put_args[3] = {
         current_svg_overlay, env->intern(env, "display"), next_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-    pthread_create(&th, NULL, async_slide_forward, state);
-    pthread_detach(th);
-
+    slide_cache_window_forward(state);
     return EMACS_T;
   } else {
     return EMACS_NIL;
   }
 
+  /* sleep(1); */
   return EMACS_T;
 }
 
@@ -407,7 +424,6 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)args;
   (void)data;
 
-  pthread_t th;
   DocState *state = get_doc_state_ptr(env);
   emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
@@ -426,8 +442,7 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
         current_svg_overlay, env->intern(env, "display"), prev_image_data};
     env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-    pthread_create(&th, NULL, async_slide_backward, state);
-    pthread_detach(th);
+    slide_cache_window_backward(state);
 
   } else {
     return EMACS_NIL;

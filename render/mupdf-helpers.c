@@ -18,7 +18,6 @@
 
 #include "mupdf-helpers.h"
 #include "render-core.h"
-#include <stdlib.h>
 
 pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
 
@@ -63,7 +62,7 @@ int doc_page_length(DocState *state) {
 void reset_doc_state(DocState *state) {
   fprintf(stderr, "Freeing the existing DocState\n");
   *state = (DocState){.ctx = NULL,
-		      .locks = NULL,
+                      .locks = NULL,
                       .doc = NULL,
                       .cached_pages_pool = NULL,
                       .cache_window = NULL,
