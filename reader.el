@@ -109,15 +109,25 @@ other file format will simply not show up as a candidate."
   (reader-mode))
 
 (defun reader-next-page ()
+  (interactive)
+  (reader-enqueue-command #'reader--next-page))
+
+(defun reader--next-page ()
   "Go to the next page of the document."
   (interactive)
-  (let ((status (reader-dyn--next-page)))
+  (let* ((status (reader-dyn--next-page))
+	 (img (overlay-get reader-current-svg-overlay 'display)))
     (when status
       (reader-doc-scale-page reader-current-doc-scale-value)
-      (force-mode-line-update t))
+      (force-mode-line-update t)
+      (when img (image-flush img)))
     status))
 
 (defun reader-previous-page ()
+  (interactive)
+  (reader-enqueue-command #'reader--previous-page))
+
+(defun reader--previous-page ()
   "Go to the previous page of the document."
   (interactive)
   (let ((status (reader-dyn--prev-page)))
