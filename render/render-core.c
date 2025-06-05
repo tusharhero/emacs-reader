@@ -94,73 +94,39 @@ void *render_page_thread(void *arg) {
   return NULL;
 }
 
+int load_page_dl(DocState *state, CachedPage *cp) {
+  fz_device *dl_dev = NULL;
+  fz_output *curr_out = NULL;
+  fz_buffer *curr_buf = NULL;
+  fz_page *loaded_page = NULL;
+
+  fz_context *ctx = fz_clone_context(state->ctx);
+
+  clock_t start = clock();
 
   if (cp->status == PAGE_STATUS_EMPTY) {
     cp->status = PAGE_STATUS_RENDERING;
 
-    fz_try(ctx) { loaded_page = fz_load_page(ctx, state->doc, cp->page_num); }
-    fz_catch(ctx) {
-      fprintf(stderr, "Cannot load pages: %s\n", fz_caught_message(state->ctx));
-      fz_drop_context(ctx);
-    }
-
-    state->page_bbox = fz_bound_page(ctx, loaded_page);
-    float page_width = state->page_bbox.x1 - state->page_bbox.x0;
-    float page_height = state->page_bbox.y1 - state->page_bbox.y0;
-
     fz_try(ctx) {
-      curr_buf = fz_new_buffer(ctx, 1024);
-      curr_out = fz_new_output_with_buffer(ctx, curr_buf);
-      curr_dev =
-	fz_new_svg_device(ctx, curr_out, page_width, page_height, 0, 1);
-     }
-     fz_catch(ctx) {
-       fprintf(stderr, "Failed to create resources for current page: %s\n",
-	       fz_caught_message(ctx));
-       if (curr_dev)
-	 fz_drop_device(ctx, curr_dev);
-       if (curr_out)
-	 fz_drop_output(ctx, curr_out);
-       if (curr_buf)
-	 fz_drop_buffer(ctx, curr_buf);
-       fz_drop_context(ctx);
-     }
+      loaded_page = fz_load_page(ctx, state->doc, cp->page_num);
+      state->page_bbox = fz_bound_page(ctx, loaded_page);
 
-     fz_try(ctx) { fz_run_page(ctx, loaded_page, curr_dev, fz_identity, NULL); }
-     fz_catch(ctx) {
-       fprintf(stderr, "Cannot run page: %s\n", fz_caught_message(ctx));
-       fz_drop_device(ctx, curr_dev);
-       fz_drop_output(ctx, curr_out);
-       fz_drop_buffer(ctx, curr_buf);
-     }
+      cp->display_list = fz_new_display_list(ctx, state->page_bbox);
+      dl_dev = fz_new_list_device(ctx, cp->display_list);
+      fz_run_page(ctx, loaded_page, dl_dev, fz_identity, NULL);
+    }
+    fz_always(ctx) {
+      fz_drop_device(state->ctx, dl_dev);
+      fz_drop_page(state->ctx, loaded_page);
+    }
+    fz_catch(ctx) fz_rethrow(ctx);
+  }
 
-     fz_try(ctx) {
-       fz_close_device(ctx, curr_dev);
-       fz_drop_device(ctx, curr_dev);
-       curr_dev = NULL;
-       fz_close_output(ctx, curr_out);
-     }
-     fz_catch(ctx) {
-       fprintf(stderr, "Cannot close device: %s\n", fz_caught_message(ctx));
-       fz_drop_device(ctx, curr_dev);
-       fz_drop_output(ctx, curr_out);
-       fz_drop_buffer(ctx, curr_buf);
-     }
+  clock_t end = clock();
 
-     cp->svg_size = curr_buf->len;
-     cp->svg_data = (char *)malloc(cp->svg_size + 1);
-
-     memcpy(cp->svg_data, curr_buf->data, cp->svg_size);
-     cp->svg_data[cp->svg_size] = '\0';
-
-     curr_out = NULL;
-     fz_drop_buffer(ctx, curr_buf);
-     curr_buf = NULL;
-     fz_drop_page(ctx, loaded_page);
-   }
-   pthread_mutex_unlock(&cp->mutex);
-
-  return NULL;
+  double duration = (double)(end - start) / CLOCKS_PER_SEC;
+  fprintf(stderr, "Took %f to load\n", duration);
+  return EXIT_SUCCESS;
 }
 
 bool async_render(DocState *state, CachedPage *cp) {
