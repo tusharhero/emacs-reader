@@ -66,6 +66,26 @@
   "The current page number of the document."
   (1+ (reader-dyn--current-doc-pagenumber)))
 
+(defvar reader-command-queue nil
+  "Queue of reader commands to be executed sequentially.")
+
+(defun reader-process-command-queue ()
+  "Process the next command in the queue, ensuring UI updates."
+  (when reader-command-queue
+    (let ((cmd (pop reader-command-queue)))
+      (when cmd
+        (funcall cmd)
+        (redisplay)
+        (when reader-command-queue
+          (run-with-idle-timer 0.01 nil #'reader-process-command-queue))))))
+
+(defun reader-enqueue-command (cmd)
+  "Add CMD to the queue and start processing if needed."
+  (push cmd reader-command-queue)
+  (unless (or (active-minibuffer-window)
+              (memq #'reader-process-command-queue post-command-hook))
+    (add-hook 'post-command-hook #'reader-process-command-queue)))
+
 ;;;###autoload
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.
