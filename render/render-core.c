@@ -32,7 +32,6 @@ void *render_page_thread(void *arg) {
   CachedPage *cp = args->cp;
 
   clock_t start = clock();
-  /* pthread_mutex_lock(&cp->mutex); */
   fz_context *ctx = fz_clone_context(state->ctx);
 
   fz_try(ctx) {
@@ -54,7 +53,7 @@ void *render_page_thread(void *arg) {
     out = fz_new_output_with_buffer(ctx, buf);
 
     fz_write_pixmap_as_png(ctx, out, cp->pixmap);
-    /* fz_drop_pixmap(ctx, cp->pixmap); */
+    fz_drop_pixmap(ctx, cp->pixmap);
   }
   fz_catch(ctx) {
     fz_close_output(ctx, out);
@@ -76,7 +75,6 @@ void *render_page_thread(void *arg) {
 
   // Copy the data and null-terminate
   memcpy(cp->svg_data, buf->data, cp->svg_size);
-  /* cp->svg_data[cp->svg_size] = '\0'; */
 
   fz_drop_output(ctx, out);
   fz_drop_buffer(ctx, buf);
@@ -87,15 +85,12 @@ void *render_page_thread(void *arg) {
 
   double duration = (double)(end - start) / CLOCKS_PER_SEC;
   fprintf(stderr, "Took %f to render\n", duration);
-  /* pthread_mutex_unlock(&cp->mutex); */
 
   return NULL;
 }
 
 int load_page_dl(DocState *state, CachedPage *cp) {
   fz_device *dl_dev = NULL;
-  fz_output *curr_out = NULL;
-  fz_buffer *curr_buf = NULL;
   fz_page *loaded_page = NULL;
 
   fz_context *ctx = fz_clone_context(state->ctx);
