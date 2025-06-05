@@ -33,6 +33,8 @@ typedef enum {
 
 typedef struct {
   int page_num;
+  fz_display_list *display_list;
+  fz_pixmap *pixmap;
   char *svg_data;
   size_t svg_size;
   PageStatus status;
