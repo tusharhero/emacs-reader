@@ -25,18 +25,75 @@ int plugin_is_GPL_compatible;
 pthread_mutex_t g_slide_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void *render_page_thread(void *arg) {
-  fz_device *curr_dev = NULL;
-  fz_output *curr_out = NULL;
-  fz_buffer *curr_buf = NULL;
-  fz_page *loaded_page = NULL;
+  fz_output *out = NULL;
+  fz_buffer *buf = NULL;
+  fz_device *dev = NULL;
 
   RenderThreadArgs *args = (RenderThreadArgs *)arg;
   DocState *state = args->state;
   CachedPage *cp = args->cp;
 
+  clock_t start = clock();
+  /* pthread_mutex_lock(&cp->mutex); */
   fz_context *ctx = fz_clone_context(state->ctx);
 
-  pthread_mutex_lock(&cp->mutex);
+  fz_try(ctx) {
+    cp->pixmap = fz_new_pixmap_with_bbox(
+					 ctx, fz_device_rgb(ctx), fz_round_rect(state->page_bbox), NULL, 0);
+    fz_clear_pixmap_with_value(ctx, cp->pixmap, 0xff);
+
+    dev = fz_new_draw_device(ctx, fz_identity, cp->pixmap);
+    fz_run_display_list(ctx, cp->display_list, dev, fz_identity,
+                        state->page_bbox, NULL);
+
+    fz_close_device(ctx, dev);
+  }
+  fz_always(ctx) fz_drop_device(ctx, dev);
+  fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
+
+  fz_try(ctx) {
+    buf = fz_new_buffer(ctx, 1024);
+    out = fz_new_output_with_buffer(ctx, buf);
+
+    fz_write_pixmap_as_png(ctx, out, cp->pixmap);
+    /* fz_drop_pixmap(ctx, cp->pixmap); */
+  }
+  fz_catch(ctx) {
+    fz_close_output(ctx, out);
+    fz_drop_output(ctx, out);
+    fz_drop_buffer(ctx, buf);
+  }
+
+  fz_close_output(ctx, out);
+
+  cp->svg_size = buf->len;
+  cp->svg_data = (char *)malloc(cp->svg_size);
+
+  if (cp->svg_data == NULL) {
+    fprintf(stderr, "Cannot allocate memory for SVG data\n");
+    fz_close_output(ctx, out);
+    fz_drop_buffer(ctx, buf);
+    return NULL;
+  }
+
+  // Copy the data and null-terminate
+  memcpy(cp->svg_data, buf->data, cp->svg_size);
+  /* cp->svg_data[cp->svg_size] = '\0'; */
+
+  fz_drop_output(ctx, out);
+  fz_drop_buffer(ctx, buf);
+  fz_drop_context(ctx);
+
+  cp->status = PAGE_STATUS_READY;
+  clock_t end = clock();
+
+  double duration = (double)(end - start) / CLOCKS_PER_SEC;
+  fprintf(stderr, "Took %f to render\n", duration);
+  /* pthread_mutex_unlock(&cp->mutex); */
+
+  return NULL;
+}
+
 
   if (cp->status == PAGE_STATUS_EMPTY) {
     cp->status = PAGE_STATUS_RENDERING;
