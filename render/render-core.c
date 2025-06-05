@@ -22,8 +22,6 @@
 
 int plugin_is_GPL_compatible;
 
-pthread_mutex_t g_slide_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 void *render_page_thread(void *arg) {
   fz_output *out = NULL;
   fz_buffer *buf = NULL;
@@ -224,21 +222,10 @@ sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
   return true;
 }
 
-void *async_slide_forward(void *args) {
-
-  pthread_mutex_lock(&g_slide_mutex);
-
-  DocState *state = args;
-  slide_cache_window_forward(state);
-
-  pthread_mutex_unlock(&g_slide_mutex);
-
-  return NULL;
-}
-
 bool slide_cache_window_backward(DocState *state) {
   int n = --state->current_page_number;
   int pagecount = state->pagecount;
+  /* pthread_t th; */
 
   if (n < 0) {
     fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
@@ -265,15 +252,6 @@ CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
 
   state->current_cached_page = state->cache_window[state->current_window_index];
   return true;
-}
-
-void *async_slide_backward(void *args) {
-  pthread_mutex_lock(&g_slide_mutex);
-  DocState *state = args;
-  slide_cache_window_backward(state);
-  pthread_mutex_unlock(&g_slide_mutex);
-
-  return NULL;
 }
 
 /**
