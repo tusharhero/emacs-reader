@@ -22,7 +22,40 @@
 
 int plugin_is_GPL_compatible;
 
-void *render_page_thread(void *arg) {
+int load_page_dl(DocState *state, CachedPage *cp) {
+  fz_device *dl_dev = NULL;
+  fz_page *loaded_page = NULL;
+
+  fz_context *ctx = fz_clone_context(state->ctx);
+
+  clock_t start = clock();
+
+  if (cp->status == PAGE_STATUS_EMPTY) {
+    cp->status = PAGE_STATUS_RENDERING;
+
+    fz_try(ctx) {
+      loaded_page = fz_load_page(ctx, state->doc, cp->page_num);
+      state->page_bbox = fz_bound_page(ctx, loaded_page);
+
+      cp->display_list = fz_new_display_list(ctx, state->page_bbox);
+      dl_dev = fz_new_list_device(ctx, cp->display_list);
+      fz_run_page(ctx, loaded_page, dl_dev, fz_identity, NULL);
+    }
+    fz_always(ctx) {
+      fz_drop_device(state->ctx, dl_dev);
+      fz_drop_page(state->ctx, loaded_page);
+    }
+    fz_catch(ctx) fz_rethrow(ctx);
+  }
+
+  clock_t end = clock();
+
+  double duration = (double)(end - start) / CLOCKS_PER_SEC;
+  fprintf(stderr, "Took %f to load\n", duration);
+  return EXIT_SUCCESS;
+}
+
+void *draw_page_thread(void *arg) {
   fz_output *out = NULL;
   fz_buffer *buf = NULL;
   fz_device *dev = NULL;
@@ -89,39 +122,6 @@ void *render_page_thread(void *arg) {
   return NULL;
 }
 
-int load_page_dl(DocState *state, CachedPage *cp) {
-  fz_device *dl_dev = NULL;
-  fz_page *loaded_page = NULL;
-
-  fz_context *ctx = fz_clone_context(state->ctx);
-
-  clock_t start = clock();
-
-  if (cp->status == PAGE_STATUS_EMPTY) {
-    cp->status = PAGE_STATUS_RENDERING;
-
-    fz_try(ctx) {
-      loaded_page = fz_load_page(ctx, state->doc, cp->page_num);
-      state->page_bbox = fz_bound_page(ctx, loaded_page);
-
-      cp->display_list = fz_new_display_list(ctx, state->page_bbox);
-      dl_dev = fz_new_list_device(ctx, cp->display_list);
-      fz_run_page(ctx, loaded_page, dl_dev, fz_identity, NULL);
-    }
-    fz_always(ctx) {
-      fz_drop_device(state->ctx, dl_dev);
-      fz_drop_page(state->ctx, loaded_page);
-    }
-    fz_catch(ctx) fz_rethrow(ctx);
-  }
-
-  clock_t end = clock();
-
-  double duration = (double)(end - start) / CLOCKS_PER_SEC;
-  fprintf(stderr, "Took %f to load\n", duration);
-  return EXIT_SUCCESS;
-}
-
 void async_render(DocState *state, CachedPage *cp) {
   /* if (!cp) */
   /* return false; */
@@ -131,7 +131,7 @@ void async_render(DocState *state, CachedPage *cp) {
   render_args->state = state;
   render_args->cp = cp;
 
-  render_page_thread(render_args);
+  draw_page_thread(render_args);
   /* int err = pthread_create(&th, NULL, render_page_thread, render_args); */
   /* if (err) { */
   /*   fprintf(stderr, "Failed to create render thread: %d\n", err); */
