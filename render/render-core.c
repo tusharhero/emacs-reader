@@ -425,40 +425,51 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * Return: Elisp `t` on completion.
  */
 
-emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data) {
-  (void)nargs;
-  (void)args;
-  (void)data;
+emacs_value
+emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
 
-  DocState *state = get_doc_state_ptr(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state) {
-    if (state->current_page_number == (state->pagecount - 1)) {
-      emacs_message(env, "Already last page!");
-      return EMACS_NIL;
-    }
+	if (state)
+	{
+		if (state->current_page_number == (state->pagecount - 1))
+		{
+			emacs_message(env, "Already last page!");
+			return EMACS_NIL;
+		}
 
-    // Get the pointer for the next CachedPage in the window
-    CachedPage *next_cp = state->cache_window[state->current_window_index + 1];
-    fprintf(stderr, "Loading next page %d\n", next_cp->page_num);
+		// Get the pointer for the next CachedPage in the window
+		CachedPage *next_cp
+		    = state->cache_window[state->current_window_index + 1];
+		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		draw_args->state = state;
+		draw_args->cp = next_cp;
+		draw_page_thread(draw_args);
 
-    emacs_value next_image_data =
-        svg2elisp_image(env, state, next_cp->svg_data, next_cp->svg_size);
+		emacs_value next_image_data = png2elisp_image(
+		    env, state, next_cp->svg_data, next_cp->svg_size);
 
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), next_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+		emacs_value overlay_put_args[3]
+		    = { current_svg_overlay, env->intern(env, "display"),
+			next_image_data };
+		env->funcall(env, env->intern(env, "overlay-put"), 3,
+			     overlay_put_args);
 
-    slide_cache_window_forward(state);
-    return EMACS_T;
-  } else {
-    return EMACS_NIL;
-  }
+		slide_cache_window_forward(state);
+		return EMACS_T;
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 
-  /* sleep(1); */
-  return EMACS_T;
+	/* sleep(1); */
+	return EMACS_T;
 }
 
 /**
