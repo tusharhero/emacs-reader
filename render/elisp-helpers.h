@@ -33,7 +33,7 @@ void register_module_func(
     emacs_value (*module_func)(emacs_env *env, ptrdiff_t nargs,
                                emacs_value *args, void *data),
     char *symbol, int min_args, int max_args, char *docstring);
-emacs_value png2elisp_image(emacs_env *env, DocState *state, char *svg_data,
+emacs_value data2elisp_image(emacs_env *env, DocState *state, char *svg_data,
                             size_t svg_size);
 
 DocState *get_doc_state_ptr(emacs_env *env);
@@ -45,5 +45,8 @@ void init_overlay(emacs_env *env);
 emacs_value get_current_svg_overlay(emacs_env *env);
 void emacs_message(emacs_env *env, char *str);
 void permanent_buffer_local_var(emacs_env *env, char *symbol);
+void
+display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
+		       size_t img_size, emacs_value buffer_overlay);
 
 #endif
