@@ -22,246 +22,296 @@
 
 int plugin_is_GPL_compatible;
 
-int load_page_dl(DocState *state, CachedPage *cp) {
-  fz_device *dl_dev = NULL;
-  fz_page *loaded_page = NULL;
+int
+load_page_dl(DocState *state, CachedPage *cp)
+{
+	fz_device *dl_dev = NULL;
+	fz_page *loaded_page = NULL;
 
-  fz_context *ctx = fz_clone_context(state->ctx);
+	fz_context *ctx = fz_clone_context(state->ctx);
 
-  clock_t start = clock();
+	clock_t start = clock();
 
-  if (cp->status == PAGE_STATUS_EMPTY) {
-    cp->status = PAGE_STATUS_RENDERING;
+	if (cp->status == PAGE_STATUS_EMPTY)
+	{
+		cp->status = PAGE_STATUS_RENDERING;
 
-    fz_try(ctx) {
-      loaded_page = fz_load_page(ctx, state->doc, cp->page_num);
-      state->page_bbox = fz_bound_page(ctx, loaded_page);
+		fz_try(ctx)
+		{
+			loaded_page
+			    = fz_load_page(ctx, state->doc, cp->page_num);
+			state->page_bbox = fz_bound_page(ctx, loaded_page);
+			cp->display_list = fz_new_display_list_from_page(
+			    state->ctx, loaded_page);
+		}
+		fz_always(ctx)
+		{
+			fz_drop_page(state->ctx, loaded_page);
+		}
+		fz_catch(ctx) fz_rethrow(ctx);
+	}
 
-      cp->display_list = fz_new_display_list(ctx, state->page_bbox);
-      dl_dev = fz_new_list_device(ctx, cp->display_list);
-      fz_run_page(ctx, loaded_page, dl_dev, fz_identity, NULL);
-    }
-    fz_always(ctx) {
-      fz_drop_device(state->ctx, dl_dev);
-      fz_drop_page(state->ctx, loaded_page);
-    }
-    fz_catch(ctx) fz_rethrow(ctx);
-  }
+	clock_t end = clock();
 
-  clock_t end = clock();
-
-  double duration = (double)(end - start) / CLOCKS_PER_SEC;
-  fprintf(stderr, "Took %f to load\n", duration);
-  return EXIT_SUCCESS;
+	double duration = (double)(end - start) / CLOCKS_PER_SEC;
+	fprintf(stderr, "Took %f to load\n", duration);
+	return EXIT_SUCCESS;
 }
 
-void *draw_page_thread(void *arg) {
-  fz_output *out = NULL;
-  fz_buffer *buf = NULL;
-  fz_device *dev = NULL;
+void *
+draw_page_thread(void *arg)
+{
+	fz_output *out = NULL;
+	fz_buffer *buf = NULL;
+	fz_device *dev = NULL;
+	fz_rect bounds;
+	fz_irect ibounds;
+	fz_matrix ctm;
 
-  RenderThreadArgs *args = (RenderThreadArgs *)arg;
-  DocState *state = args->state;
-  CachedPage *cp = args->cp;
+	RenderThreadArgs *args = (RenderThreadArgs *)arg;
+	DocState *state = args->state;
+	CachedPage *cp = args->cp;
 
-  clock_t start = clock();
-  fz_context *ctx = fz_clone_context(state->ctx);
+	clock_t start = clock();
+	fz_context *ctx = fz_clone_context(state->ctx);
 
-  fz_try(ctx) {
-    cp->pixmap = fz_new_pixmap_with_bbox(
-        ctx, fz_device_rgb(ctx), fz_round_rect(state->page_bbox), NULL, 0);
-    fz_clear_pixmap_with_value(ctx, cp->pixmap, 0xff);
+	ctm = fz_transform_page(state->page_bbox, state->resolution,
+				state->rotate);
+	bounds = fz_transform_rect(state->page_bbox, ctm);
+	ibounds = fz_round_rect(bounds);
+	bounds = fz_rect_from_irect(ibounds);
 
-    dev = fz_new_draw_device(ctx, fz_identity, cp->pixmap);
-    fz_run_display_list(ctx, cp->display_list, dev, fz_identity,
-                        state->page_bbox, NULL);
+	cp->imgh = 0;
+	cp->imgw = 0;
 
-    fz_close_device(ctx, dev);
-  }
-  fz_always(ctx) fz_drop_device(ctx, dev);
-  fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
+	fz_try(ctx)
+	{
+		cp->pixmap = fz_new_pixmap_from_display_list(
+		    ctx, cp->display_list, ctm, fz_device_rgb(ctx), 0);
+		cp->imgh = fz_pixmap_height(ctx, cp->pixmap);
+		cp->imgw = fz_pixmap_width(ctx, cp->pixmap);
+	}
+	fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
 
-  fz_try(ctx) {
-    buf = fz_new_buffer(ctx, 1024);
-    out = fz_new_output_with_buffer(ctx, buf);
+	fz_try(ctx)
+	{
+		buf = fz_new_buffer(ctx, 1024);
+		out = fz_new_output_with_buffer(ctx, buf);
+		fz_write_pixmap_as_png(ctx, out, cp->pixmap);
+		fz_drop_pixmap(ctx, cp->pixmap);
+	}
+	fz_catch(ctx)
+	{
+		fz_close_output(ctx, out);
+		fz_drop_output(ctx, out);
+		fz_drop_buffer(ctx, buf);
+	}
 
-    fz_write_pixmap_as_png(ctx, out, cp->pixmap);
-    fz_drop_pixmap(ctx, cp->pixmap);
-  }
-  fz_catch(ctx) {
-    fz_close_output(ctx, out);
-    fz_drop_output(ctx, out);
-    fz_drop_buffer(ctx, buf);
-  }
+	fz_close_output(ctx, out);
 
-  fz_close_output(ctx, out);
+	cp->svg_size = buf->len;
+	cp->svg_data = (char *)malloc(cp->svg_size);
 
-  cp->svg_size = buf->len;
-  cp->svg_data = (char *)malloc(cp->svg_size);
+	if (cp->svg_data == NULL)
+	{
+		fprintf(stderr, "Cannot allocate memory for SVG data\n");
+		fz_close_output(ctx, out);
+		fz_drop_buffer(ctx, buf);
+		return NULL;
+	}
 
-  if (cp->svg_data == NULL) {
-    fprintf(stderr, "Cannot allocate memory for SVG data\n");
-    fz_close_output(ctx, out);
-    fz_drop_buffer(ctx, buf);
-    return NULL;
-  }
+	// Copy the data and null-terminate
+	memcpy(cp->svg_data, buf->data, cp->svg_size);
 
-  // Copy the data and null-terminate
-  memcpy(cp->svg_data, buf->data, cp->svg_size);
+	fz_drop_output(ctx, out);
+	fz_drop_buffer(ctx, buf);
+	fz_drop_context(ctx);
 
-  fz_drop_output(ctx, out);
-  fz_drop_buffer(ctx, buf);
-  fz_drop_context(ctx);
+	cp->status = PAGE_STATUS_READY;
+	clock_t end = clock();
 
-  cp->status = PAGE_STATUS_READY;
-  clock_t end = clock();
+	double duration = (double)(end - start) / CLOCKS_PER_SEC;
+	fprintf(stderr, "Took %f to render\n", duration);
 
-  double duration = (double)(end - start) / CLOCKS_PER_SEC;
-  fprintf(stderr, "Took %f to render\n", duration);
-
-  return NULL;
+	return NULL;
 }
 
-void async_render(DocState *state, CachedPage *cp) {
-  /* if (!cp) */
-  /* return false; */
-  /* pthread_t th; */
+void
+async_render(DocState *state, CachedPage *cp)
+{
+	/* if (!cp) */
+	/* return false; */
+	/* pthread_t th; */
 
-  RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
-  render_args->state = state;
-  render_args->cp = cp;
+	RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
+	render_args->state = state;
+	render_args->cp = cp;
 
-  draw_page_thread(render_args);
-  /* int err = pthread_create(&th, NULL, render_page_thread, render_args); */
-  /* if (err) { */
-  /*   fprintf(stderr, "Failed to create render thread: %d\n", err); */
-  /*   free(render_args); */
-  /* return false; */
-  /* } */
-  /* pthread_join(th, NULL); */
+	draw_page_thread(render_args);
+	/* int err = pthread_create(&th, NULL, render_page_thread, render_args);
+	 */
+	/* if (err) { */
+	/*   fprintf(stderr, "Failed to create render thread: %d\n", err); */
+	/*   free(render_args); */
+	/* return false; */
+	/* } */
+	/* pthread_join(th, NULL); */
 
-  /* return th; */
+	/* return th; */
 }
 
-void build_cache_window(DocState *state, int n) {
-  int start, end;
-  int pagecount = state->pagecount;
+void
+build_cache_window(DocState *state, int n)
+{
+	int start, end;
+	int pagecount = state->pagecount;
 
-  if (n < MAX_CACHE_WINDOW) {
-    start = 0;
-    end = n + MAX_CACHE_WINDOW;
-    if (end >= pagecount)
-      end = pagecount - 1;
-  } else if (n > (pagecount - 1) - MAX_CACHE_WINDOW) {
-    end = pagecount - 1;
-    start = n - MAX_CACHE_WINDOW;
-    if (start < 0)
-      start = 0;
-  } else {
-    start = n - MAX_CACHE_WINDOW;
-    end = n + MAX_CACHE_WINDOW;
-  }
+	if (n < MAX_CACHE_WINDOW)
+	{
+		start = 0;
+		end = n + MAX_CACHE_WINDOW;
+		if (end >= pagecount)
+			end = pagecount - 1;
+	}
+	else if (n > (pagecount - 1) - MAX_CACHE_WINDOW)
+	{
+		end = pagecount - 1;
+		start = n - MAX_CACHE_WINDOW;
+		if (start < 0)
+			start = 0;
+	}
+	else
+	{
+		start = n - MAX_CACHE_WINDOW;
+		end = n + MAX_CACHE_WINDOW;
+	}
 
-  state->current_page_number = n;
-  state->current_window_index = n - start;
+	state->current_page_number = n;
+	state->current_window_index = n - start;
 
-  /* pthread_t threads[MAX_CACHE_WINDOW]; */
-  /* int thread_count = 0; */
+	/* pthread_t threads[MAX_CACHE_WINDOW]; */
+	/* int thread_count = 0; */
 
-  for (int i = 0; i < MAX_CACHE_SIZE; ++i) {
-    int idx = start + i;
-    if (idx < pagecount && idx <= end) {
-      CachedPage *cp = state->cached_pages_pool[idx];
-      state->cache_window[i] = cp;
+	for (int i = 0; i < MAX_CACHE_SIZE; ++i)
+	{
+		int idx = start + i;
+		if (idx < pagecount && idx <= end)
+		{
+			CachedPage *cp = state->cached_pages_pool[idx];
+			state->cache_window[i] = cp;
 
-      if (cp->status == PAGE_STATUS_EMPTY) {
-        load_page_dl(state, cp);
-        /* pthread_t th = async_render(state, cp); */
-        /* if (th != 0) { */
-        /*   threads[thread_count++] = th; */
-        /* } */
-        async_render(state, cp);
-      }
-    } else {
-      state->cache_window[i] = NULL;
-    }
-  }
+			if (cp->status == PAGE_STATUS_EMPTY)
+			{
+				load_page_dl(state, cp);
+				/* pthread_t th = async_render(state, cp); */
+				/* if (th != 0) { */
+				/*   threads[thread_count++] = th; */
+				/* } */
+				async_render(state, cp);
+			}
+		}
+		else
+		{
+			state->cache_window[i] = NULL;
+		}
+	}
 
-  /* for (int j = 0; j < thread_count; j++) { */
-  /*   pthread_join(threads[j], NULL); */
-  /* } */
+	/* for (int j = 0; j < thread_count; j++) { */
+	/*   pthread_join(threads[j], NULL); */
+	/* } */
 
-  /* for (int k = 0; k < thread_count; k++) { */
-  /*   CachedPage *cp = state->cache_window[k]; */
-  /* } */
+	/* for (int k = 0; k < thread_count; k++) { */
+	/*   CachedPage *cp = state->cache_window[k]; */
+	/* } */
 
-  state->current_cached_page = state->cache_window[state->current_window_index];
+	state->current_cached_page
+	    = state->cache_window[state->current_window_index];
 }
 
-bool slide_cache_window_forward(DocState *state) {
-  int n = ++state->current_page_number;
-  int pagecount = state->pagecount;
-  /* pthread_t th; */
+bool
+slide_cache_window_forward(DocState *state)
+{
+	int n = ++state->current_page_number;
+	int pagecount = state->pagecount;
+	/* pthread_t th; */
 
-  if (state->current_page_number + 1 >= state->pagecount) {
-    fprintf(stderr,
-            "slide_cache_window_right: cannot slide past end (page %d)\n", n);
-    return false;
-  }
+	if (state->current_page_number + 1 >= state->pagecount)
+	{
+		fprintf(stderr,
+			"slide_cache_window_right: cannot slide past end (page "
+			"%d)\n",
+			n);
+		return false;
+	}
 
-  if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
-    memmove(&state->cache_window[0], &state->cache_window[1],
-            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
+	{
+		memmove(&state->cache_window[0], &state->cache_window[1],
+			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-    CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
-    state->cache_window[MAX_CACHE_SIZE - 1] = cp;
+		CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
+		state->cache_window[MAX_CACHE_SIZE - 1] = cp;
 
-    if (cp->status == PAGE_STATUS_EMPTY) {
-      load_page_dl(state, cp);
-      async_render(state, cp);
-    }
+		if (cp->status == PAGE_STATUS_EMPTY)
+		{
+			load_page_dl(state, cp);
+			async_render(state, cp);
+		}
 
-    state->current_window_index = MAX_CACHE_WINDOW;
-  } else {
-    build_cache_window(state, n);
-  }
+		state->current_window_index = MAX_CACHE_WINDOW;
+	}
+	else
+	{
+		build_cache_window(state, n);
+	}
 
-  state->current_cached_page = state->cache_window[state->current_window_index];
+	state->current_cached_page
+	    = state->cache_window[state->current_window_index];
 
-  return true;
+	return true;
 }
 
-bool slide_cache_window_backward(DocState *state) {
-  int n = --state->current_page_number;
-  int pagecount = state->pagecount;
-  /* pthread_t th; */
+bool
+slide_cache_window_backward(DocState *state)
+{
+	int n = --state->current_page_number;
+	int pagecount = state->pagecount;
+	/* pthread_t th; */
 
-  if (n < 0) {
-    fprintf(stderr, "slide_window_left: cannot slide past start (page %d)\n",
-            state->current_page_number);
-    return false;
-  }
+	if (n < 0)
+	{
+		fprintf(
+		    stderr,
+		    "slide_window_left: cannot slide past start (page %d)\n",
+		    state->current_page_number);
+		return false;
+	}
 
-  if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount) {
+	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
+	{
 
-    memmove(&state->cache_window[1], &state->cache_window[0],
-            sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+		memmove(&state->cache_window[1], &state->cache_window[0],
+			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-    CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
-    state->cache_window[0] = cp;
+		CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
+		state->cache_window[0] = cp;
 
-    if (cp->status == PAGE_STATUS_EMPTY) {
-      load_page_dl(state, cp);
-      async_render(state, cp);
-    }
+		if (cp->status == PAGE_STATUS_EMPTY)
+		{
+			load_page_dl(state, cp);
+			async_render(state, cp);
+		}
 
-    state->current_window_index = MAX_CACHE_WINDOW;
-  } else {
-    build_cache_window(state, n);
-  }
+		state->current_window_index = MAX_CACHE_WINDOW;
+	}
+	else
+	{
+		build_cache_window(state, n);
+	}
 
-  state->current_cached_page = state->cache_window[state->current_window_index];
-  return true;
+	state->current_cached_page
+	    = state->cache_window[state->current_window_index];
+	return true;
 }
 
 /**
