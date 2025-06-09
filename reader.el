@@ -118,9 +118,7 @@ other file format will simply not show up as a candidate."
   (let* ((status (reader-dyn--next-page))
 	 (img (overlay-get reader-current-svg-overlay 'display)))
     (when status
-      (reader-doc-scale-page reader-current-doc-scale-value)
-      (force-mode-line-update t)
-      (when img (image-flush img)))
+      (force-mode-line-update t))
     status))
 
 (defun reader-previous-page ()
@@ -132,7 +130,6 @@ other file format will simply not show up as a candidate."
   (interactive)
   (let ((status (reader-dyn--prev-page)))
     (when status
-      (reader-doc-scale-page reader-current-doc-scale-value)
       (force-mode-line-update t))
     status))
 
@@ -140,7 +137,6 @@ other file format will simply not show up as a candidate."
   "Go to the first page of the document."
   (interactive)
   (reader-dyn--first-page)
-  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -148,7 +144,6 @@ other file format will simply not show up as a candidate."
   "Go to the last page of the document."
   (interactive)
   (reader-dyn--last-page)
-  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page)
   (force-mode-line-update t))
 
@@ -156,7 +151,6 @@ other file format will simply not show up as a candidate."
   "Go to page number N in the current document."
   (interactive "nGoto page: ")
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
-  (reader-doc-scale-page reader-current-doc-scale-value)
   (reader--center-page))
 
 (defun reader--get-current-doc-image-size ()
