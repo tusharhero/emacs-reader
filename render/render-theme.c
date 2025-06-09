@@ -41,7 +41,7 @@ emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
     CachedPage *cp = state->current_cached_page;
     emacs_value current_image_data =
-        svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+        png2elisp_image(env, state, cp->svg_data, cp->svg_size);
 
     // Render the themed page on the buffer’s overlay
     emacs_value current_svg_overlay = get_current_svg_overlay(env);
