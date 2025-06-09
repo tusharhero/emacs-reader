@@ -31,29 +31,32 @@
  * @Return: true on success, false on error
  */
 
-bool elisp_2_c_str(emacs_env *env, emacs_value value, char **buffer,
-                   size_t *size) {
-  ptrdiff_t buffer_size;
-  if (!env->copy_string_contents(env, value, NULL, &buffer_size))
-    return false;
-  assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
-  assert(buffer_size > 0);
-  *buffer = malloc((size_t)buffer_size);
-  if (*buffer == NULL) {
-    env->non_local_exit_signal(env, env->intern(env, "memory-full"),
-                               env->intern(env, "nil"));
-    return false;
-  }
-  ptrdiff_t old_buffer_size = buffer_size;
-  if (!env->copy_string_contents(env, value, *buffer, &buffer_size)) {
-    free(*buffer);
-    *buffer = NULL;
-    return false;
-  }
-  assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
-  assert(buffer_size == old_buffer_size);
-  *size = (size_t)(buffer_size - 1);
-  return true;
+bool
+elisp_2_c_str(emacs_env *env, emacs_value value, char **buffer, size_t *size)
+{
+	ptrdiff_t buffer_size;
+	if (!env->copy_string_contents(env, value, NULL, &buffer_size))
+		return false;
+	assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
+	assert(buffer_size > 0);
+	*buffer = malloc((size_t)buffer_size);
+	if (*buffer == NULL)
+	{
+		env->non_local_exit_signal(env, env->intern(env, "memory-full"),
+					   env->intern(env, "nil"));
+		return false;
+	}
+	ptrdiff_t old_buffer_size = buffer_size;
+	if (!env->copy_string_contents(env, value, *buffer, &buffer_size))
+	{
+		free(*buffer);
+		*buffer = NULL;
+		return false;
+	}
+	assert(env->non_local_exit_check(env) == emacs_funcall_exit_return);
+	assert(buffer_size == old_buffer_size);
+	*size = (size_t)(buffer_size - 1);
+	return true;
 }
 
 /**
@@ -69,12 +72,14 @@ bool elisp_2_c_str(emacs_env *env, emacs_value value, char **buffer,
  * (provide 'feature)
  */
 
-void provide(emacs_env *env, const char *value) {
-  emacs_value Qvalue = env->intern(env, value);
-  emacs_value Qprovide = env->intern(env, "provide");
-  emacs_value args[] = {Qvalue};
+void
+provide(emacs_env *env, const char *value)
+{
+	emacs_value Qvalue = env->intern(env, value);
+	emacs_value Qprovide = env->intern(env, "provide");
+	emacs_value args[] = { Qvalue };
 
-  env->funcall(env, Qprovide, 1, args);
+	env->funcall(env, Qprovide, 1, args);
 }
 
 /**
@@ -100,18 +105,19 @@ registered.
  * Returns: nothing
  */
 
-void register_module_func(
-    emacs_env *env,
-    emacs_value (*module_func)(emacs_env *env, ptrdiff_t nargs,
-                               emacs_value *args, void *data),
-    char *symbol, int min_args, int max_args, char *docstring) {
+void
+register_module_func(emacs_env *env,
+		     emacs_value (*module_func)(emacs_env *env, ptrdiff_t nargs,
+						emacs_value *args, void *data),
+		     char *symbol, int min_args, int max_args, char *docstring)
+{
 
-  emacs_value elisp_func_symbol = env->intern(env, symbol);
-  emacs_value elisp_func =
-      env->make_function(env, min_args, max_args, module_func, docstring, NULL);
+	emacs_value elisp_func_symbol = env->intern(env, symbol);
+	emacs_value elisp_func = env->make_function(
+	    env, min_args, max_args, module_func, docstring, NULL);
 
-  emacs_value elisp_func_args[2] = {elisp_func_symbol, elisp_func};
-  env->funcall(env, env->intern(env, "fset"), 2, elisp_func_args);
+	emacs_value elisp_func_args[2] = { elisp_func_symbol, elisp_func };
+	env->funcall(env, env->intern(env, "fset"), 2, elisp_func_args);
 }
 
 /**
@@ -173,13 +179,15 @@ png2elisp_image(emacs_env *env, DocState *state, char *svg_data,
  * Return: A pointer to the current `DocState`.
  */
 
-DocState *get_doc_state_ptr(emacs_env *env) {
-  emacs_value ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
-  emacs_value ptr =
-      env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
-  DocState *state = env->get_user_ptr(env, ptr);
+DocState *
+get_doc_state_ptr(emacs_env *env)
+{
+	emacs_value ptr_sym = env->intern(env, "reader-current-doc-state-ptr");
+	emacs_value ptr
+	    = env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
+	DocState *state = env->get_user_ptr(env, ptr);
 
-  return state;
+	return state;
 }
 
 /**
@@ -196,20 +204,25 @@ DocState *get_doc_state_ptr(emacs_env *env) {
  * Return: An Elisp integer representing the current page number.
  */
 
-emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
-                                    emacs_value *args, void *data) {
-  (void)nargs;
-  (void)data;
-  (void)args;
+emacs_value
+get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+			void *data)
+{
+	(void)nargs;
+	(void)data;
+	(void)args;
 
-  DocState *state = get_doc_state_ptr(env);
-  if (state) {
-    emacs_value page_number =
-        env->make_integer(env, state->current_page_number);
-    return page_number;
-  } else {
-    return EMACS_NIL;
-  }
+	DocState *state = get_doc_state_ptr(env);
+	if (state)
+	{
+		emacs_value page_number
+		    = env->make_integer(env, state->current_page_number);
+		return page_number;
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 }
 
 /**
@@ -221,11 +234,14 @@ emacs_value get_current_page_number(emacs_env *env, ptrdiff_t nargs,
  * is up to date.
  */
 
-void set_current_render_status(emacs_env *env) {
-  emacs_value render_status_var =
-      env->intern(env, "reader-current-doc-render-status");
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){render_status_var, env->intern(env, "t")});
+void
+set_current_render_status(emacs_env *env)
+{
+	emacs_value render_status_var
+	    = env->intern(env, "reader-current-doc-render-status");
+	env->funcall(
+	    env, env->intern(env, "set"), 2,
+	    (emacs_value[]){ render_status_var, env->intern(env, "t") });
 }
 
 /**
@@ -238,11 +254,13 @@ void set_current_render_status(emacs_env *env) {
  * inspect how many pages the document has.
  */
 
-void set_current_pagecount(emacs_env *env, DocState *state) {
-  emacs_value pagecount_args[2] = {
-      env->intern(env, "reader-current-doc-pagecount"),
-      env->make_integer(env, state->pagecount)};
-  env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
+void
+set_current_pagecount(emacs_env *env, DocState *state)
+{
+	emacs_value pagecount_args[2]
+	    = { env->intern(env, "reader-current-doc-pagecount"),
+		env->make_integer(env, state->pagecount) };
+	env->funcall(env, env->intern(env, "set"), 2, pagecount_args);
 }
 
 /**
@@ -254,16 +272,21 @@ void set_current_pagecount(emacs_env *env, DocState *state) {
  * object in the Elisp variable `reader-current-svg-overlay` for later use.
  */
 
-void init_overlay(emacs_env *env) {
-  emacs_value start = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
-  emacs_value end = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
-  emacs_value overlay = env->funcall(env, env->intern(env, "make-overlay"), 2,
-                                     (emacs_value[]){start, end});
-  emacs_value current_overlay_sym =
-      env->intern(env, "reader-current-svg-overlay");
+void
+init_overlay(emacs_env *env)
+{
+	emacs_value start
+	    = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
+	emacs_value end
+	    = env->funcall(env, env->intern(env, "point-max"), 0, NULL);
+	emacs_value overlay
+	    = env->funcall(env, env->intern(env, "make-overlay"), 2,
+			   (emacs_value[]){ start, end });
+	emacs_value current_overlay_sym
+	    = env->intern(env, "reader-current-svg-overlay");
 
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){current_overlay_sym, overlay});
+	env->funcall(env, env->intern(env, "set"), 2,
+		     (emacs_value[]){ current_overlay_sym, overlay });
 }
 
 /**
@@ -276,14 +299,16 @@ void init_overlay(emacs_env *env) {
  * Return: The Elisp overlay object, or an unbound value if not set.
  */
 
-emacs_value get_current_svg_overlay(emacs_env *env) {
+emacs_value
+get_current_svg_overlay(emacs_env *env)
+{
 
-  emacs_value current_overlay_sym =
-      env->intern(env, "reader-current-svg-overlay");
-  emacs_value current_overlay = env->funcall(
-      env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
+	emacs_value current_overlay_sym
+	    = env->intern(env, "reader-current-svg-overlay");
+	emacs_value current_overlay = env->funcall(
+	    env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
 
-  return current_overlay;
+	return current_overlay;
 }
 
 /**
@@ -292,9 +317,11 @@ emacs_value get_current_svg_overlay(emacs_env *env) {
  * @str:    Null-terminated C string containing the message.
  */
 
-void emacs_message(emacs_env *env, char *str) {
-  emacs_value el_string = env->make_string(env, str, strlen(str));
-  env->funcall(env, env->intern(env, "message"), 1, &el_string);
+void
+emacs_message(emacs_env *env, char *str)
+{
+	emacs_value el_string = env->make_string(env, str, strlen(str));
+	env->funcall(env, env->intern(env, "message"), 1, &el_string);
 }
 
 /**
@@ -304,14 +331,17 @@ void emacs_message(emacs_env *env, char *str) {
  * @symbol: The symbol of the variable to be set
  */
 
-void permanent_buffer_local_var(emacs_env *env, char *symbol) {
-  emacs_value el_symbol = env->intern(env, symbol);
-  env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
-               &el_symbol);
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){el_symbol, EMACS_NIL});
+void
+permanent_buffer_local_var(emacs_env *env, char *symbol)
+{
+	emacs_value el_symbol = env->intern(env, symbol);
+	env->funcall(env, env->intern(env, "make-variable-buffer-local"), 1,
+		     &el_symbol);
+	env->funcall(env, env->intern(env, "set"), 2,
+		     (emacs_value[]){ el_symbol, EMACS_NIL });
 
-  env->funcall(
-      env, env->intern(env, "put"), 3,
-      (emacs_value[]){el_symbol, env->intern(env, "permanent-local"), EMACS_T});
+	env->funcall(env, env->intern(env, "put"), 3,
+		     (emacs_value[]){ el_symbol,
+				      env->intern(env, "permanent-local"),
+				      EMACS_T });
 }
