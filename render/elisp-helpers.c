@@ -130,32 +130,36 @@ rendered in Emacs with `insert-image' or other means.
 
  */
 
-emacs_value svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
-                            size_t svg_size) {
-  emacs_value image_width = env->make_integer(env, doc_page_width(state));
-  emacs_value image_length = env->make_integer(env, doc_page_length(state));
-  emacs_value image_background = env->make_string(
-      env, state->svg_background, strlen(state->svg_background));
-  emacs_value image_foreground = env->make_string(
-      env, state->svg_foreground, strlen(state->svg_foreground));
+emacs_value
+svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
+		size_t svg_size)
+{
+	emacs_value image_width = env->make_integer(env, doc_page_width(state));
+	emacs_value image_height
+	    = env->make_integer(env, doc_page_height(state));
+	emacs_value image_background = env->make_string(
+	    env, state->svg_background, strlen(state->svg_background));
+	emacs_value image_foreground = env->make_string(
+	    env, state->svg_foreground, strlen(state->svg_foreground));
 
-  emacs_value svg_string = env->make_unibyte_string(env, svg_data, svg_size);
-  emacs_value image_args[11] = {svg_string,
-                                env->intern(env, "png"),
-                                env->intern(env, "t"),
-                                env->intern(env, ":width"),
-                                image_width,
-                                env->intern(env, ":length"),
-                                image_length,
-                                env->intern(env, ":background"),
-                                image_background,
-                                env->intern(env, ":foreground"),
-                                image_foreground};
+	emacs_value svg_string
+	    = env->make_unibyte_string(env, svg_data, svg_size);
+	emacs_value image_args[11] = { svg_string,
+				       env->intern(env, "png"),
+				       env->intern(env, "t"),
+				       env->intern(env, ":width"),
+				       image_width,
+				       env->intern(env, ":height"),
+				       image_height,
+				       env->intern(env, ":background"),
+				       image_background,
+				       env->intern(env, ":foreground"),
+				       image_foreground };
 
-  emacs_value image_data =
-    env->funcall(env, env->intern(env, "create-image"), 11, image_args);
+	emacs_value image_data = env->funcall(
+	    env, env->intern(env, "create-image"), 11, image_args);
 
-  return image_data;
+	return image_data;
 }
 
 /**

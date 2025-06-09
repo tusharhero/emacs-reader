@@ -154,11 +154,11 @@ other file format will simply not show up as a candidate."
   (reader--center-page))
 
 (defun reader--get-current-doc-image-size ()
-  "Get the size of the current page's doc image."
+  "Get the dimensions of the current page's image."
   (let* ((cdr-image (cdr (overlay-get reader-current-svg-overlay 'display)))
 	 (width (plist-get cdr-image :width))
-	 (length (plist-get cdr-image :length)))
-    (cons width length)))
+	 (height (plist-get cdr-image :height)))
+    (cons width height)))
 
 (defun reader-doc-scale-page (factor)
   "Scales the page by a given FACTOR.
