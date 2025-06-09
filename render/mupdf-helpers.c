@@ -25,27 +25,28 @@ pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
  * doc_page_width - Provide integer width of the current document
  * @state: Pointer to DocState
  * Return: Integer width
- * It calculates the width of the mupdf page, has nothing to do with the Emacs
- * image for the document.
  */
 
-int doc_page_width(DocState *state) {
-  int width = (int)(state->page_bbox.x1 - state->page_bbox.x0);
-
-  return width;
+int
+doc_page_width(DocState *state)
+{
+	CachedPage *cp = state->current_cached_page;
+	int width = cp->imgw;
+	return width;
 }
 
 /**
- * doc_page_length - Provide integer length of the current document
+ * doc_page_height - Provide integer height of the current document
  * @state: Pointer to DocState
- * Return: Integer length
- * It calculates the length of the mupdf page, has nothing to do with the Emacs
- * image for the document.
+ * Return: Integer height
  */
 
-int doc_page_length(DocState *state) {
-  int length = (int)(state->page_bbox.y1 - state->page_bbox.y0);
-  return length;
+int
+doc_page_height(DocState *state)
+{
+	CachedPage *cp = state->current_cached_page;
+	int height = cp->imgh;
+	return height;
 }
 
 /**
@@ -59,9 +60,11 @@ int doc_page_length(DocState *state) {
  * state is clean before reuse.
  */
 
-void reset_doc_state(DocState *state) {
-  fprintf(stderr, "Freeing the existing DocState\n");
-  *state = (DocState){.ctx = NULL,
+void
+reset_doc_state(DocState *state)
+{
+	fprintf(stderr, "Freeing the existing DocState\n");
+	*state = (DocState){.ctx = NULL,
                       .locks = NULL,
                       .doc = NULL,
                       .cached_pages_pool = NULL,
