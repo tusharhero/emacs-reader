@@ -654,7 +654,6 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)data;
 	int page_number = env->extract_integer(env, args[0]);
-
 	DocState *state = get_doc_state_ptr(env);
 	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
@@ -712,16 +711,15 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 {
 	(void)nargs;
 	(void)data;
-
-	float scale_factor = env->extract_float(env, args[0]);
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
-	RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
-	draw_args->state = state;
-	draw_args->cp = state->current_cached_page;
-
+	float scale_factor = env->extract_float(env, args[0]);
 	if (state)
 	{
+		emacs_value current_svg_overlay = get_current_svg_overlay(env);
+		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		draw_args->state = state;
+		draw_args->cp = state->current_cached_page;
+
 		double new_res = scale_factor * 72;
 		if (new_res < MINRES)
 		{
@@ -751,6 +749,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	}
 	else
 	{
+	  emacs_message(env, "Not a valid document, or you are not in an Emacs Reader buffer!");
 		return EMACS_NIL;
 	}
 
