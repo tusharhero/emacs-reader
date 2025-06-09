@@ -26,7 +26,6 @@ int plugin_is_GPL_compatible;
 int
 load_page_dl(DocState *state, CachedPage *cp)
 {
-	fz_device *dl_dev = NULL;
 	fz_page *loaded_page = NULL;
 
 	fz_context *ctx = fz_clone_context(state->ctx);
@@ -64,7 +63,6 @@ draw_page_thread(void *arg)
 {
 	fz_output *out = NULL;
 	fz_buffer *buf = NULL;
-	fz_device *dev = NULL;
 	fz_rect bounds;
 	fz_irect ibounds;
 	fz_matrix ctm;
