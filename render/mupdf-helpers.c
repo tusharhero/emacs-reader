@@ -79,56 +79,72 @@ reset_doc_state(DocState *state)
                               .x0 = 0.0f,
                               .y0 = 0.0f,
                           },
-                      .outline = NULL};
+                      .outline = NULL,
+                      .resolution = 72,
+                      .rotate = 0};
 }
 
-void fail(const char *msg) {
-  fprintf(stderr, "%s\n", msg);
-  abort();
+void
+fail(const char *msg)
+{
+	fprintf(stderr, "%s\n", msg);
+	abort();
 }
 
-void lock_mutex(void *user, int lock) {
-  pthread_mutex_t *mutexes = (pthread_mutex_t *)user;
-  if (pthread_mutex_lock(&mutexes[lock]) != 0)
-    fail("pthread_mutex_lock()");
+void
+lock_mutex(void *user, int lock)
+{
+	pthread_mutex_t *mutexes = (pthread_mutex_t *)user;
+	if (pthread_mutex_lock(&mutexes[lock]) != 0)
+		fail("pthread_mutex_lock()");
 }
 
-void unlock_mutex(void *user, int lock) {
-  pthread_mutex_t *mutexes = (pthread_mutex_t *)user;
-  if (pthread_mutex_unlock(&mutexes[lock]) != 0)
-    fail("pthread_mutex_unlock()");
+void
+unlock_mutex(void *user, int lock)
+{
+	pthread_mutex_t *mutexes = (pthread_mutex_t *)user;
+	if (pthread_mutex_unlock(&mutexes[lock]) != 0)
+		fail("pthread_mutex_unlock()");
 }
 
-int init_main_ctx(DocState *state) {
-  for (int i = 0; i < FZ_LOCK_MAX; ++i) {
-    pthread_mutex_init(&g_mupdf_mutex[i], NULL);
-  }
-  state->locks.user = g_mupdf_mutex;
-  state->locks.lock = lock_mutex;
-  state->locks.unlock = unlock_mutex;
-  state->ctx = fz_new_context(NULL, &state->locks, FZ_STORE_UNLIMITED);
-  fz_register_document_handlers(state->ctx);
+int
+init_main_ctx(DocState *state)
+{
+	for (int i = 0; i < FZ_LOCK_MAX; ++i)
+	{
+		pthread_mutex_init(&g_mupdf_mutex[i], NULL);
+	}
+	state->locks.user = g_mupdf_mutex;
+	state->locks.lock = lock_mutex;
+	state->locks.unlock = unlock_mutex;
+	state->ctx = fz_new_context(NULL, &state->locks, FZ_STORE_UNLIMITED);
+	fz_register_document_handlers(state->ctx);
 
-  if (!state->ctx) {
-    fprintf(stderr, "Cannot create MuPDF context\n");
-    return EXIT_FAILURE;
-  }
+	if (!state->ctx)
+	{
+		fprintf(stderr, "Cannot create MuPDF context\n");
+		return EXIT_FAILURE;
+	}
 
-  return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
 
-int load_mupdf_doc(DocState *state) {
+int
+load_mupdf_doc(DocState *state)
+{
 
-  fz_try(state->ctx) {
-    state->doc = fz_open_document(state->ctx, state->path);
-    state->outline = fz_load_outline(state->ctx, state->doc);
-    state->pagecount = fz_count_pages(state->ctx, state->doc);
-  }
-  fz_catch(state->ctx) {
-    fprintf(stderr, "Could not open document\n");
-    fz_drop_context(state->ctx);
-    return EXIT_FAILURE;
-  }
+	fz_try(state->ctx)
+	{
+		state->doc = fz_open_document(state->ctx, state->path);
+		state->outline = fz_load_outline(state->ctx, state->doc);
+		state->pagecount = fz_count_pages(state->ctx, state->doc);
+	}
+	fz_catch(state->ctx)
+	{
+		fprintf(stderr, "Could not open document\n");
+		fz_drop_context(state->ctx);
+		return EXIT_FAILURE;
+	}
 
-  return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

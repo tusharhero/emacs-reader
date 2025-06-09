@@ -22,15 +22,23 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int doc_page_width(DocState *state);
-int doc_page_length(DocState *state);
+int
+doc_page_width(DocState *state);
+int
+doc_page_height(DocState *state);
 
-void fail(const char *msg);
-void lock_mutex(void *user, int lock);
-void unlock_mutex(void *user, int lock);
-int init_main_ctx(DocState *state);
-int load_mupdf_doc(DocState *state);
+void
+fail(const char *msg);
+void
+lock_mutex(void *user, int lock);
+void
+unlock_mutex(void *user, int lock);
+int
+init_main_ctx(DocState *state);
+int
+load_mupdf_doc(DocState *state);
 
-void reset_doc_state(DocState *state);
+void
+reset_doc_state(DocState *state);
 
 #endif
