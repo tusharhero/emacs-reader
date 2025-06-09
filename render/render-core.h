@@ -39,6 +39,7 @@ typedef struct {
   int page_num;
   fz_display_list *display_list;
   fz_pixmap *pixmap;
+  int imgw, imgh;
   char *svg_data;
   size_t svg_size;
   PageStatus status;
@@ -49,12 +50,11 @@ typedef struct {
   fz_context *ctx;
   fz_locks_context locks;
   fz_document *doc;
-
+  float resolution;
   CachedPage **cached_pages_pool;
   CachedPage *cache_window[MAX_CACHE_SIZE];
   int current_window_index;
   CachedPage *current_cached_page;
-
   char *path;
   int pagecount;
   char *svg_background;
@@ -62,6 +62,7 @@ typedef struct {
   int current_page_number;
   fz_rect page_bbox;
   fz_outline *outline;
+  int rotate;
 } DocState;
 
 typedef struct {
