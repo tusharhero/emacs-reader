@@ -487,37 +487,44 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * Return: Elisp `t` if page moved, `nil` if already at first page.
  */
 
-emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data) {
-  (void)nargs;
-  (void)args;
-  (void)data;
+emacs_value
+emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
 
-  DocState *state = get_doc_state_ptr(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state) {
-    if (state->current_page_number == 0) {
-      emacs_message(env, "Already first page!");
-      return EMACS_NIL;
-    }
+	if (state)
+	{
+		if (state->current_page_number == 0)
+		{
+			emacs_message(env, "Already first page!");
+			return EMACS_NIL;
+		}
 
-    CachedPage *prev_cp = state->cache_window[state->current_window_index - 1];
+		CachedPage *prev_cp
+		    = state->cache_window[state->current_window_index - 1];
 
-    emacs_value prev_image_data =
-        svg2elisp_image(env, state, prev_cp->svg_data, prev_cp->svg_size);
+		emacs_value prev_image_data = png2elisp_image(
+		    env, state, prev_cp->svg_data, prev_cp->svg_size);
 
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), prev_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+		emacs_value overlay_put_args[3]
+		    = { current_svg_overlay, env->intern(env, "display"),
+			prev_image_data };
+		env->funcall(env, env->intern(env, "overlay-put"), 3,
+			     overlay_put_args);
 
-    slide_cache_window_backward(state);
+		slide_cache_window_backward(state);
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 
-  } else {
-    return EMACS_NIL;
-  }
-
-  return EMACS_T;
+	return EMACS_T;
 }
 
 /**
@@ -534,39 +541,45 @@ emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * Return: Elisp `t` on success, `nil` if already at the first page.
  */
 
-emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                             void *data) {
-  (void)nargs;
-  (void)args;
-  (void)data;
+emacs_value
+emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
 
-  DocState *state = get_doc_state_ptr(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state) {
+	if (state)
+	{
 
-    if (state->current_page_number == 0) {
-      emacs_message(env, "Already first page!");
-      return EMACS_NIL;
-    }
+		if (state->current_page_number == 0)
+		{
+			emacs_message(env, "Already first page!");
+			return EMACS_NIL;
+		}
 
-    state->current_page_number = 0;
+		state->current_page_number = 0;
 
-    build_cache_window(state, state->current_page_number);
-    CachedPage *first_cp = state->current_cached_page;
+		build_cache_window(state, state->current_page_number);
+		CachedPage *first_cp = state->current_cached_page;
 
-    emacs_value first_image_data =
-        svg2elisp_image(env, state, first_cp->svg_data, first_cp->svg_size);
+		emacs_value first_image_data = png2elisp_image(
+		    env, state, first_cp->svg_data, first_cp->svg_size);
 
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), first_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+		emacs_value overlay_put_args[3]
+		    = { current_svg_overlay, env->intern(env, "display"),
+			first_image_data };
+		env->funcall(env, env->intern(env, "overlay-put"), 3,
+			     overlay_put_args);
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 
-  } else {
-    return EMACS_NIL;
-  }
-
-  return EMACS_T;
+	return EMACS_T;
 }
 
 /**
@@ -583,35 +596,42 @@ emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * Return: Elisp `t` on success, `nil` if already at the last page.
  */
 
-emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data) {
-  (void)nargs;
-  (void)args;
-  (void)data;
+emacs_value
+emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
 
-  DocState *state = get_doc_state_ptr(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state) {
-    if (state->current_page_number == state->pagecount - 1) {
-      emacs_message(env, "Already the last page!");
-      return EMACS_NIL;
-    }
+	if (state)
+	{
+		if (state->current_page_number == state->pagecount - 1)
+		{
+			emacs_message(env, "Already the last page!");
+			return EMACS_NIL;
+		}
 
-    state->current_page_number = state->pagecount - 1;
-    build_cache_window(state, state->current_page_number);
+		state->current_page_number = state->pagecount - 1;
+		build_cache_window(state, state->current_page_number);
 
-    CachedPage *last_cp = state->current_cached_page;
-    emacs_value last_image_data =
-        svg2elisp_image(env, state, last_cp->svg_data, last_cp->svg_size);
-    emacs_value overlay_put_args[3] = {
-        current_svg_overlay, env->intern(env, "display"), last_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-  } else {
-    return EMACS_NIL;
-  }
+		CachedPage *last_cp = state->current_cached_page;
+		emacs_value last_image_data = png2elisp_image(
+		    env, state, last_cp->svg_data, last_cp->svg_size);
+		emacs_value overlay_put_args[3]
+		    = { current_svg_overlay, env->intern(env, "display"),
+			last_image_data };
+		env->funcall(env, env->intern(env, "overlay-put"), 3,
+			     overlay_put_args);
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 
-  return EMACS_T;
+	return EMACS_T;
 }
 
 /**
@@ -628,35 +648,46 @@ emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * Return: Elisp `t` on success or out-of-bounds (always `t`).
  */
 
-emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data) {
-  (void)nargs;
-  (void)data;
-  int page_number = env->extract_integer(env, args[0]);
+emacs_value
+emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)data;
+	int page_number = env->extract_integer(env, args[0]);
 
-  DocState *state = get_doc_state_ptr(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  if (state) {
-    if (page_number >= 0 && page_number <= (state->pagecount - 1)) {
-      state->current_page_number = page_number;
-      build_cache_window(state, state->current_page_number);
+	if (state)
+	{
+		if (page_number >= 0 && page_number <= (state->pagecount - 1))
+		{
+			state->current_page_number = page_number;
+			build_cache_window(state, state->current_page_number);
 
-      CachedPage *cp = state->current_cached_page;
-      emacs_value current_image_data =
-          svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
-      emacs_value overlay_put_args[3] = {
-          current_svg_overlay, env->intern(env, "display"), current_image_data};
-      env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
-    } else {
-      emacs_message(env, "Provided page number is out of bounds!");
-      return EMACS_NIL;
-    }
-  } else {
-    return EMACS_NIL;
-  }
+			CachedPage *cp = state->current_cached_page;
+			emacs_value current_image_data = png2elisp_image(
+			    env, state, cp->svg_data, cp->svg_size);
+			emacs_value overlay_put_args[3]
+			    = { current_svg_overlay,
+				env->intern(env, "display"),
+				current_image_data };
+			env->funcall(env, env->intern(env, "overlay-put"), 3,
+				     overlay_put_args);
+		}
+		else
+		{
+			emacs_message(env,
+				      "Provided page number is out of bounds!");
+			return EMACS_NIL;
+		}
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 
-  return EMACS_T;
+	return EMACS_T;
 }
 
 /**
