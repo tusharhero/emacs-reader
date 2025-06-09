@@ -131,7 +131,7 @@ rendered in Emacs with `insert-image' or other means.
  */
 
 emacs_value
-svg2elisp_image(emacs_env *env, DocState *state, char *svg_data,
+png2elisp_image(emacs_env *env, DocState *state, char *svg_data,
 		size_t svg_size)
 {
 	emacs_value image_width = env->make_integer(env, doc_page_width(state));
