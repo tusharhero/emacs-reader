@@ -151,7 +151,7 @@ png2elisp_image(emacs_env *env, DocState *state, char *svg_data,
 	emacs_value svg_string
 	    = env->make_unibyte_string(env, svg_data, svg_size);
 	emacs_value image_args[11] = { svg_string,
-				       env->intern(env, "png"),
+				       env->intern(env, "pbm"),
 				       env->intern(env, "t"),
 				       env->intern(env, ":width"),
 				       image_width,
@@ -186,7 +186,6 @@ get_doc_state_ptr(emacs_env *env)
 	emacs_value ptr
 	    = env->funcall(env, env->intern(env, "symbol-value"), 1, &ptr_sym);
 	DocState *state = env->get_user_ptr(env, ptr);
-
 	return state;
 }
 

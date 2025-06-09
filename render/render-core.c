@@ -19,6 +19,7 @@
 #include "emacs-module.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
+#include <time.h>
 
 int plugin_is_GPL_compatible;
 
@@ -92,12 +93,18 @@ draw_page_thread(void *arg)
 		cp->imgw = fz_pixmap_width(ctx, cp->pixmap);
 	}
 	fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
+	cp->status = PAGE_STATUS_READY;
+	clock_t end = clock();
 
+	double duration = (double)(end - start) / CLOCKS_PER_SEC;
+	fprintf(stderr, "Took %f to render\n", duration);
+
+	clock_t write_start = clock();
 	fz_try(ctx)
 	{
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
-		fz_write_pixmap_as_png(ctx, out, cp->pixmap);
+		fz_write_pixmap_as_pnm(ctx, out, cp->pixmap);
 		fz_drop_pixmap(ctx, cp->pixmap);
 	}
 	fz_catch(ctx)
@@ -108,6 +115,12 @@ draw_page_thread(void *arg)
 	}
 
 	fz_close_output(ctx, out);
+
+	clock_t write_end = clock();
+
+	double write_duration
+	    = (double)(write_end - write_start) / CLOCKS_PER_SEC;
+	fprintf(stderr, "Took %f to write pixmap as PPM\n", write_duration);
 
 	cp->svg_size = buf->len;
 	cp->svg_data = (char *)malloc(cp->svg_size);
@@ -126,12 +139,6 @@ draw_page_thread(void *arg)
 	fz_drop_output(ctx, out);
 	fz_drop_buffer(ctx, buf);
 	fz_drop_context(ctx);
-
-	cp->status = PAGE_STATUS_READY;
-	clock_t end = clock();
-
-	double duration = (double)(end - start) / CLOCKS_PER_SEC;
-	fprintf(stderr, "Took %f to render\n", duration);
 
 	return NULL;
 }
