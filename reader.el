@@ -490,6 +490,18 @@ See also `reader-scroll-right'."
     (with-current-buffer (window-buffer scrolled-window)
       (reader-scroll-right amount scrolled-window))))
 
+(defun reader-rotate-clockwise ()
+  "Rotate all pages of the current document by 90 degrees, clockwise."
+  (interactive)
+  (reader-dyn--rotate-doc 90)
+  (reader--center-page))
+
+(defun reader-rotate-counter-clockwise ()
+  "Rotate all pages of the current document by 90 degrees, counter-clockwise."
+  (interactive)
+  (reader-dyn--rotate-doc -90)
+  (reader--center-page))
+
 (defun reader-kill-buffer ()
   "Kill the current buffer and the document."
   (interactive)
@@ -548,6 +560,9 @@ buffer is not in `reader-mode'."
 
   "H"       #'reader-fit-to-height
   "W"       #'reader-fit-to-width
+
+  "r"       #'reader-rotate-clockwise
+  "R"       #'reader-rotate-counter-clockwise
 
   "Q"       #'reader-kill-buffer)
 

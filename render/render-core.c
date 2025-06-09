@@ -756,10 +756,45 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	}
 	else
 	{
-	  emacs_message(env, "Not a valid document, or you are not in an Emacs Reader buffer!");
+		emacs_message(env, "Not a valid document, or you are not in an "
+				   "Emacs Reader buffer!");
 		return EMACS_NIL;
 	}
 
+	return EMACS_T;
+}
+
+emacs_value
+emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		      void *data)
+{
+	(void)nargs;
+	(void)data;
+	DocState *state = get_doc_state_ptr(env);
+	int rotation_deg = env->extract_integer(env, args[0]);
+	if (state)
+	{
+		state->rotate += rotation_deg;
+		emacs_value current_svg_overlay = get_current_svg_overlay(env);
+		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		draw_args->state = state;
+		draw_args->cp = state->current_cached_page;
+
+		draw_page_thread(draw_args);
+		emacs_value image_data
+		    = png2elisp_image(env, state, draw_args->cp->svg_data,
+				      draw_args->cp->svg_size);
+
+		emacs_value overlay_put_args[3]
+		    = { current_svg_overlay, env->intern(env, "display"),
+			image_data };
+		env->funcall(env, env->intern(env, "overlay-put"), 3,
+			     overlay_put_args);
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
 	return EMACS_T;
 }
 
@@ -869,6 +904,10 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "Sets the the theme for the documents rendered by Emacs "
 	    "reader. Currently only sets their FOREGROUND (first "
 	    "arg) and BACKGROUND (second arg).");
+
+	register_module_func(env, emacs_doc_rotate_doc,
+			     "reader-dyn--rotate-doc", 1, 1,
+			     "Rotates the page by the given DEGREE.");
 
 	// Provide the current dynamic module as a feature to Emacs
 	provide(env, "render-core");
