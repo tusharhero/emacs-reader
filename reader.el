@@ -399,7 +399,7 @@ Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((and (= 0 (reader-scroll-up amount))
-		    (reader-previous-page))) ; if succeeds
+		    (reader--previous-page))) ; if succeeds
 	      (image-height (cdr (reader--get-current-doc-image-size)))
 	      (pixel-window-height (window-pixel-height window))
 	      (bottom-most-scroll-pixel
@@ -413,7 +413,7 @@ Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
   (when (and (= 0 (reader-scroll-down amount window))
-	     (reader-next-page)) ; if succeeds
+	     (reader--next-page)) ; if succeeds
     (reader--set-window-vscroll window 0)))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional window)
@@ -508,7 +508,6 @@ buffer is not in `reader-mode'."
 (defvar-keymap reader-mode-map
   :doc "Keymap for `reader-mode'."
   "n"       #'reader-next-page
-
   "p"       #'reader-previous-page
 
   "<remap> <previous-line>" #'reader-scroll-up-or-prev-page
@@ -568,7 +567,6 @@ Keybindings:
 
   (setq-local bookmark-make-record-function
 	      #'reader-bookmark-make-record)
-
   (unless reader-current-doc-render-status
     (reader--render-buffer))
 
@@ -576,9 +574,7 @@ Keybindings:
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
-
   (reader-fit-to-height)
-
   (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
 (defun reader-mode-line ()
