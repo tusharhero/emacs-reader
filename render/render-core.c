@@ -342,64 +342,72 @@ slide_cache_window_backward(DocState *state)
  * Return: Elisp `t` on completion (or `nil` if path conversion failed).
  */
 
-emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                           void *data) {
-  (void)nargs;
-  (void)data;
-  size_t str_length = 0;
-  DocState *state = malloc(sizeof(DocState));
+emacs_value
+emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)data;
+	size_t str_length = 0;
+	DocState *state = malloc(sizeof(DocState));
 
-  if (!state) {
-    emacs_message(env, "Document cannot be loaded into memory due to "
-                       "unsupported format or some other reason.");
-    return EMACS_NIL;
-  }
+	if (!state)
+	{
+		emacs_message(env,
+			      "Document cannot be loaded into memory due to "
+			      "unsupported format or some other reason.");
+		return EMACS_NIL;
+	}
 
-  reset_doc_state(state);
+	reset_doc_state(state);
 
-  if (!elisp_2_c_str(env, args[0], &state->path, &str_length)) {
-    emacs_message(env, "Failed to convert Emacs string to C string.");
-    return EMACS_NIL;
-  }
+	if (!elisp_2_c_str(env, args[0], &state->path, &str_length))
+	{
+		emacs_message(env,
+			      "Failed to convert Emacs string to C string.");
+		return EMACS_NIL;
+	}
 
-  init_main_ctx(state);  // Creates mupdf context with locks
-  load_mupdf_doc(state); // Opens the doc and sets pagecount
+	init_main_ctx(state);  // Creates mupdf context with locks
+	load_mupdf_doc(state); // Opens the doc and sets pagecount
 
-  state->cached_pages_pool =
-      malloc(state->pagecount * sizeof(*state->cached_pages_pool));
-  CachedPage *block = calloc(state->pagecount, sizeof *block);
+	state->cached_pages_pool
+	    = malloc(state->pagecount * sizeof(*state->cached_pages_pool));
+	CachedPage *block = calloc(state->pagecount, sizeof *block);
 
-  for (int i = 0; i < state->pagecount; ++i) {
-    state->cached_pages_pool[i] = &block[i];
-    state->cached_pages_pool[i]->page_num = i;
-    pthread_mutex_init(&state->cached_pages_pool[i]->mutex, NULL);
-  }
+	for (int i = 0; i < state->pagecount; ++i)
+	{
+		state->cached_pages_pool[i] = &block[i];
+		state->cached_pages_pool[i]->page_num = i;
+		pthread_mutex_init(&state->cached_pages_pool[i]->mutex, NULL);
+	}
 
-  build_cache_window(state, state->current_page_number);
+	build_cache_window(state, state->current_page_number);
 
-  set_current_pagecount(env, state);
-  set_current_render_status(env);
-  init_overlay(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	set_current_pagecount(env, state);
+	set_current_render_status(env);
+	init_overlay(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 
-  CachedPage *cp = state->current_cached_page;
+	CachedPage *cp = state->current_cached_page;
 
-  emacs_value current_image_data =
-      svg2elisp_image(env, state, cp->svg_data, cp->svg_size);
+	emacs_value current_image_data
+	    = png2elisp_image(env, state, cp->svg_data, cp->svg_size);
 
-  // Render the created image on the buffer’s overlay
-  emacs_value overlay_put_args[3] = {
-      current_svg_overlay, env->intern(env, "display"), current_image_data};
-  env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+	// Render the created image on the buffer’s overlay
+	emacs_value overlay_put_args[3]
+	    = { current_svg_overlay, env->intern(env, "display"),
+		current_image_data };
+	env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 
-  // Create a user pointer and expose it to Emacs in a buffer-local fashion
-  emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
-  emacs_value doc_state_ptr_sym =
-      env->intern(env, "reader-current-doc-state-ptr");
-  env->funcall(env, env->intern(env, "set"), 2,
-               (emacs_value[]){doc_state_ptr_sym, user_ptr});
+	// Create a user pointer and expose it to Emacs in a buffer-local
+	// fashion
+	emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
+	emacs_value doc_state_ptr_sym
+	    = env->intern(env, "reader-current-doc-state-ptr");
+	env->funcall(env, env->intern(env, "set"), 2,
+		     (emacs_value[]){ doc_state_ptr_sym, user_ptr });
 
-  return EMACS_T;
+	return EMACS_T;
 }
 
 /**
