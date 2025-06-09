@@ -392,20 +392,13 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	set_current_render_status(env);
 	init_overlay(env);
 	emacs_value current_svg_overlay = get_current_svg_overlay(env);
-
 	CachedPage *cp = state->current_cached_page;
 
-	emacs_value current_image_data
-	    = png2elisp_image(env, state, cp->svg_data, cp->svg_size);
-
-	// Render the created image on the buffer’s overlay
-	emacs_value overlay_put_args[3]
-	    = { current_svg_overlay, env->intern(env, "display"),
-		current_image_data };
-	env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+	// Display CachedPage’s image data into the overlay
+	display_img_to_overlay(env, state, cp->svg_data, cp->svg_size,
+			       current_svg_overlay);
 
 	// Create a user pointer and expose it to Emacs in a buffer-local
-	// fashion
 	emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
 	emacs_value doc_state_ptr_sym
 	    = env->intern(env, "reader-current-doc-state-ptr");
@@ -455,16 +448,9 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		draw_args->state = state;
 		draw_args->cp = next_cp;
 		draw_page_thread(draw_args);
-
-		emacs_value next_image_data = png2elisp_image(
-		    env, state, next_cp->svg_data, next_cp->svg_size);
-
-		emacs_value overlay_put_args[3]
-		    = { current_svg_overlay, env->intern(env, "display"),
-			next_image_data };
-		env->funcall(env, env->intern(env, "overlay-put"), 3,
-			     overlay_put_args);
-
+		display_img_to_overlay(env, state, draw_args->cp->svg_data,
+				       draw_args->cp->svg_size,
+				       current_svg_overlay);
 		slide_cache_window_forward(state);
 		return EMACS_T;
 	}
@@ -512,16 +498,12 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 		CachedPage *prev_cp
 		    = state->cache_window[state->current_window_index - 1];
-
-		emacs_value prev_image_data = png2elisp_image(
-		    env, state, prev_cp->svg_data, prev_cp->svg_size);
-
-		emacs_value overlay_put_args[3]
-		    = { current_svg_overlay, env->intern(env, "display"),
-			prev_image_data };
-		env->funcall(env, env->intern(env, "overlay-put"), 3,
-			     overlay_put_args);
-
+		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		draw_args->state = state;
+		draw_args->cp = prev_cp;
+		draw_page_thread(draw_args);
+		display_img_to_overlay(env, state, prev_cp->svg_data,
+				       prev_cp->svg_size, current_svg_overlay);
 		slide_cache_window_backward(state);
 	}
 	else
@@ -569,15 +551,8 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 		build_cache_window(state, state->current_page_number);
 		CachedPage *first_cp = state->current_cached_page;
-
-		emacs_value first_image_data = png2elisp_image(
-		    env, state, first_cp->svg_data, first_cp->svg_size);
-
-		emacs_value overlay_put_args[3]
-		    = { current_svg_overlay, env->intern(env, "display"),
-			first_image_data };
-		env->funcall(env, env->intern(env, "overlay-put"), 3,
-			     overlay_put_args);
+		display_img_to_overlay(env, state, first_cp->svg_data,
+				       first_cp->svg_size, current_svg_overlay);
 	}
 	else
 	{
@@ -623,13 +598,8 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		build_cache_window(state, state->current_page_number);
 
 		CachedPage *last_cp = state->current_cached_page;
-		emacs_value last_image_data = png2elisp_image(
-		    env, state, last_cp->svg_data, last_cp->svg_size);
-		emacs_value overlay_put_args[3]
-		    = { current_svg_overlay, env->intern(env, "display"),
-			last_image_data };
-		env->funcall(env, env->intern(env, "overlay-put"), 3,
-			     overlay_put_args);
+		display_img_to_overlay(env, state, last_cp->svg_data,
+				       last_cp->svg_size, current_svg_overlay);
 	}
 	else
 	{
@@ -670,14 +640,9 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 			build_cache_window(state, state->current_page_number);
 
 			CachedPage *cp = state->current_cached_page;
-			emacs_value current_image_data = png2elisp_image(
-			    env, state, cp->svg_data, cp->svg_size);
-			emacs_value overlay_put_args[3]
-			    = { current_svg_overlay,
-				env->intern(env, "display"),
-				current_image_data };
-			env->funcall(env, env->intern(env, "overlay-put"), 3,
-				     overlay_put_args);
+			display_img_to_overlay(env, state, cp->svg_data,
+					       cp->svg_size,
+					       current_svg_overlay);
 		}
 		else
 		{
@@ -742,15 +707,9 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		}
 		draw_page_thread(draw_args);
 
-		emacs_value image_data
-		    = png2elisp_image(env, state, draw_args->cp->svg_data,
-				      draw_args->cp->svg_size);
-
-		emacs_value overlay_put_args[3]
-		    = { current_svg_overlay, env->intern(env, "display"),
-			image_data };
-		env->funcall(env, env->intern(env, "overlay-put"), 3,
-			     overlay_put_args);
+		display_img_to_overlay(env, state, draw_args->cp->svg_data,
+				       draw_args->cp->svg_size,
+				       current_svg_overlay);
 	}
 	else
 	{
@@ -764,7 +723,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
 emacs_value
 emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-		      void *data)
+		     void *data)
 {
 	(void)nargs;
 	(void)data;
@@ -779,15 +738,7 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		draw_args->cp = state->current_cached_page;
 
 		draw_page_thread(draw_args);
-		emacs_value image_data
-		    = png2elisp_image(env, state, draw_args->cp->svg_data,
-				      draw_args->cp->svg_size);
-
-		emacs_value overlay_put_args[3]
-		    = { current_svg_overlay, env->intern(env, "display"),
-			image_data };
-		env->funcall(env, env->intern(env, "overlay-put"), 3,
-			     overlay_put_args);
+		display_img_to_overlay(env, state, draw_args->cp->svg_data, draw_args->cp->svg_size, current_svg_overlay);
 	}
 	else
 	{
