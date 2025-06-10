@@ -690,23 +690,9 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
 
-		double new_res = scale_factor * 72;
-		if (new_res < MINRES)
-		{
-			emacs_message(env, "Cannot shrink image further");
-			state->resolution = MINRES;
-		}
-		else if (new_res > MAXRES)
-		{
-			emacs_message(env, "Cannot enlarge image further");
-			state->resolution = MAXRES;
-		}
-		else
-		{
-			state->resolution = new_res;
-		}
+		double new_res = fz_clamp(scale_factor * 72, MINRES, MAXRES);
+		state->resolution = new_res;
 		draw_page_thread(draw_args);
-
 		display_img_to_overlay(env, state, draw_args->cp->svg_data,
 				       draw_args->cp->svg_size,
 				       current_svg_overlay);
