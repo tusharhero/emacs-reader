@@ -459,7 +459,6 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		return EMACS_NIL;
 	}
 
-	/* sleep(1); */
 	return EMACS_T;
 }
 
@@ -689,7 +688,6 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
-
 		double new_res = fz_clamp(scale_factor * 72, MINRES, MAXRES);
 		state->resolution = new_res;
 		draw_page_thread(draw_args);
@@ -724,7 +722,9 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		draw_args->cp = state->current_cached_page;
 
 		draw_page_thread(draw_args);
-		display_img_to_overlay(env, state, draw_args->cp->svg_data, draw_args->cp->svg_size, current_svg_overlay);
+		display_img_to_overlay(env, state, draw_args->cp->svg_data,
+				       draw_args->cp->svg_size,
+				       current_svg_overlay);
 	}
 	else
 	{
