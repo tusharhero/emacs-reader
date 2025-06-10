@@ -22,7 +22,7 @@
 #include <pthread.h>
 
 #define MINRES 18
-#define MAXRES 1152
+#define MAXRES 850
 #define MAX_POOL_SIZE 8
 #define MAX_QUEUE_SIZE 256
 #define MAX_CACHE_SIZE 11
