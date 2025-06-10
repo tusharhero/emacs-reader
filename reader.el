@@ -167,18 +167,22 @@ It also updates `reader-current-doc-scale-value' to reflect the new scale."
   (reader-dyn--scale-page factor)
   (setq reader-current-doc-scale-value factor))
 
-(defun reader-enlarge-size ()
-  "Enlarge the size of the current page by the `reader-enlarge-factor'."
-  (interactive)
-  (let ((scaling-factor (* reader-current-doc-scale-value reader-enlarge-factor)))
-    (reader-doc-scale-page scaling-factor))
+(defun reader-enlarge-size (&optional scaling-factor)
+  "Enlarge the size of the current page by the `reader-enlarge-factor'.
+
+Optionally scale it by the SCALING-FACTOR."
+  (interactive (list (float
+		      (* reader-current-doc-scale-value reader-enlarge-factor))))
+  (reader-doc-scale-page scaling-factor)
   (reader--center-page))
 
-(defun reader-shrink-size ()
-  "Shrink the size of the current page by the `reader-shrink-factor'."
-  (interactive)
-  (let ((scaling-factor (* reader-current-doc-scale-value reader-shrink-factor)))
-    (reader-doc-scale-page scaling-factor))
+(defun reader-shrink-size (&optional scaling-factor)
+  "Shrink the size of the current page by the `reader-shrink-factor'.
+
+Optionally scale it by the SCALING-FACTOR."
+  (interactive (list (float
+		      (* reader-current-doc-scale-value reader-shrink-factor))))
+  (reader-doc-scale-page scaling-factor)
   (reader--center-page))
 
 (defun reader-fit-to-height ()
@@ -490,6 +494,36 @@ See also `reader-scroll-right'."
     (with-current-buffer (window-buffer scrolled-window)
       (reader-scroll-right amount scrolled-window))))
 
+(defun reader-mwheel-enlarge-size (event)
+  "Enlarge the current page, but also handle mouse EVENT.
+
+See also `reader-enlarge-size'."
+  (interactive "e")
+  (let* ((event-type (car event))
+	 (scaling-factor (pcase event-type
+			   ('C-wheel-up reader-enlarge-factor)
+			   ('C-double-wheel-up (+ reader-enlarge-factor 0.1))
+			   ('C-triple-wheel-up (+ reader-enlarge-factor 0.2))))
+	 (scrolled-window (car (cadr event))))
+    (with-current-buffer (window-buffer scrolled-window)
+      (reader-enlarge-size
+       (* scaling-factor reader-current-doc-scale-value)))))
+
+(defun reader-mwheel-shrink-size (event)
+  "Shrink the current page, but also handle mouse EVENT.
+
+See also `reader-shrink-size'."
+  (interactive "e")
+  (let* ((event-type (car event))
+	 (scaling-factor (pcase event-type
+			   ('C-wheel-down reader-shrink-factor)
+			   ('C-double-wheel-down (- reader-shrink-factor 0.1))
+			   ('C-triple-wheel-down (- reader-shrink-factor 0.2))))
+	 (scrolled-window (car (cadr event))))
+    (with-current-buffer (window-buffer scrolled-window)
+      (reader-shrink-size
+       (* scaling-factor reader-current-doc-scale-value)))))
+
 (defun reader-rotate-clockwise ()
   "Rotate all pages of the current document by 90 degrees, clockwise."
   (interactive)
@@ -553,10 +587,10 @@ buffer is not in `reader-mode'."
 
   "="       #'reader-enlarge-size
   "+"       #'reader-enlarge-size
-  "C-<wheel-up>" #'reader-enlarge-size
+  "C-<wheel-up>" #'reader-mwheel-enlarge-size
 
   "-"       #'reader-shrink-size
-  "C-<wheel-down>" #'reader-shrink-size
+  "C-<wheel-down>" #'reader-mwheel-shrink-size
 
   "H"       #'reader-fit-to-height
   "W"       #'reader-fit-to-width
