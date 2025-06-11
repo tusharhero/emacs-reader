@@ -64,7 +64,8 @@ void
 reset_doc_state(DocState *state)
 {
 	fprintf(stderr, "Freeing the existing DocState\n");
-	*state = (DocState){.ctx = NULL,
+	*state = (DocState){
+		.ctx = NULL,
                       .locks = NULL,
                       .doc = NULL,
                       .cached_pages_pool = NULL,
@@ -79,6 +80,8 @@ reset_doc_state(DocState *state)
                               .x0 = 0.0f,
                               .y0 = 0.0f,
                           },
+		      .path = NULL,
+		      .pagecount = 0,
                       .outline = NULL,
                       .resolution = 72,
                       .rotate = 0};
