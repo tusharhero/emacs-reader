@@ -19,9 +19,29 @@
 #include "emacs-module.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 
 int plugin_is_GPL_compatible;
+
+void
+evict_cached_page(DocState *state, CachedPage *cp)
+{
+	// Drop MuPDF objects
+	/* fz_drop_pixmap(state->ctx, cp->pixmap); */
+	fz_drop_display_list(state->ctx, cp->display_list);
+
+	// Free SVG buffer
+	free(cp->svg_data);
+
+	// Reset pointers/status
+	/* cp->pixmap = NULL; */
+	cp->display_list = NULL;
+	cp->svg_data = NULL;
+	cp->svg_size = 0;
+	cp->status = PAGE_STATUS_EMPTY;
+}
 
 int
 load_page_dl(DocState *state, CachedPage *cp)
@@ -78,7 +98,7 @@ draw_page_thread(void *arg)
 				state->rotate);
 	bounds = fz_transform_rect(state->page_bbox, ctm);
 	ibounds = fz_round_rect(bounds);
-	bounds = fz_rect_from_irect(ibounds);
+	/* bounds = fz_rect_from_irect(ibounds); */
 
 	cp->imgh = 0;
 	cp->imgw = 0;
@@ -163,6 +183,7 @@ async_render(DocState *state, CachedPage *cp)
 	/* pthread_join(th, NULL); */
 
 	/* return th; */
+	free(render_args);
 }
 
 void
@@ -203,6 +224,11 @@ build_cache_window(DocState *state, int n)
 		if (idx < pagecount && idx <= end)
 		{
 			CachedPage *cp = state->cached_pages_pool[idx];
+			/* if (cp->status == PAGE_STATUS_READY) */
+			/* { */
+			/* 	fprintf(stderr, "Page is ready\n"); */
+			/* 	evict_cached_page(state, cp); */
+			/* } */
 			state->cache_window[i] = cp;
 
 			if (cp->status == PAGE_STATUS_EMPTY)
@@ -251,6 +277,12 @@ slide_cache_window_forward(DocState *state)
 
 	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
 	{
+		if (state->cache_window[0]->status == PAGE_STATUS_READY)
+		{
+			fprintf(stderr, "First page of window is cleared\n");
+			evict_cached_page(state, state->cache_window[0]);
+		}
+
 		memmove(&state->cache_window[0], &state->cache_window[1],
 			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
@@ -259,11 +291,27 @@ slide_cache_window_forward(DocState *state)
 
 		if (cp->status == PAGE_STATUS_EMPTY)
 		{
+			fprintf(stderr, "Page number %d rendering...\n",
+				cp->page_num);
 			load_page_dl(state, cp);
 			async_render(state, cp);
 		}
 
 		state->current_window_index = MAX_CACHE_WINDOW;
+
+		if (state->cached_pages_pool[25]->svg_data)
+		{
+		  fprintf(stderr, "\n\n25th page is rendered\n");
+		}
+		else
+		{
+		  fprintf(stderr, "25th page is not rendered\n");
+		}
+
+		for (int i = 0; i < MAX_CACHE_SIZE; i++)
+		{
+		  fprintf(stderr, "Page number of cache window index (%d): %d\n", i, state->cache_window[i]->page_num);
+		}
 	}
 	else
 	{
@@ -299,6 +347,11 @@ slide_cache_window_backward(DocState *state)
 			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
 		CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
+		if (cp->status == PAGE_STATUS_READY)
+		{
+			fprintf(stderr, "Page is ready\n");
+			evict_cached_page(state, cp);
+		}
 		state->cache_window[0] = cp;
 
 		if (cp->status == PAGE_STATUS_EMPTY)
@@ -394,7 +447,7 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	emacs_value current_svg_overlay = get_current_svg_overlay(env);
 	CachedPage *cp = state->current_cached_page;
 
-	// Display CachedPage’s image data into the overlay
+	// Display CachedPage's image data into the overlay
 	display_img_to_overlay(env, state, cp->svg_data, cp->svg_size,
 			       current_svg_overlay);
 
@@ -405,6 +458,7 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	env->funcall(env, env->intern(env, "set"), 2,
 		     (emacs_value[]){ doc_state_ptr_sym, user_ptr });
 
+	/* free(block); */
 	return EMACS_T;
 }
 
@@ -417,7 +471,7 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  *
  * Retrieves the current DocState and overlay, converts the next-page's SVG
  * data (`state->next_svg_data`) into an Emacs image, and updates the overlay to
- * display it. If not already at the last page, also advances the DocState’s
+ * display it. If not already at the last page, also advances the DocState's
  * page index by calling render_pages() on the next page.
  *
  * Return: Elisp `t` on completion.
@@ -452,6 +506,26 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 				       draw_args->cp->svg_size,
 				       current_svg_overlay);
 		slide_cache_window_forward(state);
+
+		if (state->cached_pages_pool[0]->svg_data)
+		{
+			fprintf(stderr,
+				"The first page of pool is still rendered\n");
+		}
+
+		if (state->cached_pages_pool[50]->svg_data)
+		{
+			fprintf(stderr,
+				"The 50th page of pool is still rendered\n");
+		}
+
+		if (state->cached_pages_pool[110]->svg_data)
+		{
+			fprintf(stderr,
+				"The 110th page of pool is still rendered\n");
+		}
+
+		free(draw_args);
 		return EMACS_T;
 	}
 	else
@@ -504,6 +578,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		display_img_to_overlay(env, state, prev_cp->svg_data,
 				       prev_cp->svg_size, current_svg_overlay);
 		slide_cache_window_backward(state);
+		free(draw_args);
 	}
 	else
 	{
@@ -694,6 +769,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		display_img_to_overlay(env, state, draw_args->cp->svg_data,
 				       draw_args->cp->svg_size,
 				       current_svg_overlay);
+		free(draw_args);
 	}
 	else
 	{
@@ -725,6 +801,7 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		display_img_to_overlay(env, state, draw_args->cp->svg_data,
 				       draw_args->cp->svg_size,
 				       current_svg_overlay);
+		free(draw_args);
 	}
 	else
 	{
