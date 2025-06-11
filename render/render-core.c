@@ -79,8 +79,6 @@ draw_page_thread(void *arg)
 {
 	fz_output *out = NULL;
 	fz_buffer *buf = NULL;
-	fz_rect bounds;
-	fz_irect ibounds;
 	fz_matrix ctm;
 
 	RenderThreadArgs *args = (RenderThreadArgs *)arg;
@@ -92,9 +90,6 @@ draw_page_thread(void *arg)
 
 	ctm = fz_transform_page(state->page_bbox, state->resolution,
 				state->rotate);
-	bounds = fz_transform_rect(state->page_bbox, ctm);
-	ibounds = fz_round_rect(bounds);
-	/* bounds = fz_rect_from_irect(ibounds); */
 
 	cp->imgh = 0;
 	cp->imgw = 0;
