@@ -353,4 +353,5 @@ display_img_to_overlay(emacs_env *env, DocState *state, char *img_data, size_t i
 	emacs_value overlay_put_args[3]
 	    = { buffer_overlay, env->intern(env, "display"), elisp_img };
 	env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+	env->funcall(env, env->intern(env, "clear-image-cache"), 0, NULL);
 }
