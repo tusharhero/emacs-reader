@@ -114,7 +114,9 @@ draw_page_thread(void *arg)
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
 		fz_write_pixmap_as_pnm(ctx, out, cp->pixmap);
-		fz_drop_pixmap(ctx, cp->pixmap);
+		fz_drop_pixmap(
+		    ctx, cp->pixmap); // We don't need the pixmap anymore since
+				      // we already have the PPM data
 		cp->pixmap = NULL;
 	}
 	fz_catch(ctx)
@@ -132,6 +134,7 @@ draw_page_thread(void *arg)
 	    = (double)(write_end - write_start) / CLOCKS_PER_SEC;
 	fprintf(stderr, "Took %f to write pixmap as PPM\n", write_duration);
 
+	// Reset the pre-existing memory that we were pointing to
 	free(cp->svg_data);
 	cp->svg_data = NULL;
 	cp->svg_size = 0;
