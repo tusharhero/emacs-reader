@@ -24,52 +24,17 @@
 int plugin_is_GPL_compatible;
 
 void
-evict_cached_page(DocState *state, CachedPage *cp)
+free_cached_page(DocState *state, CachedPage *cp)
 {
 	if (cp->status != PAGE_STATUS_READY)
 		return; // already evicted or never loaded
 
 	cp->status = PAGE_STATUS_EMPTY;
-	// Drop MuPDF objects
-	/* fz_drop_pixmap(state->ctx, cp->pixmap); */
 	fz_drop_display_list(state->ctx, cp->display_list);
-
-	// Free SVG buffer
 	free(cp->svg_data);
-
-	// Reset pointers/status
-	/* cp->pixmap = NULL; */
 	cp->display_list = NULL;
 	cp->svg_data = NULL;
 	cp->svg_size = 0;
-}
-
-static void
-evict_pages_outside_window(DocState *state)
-{
-	// First, mark which pages are in the current window
-	bool keep[MAX_CACHE_SIZE] = { 0 };
-	for (int i = 0; i < MAX_CACHE_SIZE; i++)
-	{
-		CachedPage *cp = state->cache_window[i];
-		if (cp)
-			keep[i] = true;
-	}
-
-	// Now walk your entire pool; if a page isn't in the window, evict it
-	for (int i = 0; i < state->pagecount; i++)
-	{
-		CachedPage *cp = state->cached_pages_pool[i];
-		if (!cp)
-			continue;
-		// check if cp is one of the kept ones
-		bool in_window = false;
-		for (int w = 0; w < MAX_CACHE_SIZE; w++)
-			if (state->cache_window[w] == cp)
-				in_window = true;
-		if (!in_window && cp->status == PAGE_STATUS_READY)
-			evict_cached_page(state, cp);
-	}
 }
 
 int
