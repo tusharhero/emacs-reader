@@ -224,11 +224,6 @@ build_cache_window(DocState *state, int n)
 		if (idx < pagecount && idx <= end)
 		{
 			CachedPage *cp = state->cached_pages_pool[idx];
-			/* if (cp->status == PAGE_STATUS_READY) */
-			/* { */
-			/* 	fprintf(stderr, "Page is ready\n"); */
-			/* 	evict_cached_page(state, cp); */
-			/* } */
 			state->cache_window[i] = cp;
 
 			if (cp->status == PAGE_STATUS_EMPTY)
@@ -246,8 +241,6 @@ build_cache_window(DocState *state, int n)
 			state->cache_window[i] = NULL;
 		}
 	}
-	evict_pages_outside_window(state);
-
 	/* for (int j = 0; j < thread_count; j++) { */
 	/*   pthread_join(threads[j], NULL); */
 	/* } */
@@ -278,10 +271,11 @@ slide_cache_window_forward(DocState *state)
 
 	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
 	{
+		// Free the leftmost page in the cache window
 		if (state->cache_window[0]->status == PAGE_STATUS_READY)
 		{
 			fprintf(stderr, "First page of window is cleared\n");
-			evict_cached_page(state, state->cache_window[0]);
+			free_cached_page(state, state->cache_window[0]);
 		}
 
 		memmove(&state->cache_window[0], &state->cache_window[1],
@@ -299,7 +293,6 @@ slide_cache_window_forward(DocState *state)
 		}
 
 		state->current_window_index = MAX_CACHE_WINDOW;
-		/* evict_pages_outside_window(state); */
 	}
 	else
 	{
@@ -328,27 +321,26 @@ slide_cache_window_backward(DocState *state)
 		return false;
 	}
 
-	/* evict_pages_outside_window(state); */
 	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
 	{
 
-		if (state->cache_window[MAX_CACHE_WINDOW - 1]->status == PAGE_STATUS_READY)
+		// Free the rightmost page in the cache window
+		if (state->cache_window[MAX_CACHE_WINDOW - 1]->status
+		    == PAGE_STATUS_READY)
 		{
-			evict_cached_page(state, state->cache_window[MAX_CACHE_WINDOW - 1]);
+			free_cached_page(
+			    state, state->cache_window[MAX_CACHE_WINDOW - 1]);
 		}
-
 		memmove(&state->cache_window[1], &state->cache_window[0],
 			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
 		CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
 		state->cache_window[0] = cp;
-
 		if (cp->status == PAGE_STATUS_EMPTY)
 		{
 			load_page_dl(state, cp);
 			async_render(state, cp);
 		}
-
 		state->current_window_index = MAX_CACHE_WINDOW;
 	}
 	else
