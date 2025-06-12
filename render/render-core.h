@@ -28,74 +28,87 @@
 #define MAX_CACHE_SIZE 11
 #define MAX_CACHE_WINDOW (MAX_CACHE_SIZE / 2)
 
-typedef enum {
-  PAGE_STATUS_EMPTY,
-  PAGE_STATUS_RENDERING,
-  PAGE_STATUS_READY,
-  PAGE_STATUS_ERROR
+typedef enum
+{
+	PAGE_STATUS_EMPTY,
+	PAGE_STATUS_RENDERING,
+	PAGE_STATUS_READY,
+	PAGE_STATUS_ERROR
 } PageStatus;
 
-typedef struct {
-  int page_num;
-  fz_display_list *display_list;
-  fz_pixmap *pixmap;
-  int imgw, imgh;
-  char *svg_data;
-  size_t svg_size;
-  PageStatus status;
-  pthread_mutex_t mutex;
+typedef struct
+{
+	int page_num;
+	fz_display_list *display_list;
+	fz_pixmap *pixmap;
+	int imgw, imgh;
+	char *svg_data;
+	size_t svg_size;
+	PageStatus status;
+	pthread_mutex_t mutex;
 } CachedPage;
 
-typedef struct {
-  fz_context *ctx;
-  fz_locks_context locks;
-  fz_document *doc;
-  float resolution;
-  CachedPage **cached_pages_pool;
-  CachedPage *cache_window[MAX_CACHE_SIZE];
-  int current_window_index;
-  CachedPage *current_cached_page;
-  char *path;
-  int pagecount;
-  char *svg_background;
-  char *svg_foreground;
-  int current_page_number;
-  fz_rect page_bbox;
-  fz_outline *outline;
-  int rotate;
+typedef struct
+{
+	fz_context *ctx;
+	fz_locks_context locks;
+	fz_document *doc;
+	float resolution;
+	CachedPage **cached_pages_pool;
+	CachedPage *cache_window[MAX_CACHE_SIZE];
+	int current_window_index;
+	CachedPage *current_cached_page;
+	char *path;
+	int pagecount;
+	char *svg_background;
+	char *svg_foreground;
+	int current_page_number;
+	fz_rect page_bbox;
+	fz_outline *outline;
+	int rotate;
 } DocState;
 
-typedef struct {
-  DocState *state;
-  CachedPage *cp;
+typedef struct
+{
+	DocState *state;
+	CachedPage *cp;
 } RenderThreadArgs;
 
-typedef struct {
-  void *(*func)(void *);
-  void *arg;
+typedef struct
+{
+	void *(*func)(void *);
+	void *arg;
 } ThreadJob;
 
-int load_page_dl(DocState *state, CachedPage *cp);
-void *draw_page_thread(void *arg);
-void async_render(DocState *state, CachedPage *cp);
-void build_cache_window(DocState *state, int n);
-bool slide_cache_window_forward(DocState *state);
-bool slide_cache_window_backward(DocState *state);
+int
+load_page_dl(DocState *state, CachedPage *cp);
+void *
+draw_page_thread(void *arg);
+void
+async_render(DocState *state, CachedPage *cp);
+void
+build_cache_window(DocState *state, int n);
+bool
+slide_cache_window_forward(DocState *state);
+bool
+slide_cache_window_backward(DocState *state);
 
 // Emacs module functions
-emacs_value emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                           void *data);
-emacs_value emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
-emacs_value emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
-emacs_value emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                             void *data);
-emacs_value emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
-emacs_value emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                            void *data);
-emacs_value emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs,
-                                 emacs_value *args, void *data);
+emacs_value
+emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value
+emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value
+emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value
+emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		 void *data);
+emacs_value
+emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value
+emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
+emacs_value
+emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		     void *data);
 
 #endif // RENDER_CORE_H

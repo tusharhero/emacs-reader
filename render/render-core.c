@@ -58,10 +58,7 @@ load_page_dl(DocState *state, CachedPage *cp)
 			cp->display_list = fz_new_display_list_from_page(
 			    state->ctx, loaded_page);
 		}
-		fz_always(ctx)
-		{
-			fz_drop_page(state->ctx, loaded_page);
-		}
+		fz_always(ctx) fz_drop_page(state->ctx, loaded_page);
 		fz_catch(ctx) fz_rethrow(ctx);
 	}
 
@@ -274,7 +271,6 @@ slide_cache_window_forward(DocState *state)
 		// Free the leftmost page in the cache window
 		if (state->cache_window[0]->status == PAGE_STATUS_READY)
 		{
-			fprintf(stderr, "First page of window is cleared\n");
 			free_cached_page(state, state->cache_window[0]);
 		}
 
@@ -286,8 +282,6 @@ slide_cache_window_forward(DocState *state)
 
 		if (cp->status == PAGE_STATUS_EMPTY)
 		{
-			fprintf(stderr, "Page number %d rendering...\n",
-				cp->page_num);
 			load_page_dl(state, cp);
 			async_render(state, cp);
 		}
