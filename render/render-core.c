@@ -760,7 +760,6 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		display_img_to_overlay(
 		    env, state, state->current_cached_page->svg_data,
 		    state->current_cached_page->svg_size, current_svg_overlay);
-		free(draw_args);
 	}
 	else
 	{
