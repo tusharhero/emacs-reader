@@ -19,7 +19,6 @@
 
 #include "emacs-module.h"
 #include <mupdf/fitz.h>
-#include <pthread.h>
 
 #define MINRES 18
 #define MAXRES 850
@@ -109,6 +108,9 @@ emacs_value
 emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value
 emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		     void *data);
+emacs_value
+emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		     void *data);
 
 #endif // RENDER_CORE_H
