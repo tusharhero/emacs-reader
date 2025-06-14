@@ -19,7 +19,6 @@
 #include "emacs-module.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
-#include <stdio.h>
 
 int plugin_is_GPL_compatible;
 
@@ -722,7 +721,6 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		display_img_to_overlay(
 		    env, state, state->current_cached_page->svg_data,
 		    state->current_cached_page->svg_size, current_svg_overlay);
-		/* free(draw_args); */
 	}
 	else
 	{

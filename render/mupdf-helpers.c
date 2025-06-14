@@ -18,6 +18,7 @@
 
 #include "mupdf-helpers.h"
 #include "render-core.h"
+#include <pthread.h>
 
 pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
 
