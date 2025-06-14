@@ -15,40 +15,35 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render-theme.h"
+#include "elisp-helpers.h"
 #include "render-core.h"
 
-/**
- * set_doc_theme - Set the theme for Emacs Reader
- * @foreground: The color to be set for the foreground property of the image.
- * @background: The color to be set for the background property of the image.
- *
- * Both of them should be strings like "white" or a hexadecimal value for the
- * color.
- */
-
-emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                          void *data) {
+emacs_value
+emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		     void *data)
+{
   (void)data;
   (void)nargs;
+  (void)args;
   DocState *state = get_doc_state_ptr(env);
-
-  size_t foreground_ln = 0;
-  size_t background_ln = 0;
-
-  if (state) {
-    elisp_2_c_str(env, args[0], &state->svg_foreground, &foreground_ln);
-    elisp_2_c_str(env, args[1], &state->svg_background, &background_ln);
-
+  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+  if (state)
+  {
+    state->invert ^= 1;
     CachedPage *cp = state->current_cached_page;
-    emacs_value current_image_data =
-        data2elisp_image(env, state, cp->svg_data, cp->svg_size);
-
-    // Render the themed page on the buffer’s overlay
-    emacs_value current_svg_overlay = get_current_svg_overlay(env);
-    emacs_value overlay_put_args[3] = {
-      current_svg_overlay, env->intern(env, "display"), current_image_data};
-    env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
+    RenderThreadArgs *draw_args
+      = malloc(sizeof(RenderThreadArgs));
+    draw_args->state = state;
+    draw_args->cp = cp;
+    draw_page_thread(draw_args);
+    display_img_to_overlay(env, state, cp->svg_data,
+			   cp->svg_size,
+			   current_svg_overlay);
   }
+  else
+    {
+      return EMACS_NIL;
+    }
 
   return EMACS_T;
 }

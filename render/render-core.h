@@ -66,6 +66,7 @@ typedef struct
 	fz_rect page_bbox;
 	fz_outline *outline;
 	int rotate;
+	int invert;
 } DocState;
 
 typedef struct

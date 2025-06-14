@@ -17,5 +17,5 @@
 #include "elisp-helpers.h"
 #include "render-core.h"
 
-emacs_value set_doc_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-                          void *data);
+emacs_value emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+				 void *data);

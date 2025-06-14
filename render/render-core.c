@@ -94,6 +94,11 @@ draw_page_thread(void *arg)
 	{
 		cp->pixmap = fz_new_pixmap_from_display_list(
 		    ctx, cp->display_list, ctm, fz_device_rgb(ctx), 0);
+		if (state->invert)
+		{
+			fz_invert_pixmap_luminance(ctx, cp->pixmap);
+			fz_gamma_pixmap(ctx, cp->pixmap, 1 / 1.4f);
+		}
 		cp->imgh = fz_pixmap_height(ctx, cp->pixmap);
 		cp->imgw = fz_pixmap_width(ctx, cp->pixmap);
 	}
@@ -432,7 +437,36 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	env->funcall(env, env->intern(env, "set"), 2,
 		     (emacs_value[]){ doc_state_ptr_sym, user_ptr });
 
-	/* free(block); */
+	return EMACS_T;
+}
+
+emacs_value
+emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		    void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
+
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+
+	if (state)
+	{
+		state->invert = 0;
+		state->rotate = 0;
+		CachedPage *cp = state->current_cached_page;
+		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		draw_args->state = state;
+		draw_args->cp = cp;
+		display_img_to_overlay(env, state, cp->svg_data, cp->svg_size,
+				       current_svg_overlay);
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
+
 	return EMACS_T;
 }
 
@@ -794,6 +828,9 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "and stores it in `reader-current-doc-state-ptr'.");
 
 	register_module_func(
+			     env, emacs_redisplay_doc, "reader-dyn--redisplay-doc", 0, 0,
+			     "Redisplays the document at the current page and scale.");
+	register_module_func(
 	    env, emacs_next_page, "reader-dyn--next-page", 0, 0,
 	    "Loads and renders the next page of the document.  It is wrapped "
 	    "around "
@@ -861,11 +898,10 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "the image, and then renders the scaled image through "
 	    "`overlay-put'.");
 
-	register_module_func(
-	    env, set_doc_theme, "reader-dyn--set-doc-theme", 2, 2,
-	    "Sets the the theme for the documents rendered by Emacs "
-	    "reader. Currently only sets their FOREGROUND (first "
-	    "arg) and BACKGROUND (second arg).");
+	register_module_func(env, emacs_set_dark_theme,
+			     "reader-dyn--set-dark-theme", 0, 0,
+			     "Sets the current document to have a dark theme. "
+			     "It simply inverts the pixmap.");
 
 	register_module_func(env, emacs_doc_rotate_doc,
 			     "reader-dyn--rotate-doc", 1, 1,

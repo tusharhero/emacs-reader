@@ -639,8 +639,8 @@ Keybindings:
   :lighter " Dark"
   (when (eq major-mode 'reader-mode)
     (if reader-dark-mode
-	(reader-dyn--set-doc-theme "white" "black")
-      (reader-dyn--set-doc-theme "black" "white"))
+      (reader-dyn--set-dark-theme)
+      (reader-dyn--redisplay-doc))
     (reader-doc-scale-page reader-current-doc-scale-value)))
 
 (define-globalized-minor-mode reader-global-dark-mode reader-dark-mode reader-dark-mode)

@@ -85,7 +85,8 @@ reset_doc_state(DocState *state)
 		      .pagecount = 0,
                       .outline = NULL,
                       .resolution = 72,
-                      .rotate = 0};
+                      .rotate = 0,
+		      .invert = 0};
 }
 
 void
