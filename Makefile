@@ -42,10 +42,10 @@ else
   OBJ_EXT := .o
   CC := gcc -ggdb3
   CFLAGS += -DLINUX -pthread
-  LDFLAGS := -shared -lmupdf -lpthread
-  # RPATHS := -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
-  # MUPDF_LIB := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
-  NEED_MUPDF_BUILD := no
+  LDFLAGS := -shared -L$(MUPDF_DIR)/build/shared-release/ -lmupdf -lpthread
+  RPATHS := -Wl,-rpath,$(MUPDF_DIR)/build/shared-release/
+  MUPDF_LIB := $(MUPDF_DIR)/build/shared-release/libmupdf.so.26.0
+  NEED_MUPDF_BUILD := yes
 endif
 
 # Module filenames and library paths
