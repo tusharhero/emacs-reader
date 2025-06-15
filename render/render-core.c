@@ -92,6 +92,11 @@ draw_page_thread(void *arg)
 
 	fz_try(ctx)
 	{
+		if (cp->pixmap)
+		{
+			fz_drop_pixmap(ctx, cp->pixmap);
+			cp->pixmap = NULL;
+		}
 		cp->pixmap = fz_new_pixmap_from_display_list(
 		    ctx, cp->display_list, ctm, fz_device_rgb(ctx), 0);
 		if (state->invert)
@@ -115,10 +120,11 @@ draw_page_thread(void *arg)
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
 		fz_write_pixmap_as_pnm(ctx, out, cp->pixmap);
-		fz_drop_pixmap(
-		    ctx, cp->pixmap); // We don't need the pixmap anymore since
-				      // we already have the PPM data
-		cp->pixmap = NULL;
+		/* fz_drop_pixmap( */
+		/*     ctx, cp->pixmap); // We don't need the pixmap anymore
+		 * since */
+		/* 			  // we already have the PPM data */
+		/* cp->pixmap = NULL; */
 	}
 	fz_catch(ctx)
 	{
@@ -828,8 +834,8 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "and stores it in `reader-current-doc-state-ptr'.");
 
 	register_module_func(
-			     env, emacs_redisplay_doc, "reader-dyn--redisplay-doc", 0, 0,
-			     "Redisplays the document at the current page and scale.");
+	    env, emacs_redisplay_doc, "reader-dyn--redisplay-doc", 0, 0,
+	    "Redisplays the document at the current page and scale.");
 	register_module_func(
 	    env, emacs_next_page, "reader-dyn--next-page", 0, 0,
 	    "Loads and renders the next page of the document.  It is wrapped "
