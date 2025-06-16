@@ -137,33 +137,23 @@ rendered in Emacs with `insert-image' or other means.
  */
 
 emacs_value
-data2elisp_image(emacs_env *env, DocState *state, char *svg_data,
-		size_t svg_size)
+data2elisp_image(emacs_env *env, DocState *state, char *img_data,
+		 size_t img_size)
 {
 	emacs_value image_width = env->make_integer(env, doc_page_width(state));
 	emacs_value image_height
 	    = env->make_integer(env, doc_page_height(state));
-	emacs_value image_background = env->make_string(
-	    env, state->svg_background, strlen(state->svg_background));
-	emacs_value image_foreground = env->make_string(
-	    env, state->svg_foreground, strlen(state->svg_foreground));
-
-	emacs_value svg_string
-	    = env->make_unibyte_string(env, svg_data, svg_size);
-	emacs_value image_args[11] = { svg_string,
-				       env->intern(env, "pbm"),
-				       env->intern(env, "t"),
-				       env->intern(env, ":width"),
-				       image_width,
-				       env->intern(env, ":height"),
-				       image_height,
-				       env->intern(env, ":background"),
-				       image_background,
-				       env->intern(env, ":foreground"),
-				       image_foreground };
+	emacs_value img_data_string
+	    = env->make_unibyte_string(env, img_data, img_size);
+	emacs_value image_args[7] = {
+		img_data_string,       env->intern(env, "pbm"),
+		env->intern(env, "t"), env->intern(env, ":width"),
+		image_width,	       env->intern(env, ":height"),
+		image_height,
+	};
 
 	emacs_value image_data = env->funcall(
-	    env, env->intern(env, "create-image"), 11, image_args);
+	    env, env->intern(env, "create-image"), 7, image_args);
 
 	return image_data;
 }
@@ -268,7 +258,7 @@ set_current_pagecount(emacs_env *env, DocState *state)
  *
  * Calls `point-min` and `point-max` to get buffer bounds, then
  * makes an overlay spanning the entire buffer. Stores the overlay
- * object in the Elisp variable `reader-current-svg-overlay` for later use.
+ * object in the Elisp variable `reader-current-doc-overlay` for later use.
  */
 
 void
@@ -282,28 +272,29 @@ init_overlay(emacs_env *env)
 	    = env->funcall(env, env->intern(env, "make-overlay"), 2,
 			   (emacs_value[]){ start, end });
 	emacs_value current_overlay_sym
-	    = env->intern(env, "reader-current-svg-overlay");
+	    = env->intern(env, "reader-current-doc-overlay");
 
 	env->funcall(env, env->intern(env, "set"), 2,
 		     (emacs_value[]){ current_overlay_sym, overlay });
 }
 
 /**
- * get_current_svg_overlay - Retrieve the stored SVG overlay object.
+ * get_current_doc_overlay - Retrieve the stored overlay object for the
+ * document.
  * @env:    The Emacs environment pointer.
  *
- * Looks up the Elisp variable `reader-current-svg-overlay` and returns its
+ * Looks up the Elisp variable `reader-current-doc-overlay` and returns its
  * value, which should be the overlay previously created by `init_overlay`.
  *
  * Return: The Elisp overlay object, or an unbound value if not set.
  */
 
 emacs_value
-get_current_svg_overlay(emacs_env *env)
+get_current_doc_overlay(emacs_env *env)
 {
 
 	emacs_value current_overlay_sym
-	    = env->intern(env, "reader-current-svg-overlay");
+	    = env->intern(env, "reader-current-doc-overlay");
 	emacs_value current_overlay = env->funcall(
 	    env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
 
@@ -346,7 +337,8 @@ permanent_buffer_local_var(emacs_env *env, char *symbol)
 }
 
 void
-display_img_to_overlay(emacs_env *env, DocState *state, char *img_data, size_t img_size, emacs_value buffer_overlay)
+display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
+		       size_t img_size, emacs_value buffer_overlay)
 {
 	emacs_value elisp_img
 	    = data2elisp_image(env, state, img_data, img_size);

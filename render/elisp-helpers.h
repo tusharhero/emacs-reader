@@ -35,8 +35,8 @@ register_module_func(emacs_env *env,
 						emacs_value *args, void *data),
 		     char *symbol, int min_args, int max_args, char *docstring);
 emacs_value
-data2elisp_image(emacs_env *env, DocState *state, char *svg_data,
-		 size_t svg_size);
+data2elisp_image(emacs_env *env, DocState *state, char *img_data,
+		 size_t img_size);
 
 DocState *
 get_doc_state_ptr(emacs_env *env);
@@ -50,7 +50,7 @@ set_current_pagecount(emacs_env *env, DocState *state);
 void
 init_overlay(emacs_env *env);
 emacs_value
-get_current_svg_overlay(emacs_env *env);
+get_current_doc_overlay(emacs_env *env);
 void
 emacs_message(emacs_env *env, char *str);
 void

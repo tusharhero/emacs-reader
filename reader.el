@@ -26,14 +26,13 @@
 
 ;; This package provides a general purpose document reader within
 ;; Emacs by leveraging the use of dynamic modules.  It primarily
-;; relies on MuPDF to do the rendering, and Emacs Lisp’s native SVG
-;; capabilities to view the rendered images and manipulate them.
+;; relies on MuPDF to do the rendering, and Emacs Lisp’s native image
+;; displaying capabilities to view the rendered images and manipulate them.
 
 ;;; Code:
 
 (require 'image)
 (require 'image-mode)
-(require 'svg)
 (require 'render-core)
 
 (defgroup reader nil
@@ -116,7 +115,7 @@ other file format will simply not show up as a candidate."
   "Go to the next page of the document."
   (interactive)
   (let* ((status (reader-dyn--next-page))
-	 (img (overlay-get reader-current-svg-overlay 'display)))
+	 (img (overlay-get reader-current-doc-overlay 'display)))
     (when status
       (force-mode-line-update t))
     status))
@@ -155,7 +154,7 @@ other file format will simply not show up as a candidate."
 
 (defun reader--get-current-doc-image-size ()
   "Get the dimensions of the current page's image."
-  (let* ((cdr-image (cdr (overlay-get reader-current-svg-overlay 'display)))
+  (let* ((cdr-image (cdr (overlay-get reader-current-doc-overlay 'display)))
 	 (width (plist-get cdr-image :width))
 	 (height (plist-get cdr-image :height)))
     (cons width height)))
@@ -240,7 +239,7 @@ Also see `set-window-vscroll'."
   "Get the line prefix width set by `reader--center-page'."
   (car
    (plist-get
-    (cdr (overlay-get reader-current-svg-overlay 'line-prefix))
+    (cdr (overlay-get reader-current-doc-overlay 'line-prefix))
     :width)))
 
 (defun reader--right-most-window-hscroll (window)
@@ -301,7 +300,7 @@ If WINDOW is omitted defaults to current window."
 	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
 	     (overlay-offset `(space :width (,max-left-offset))))
 	;; Add prefix so that the page is at the leftmost point of the widest window.
-	(overlay-put reader-current-svg-overlay 'line-prefix overlay-offset)
+	(overlay-put reader-current-doc-overlay 'line-prefix overlay-offset)
 	;; scroll every window back to the center of the doc
 	(mapcar (lambda (window)
 		  (let* ((pixel-window-width (window-pixel-width window))

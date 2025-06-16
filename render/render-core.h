@@ -42,8 +42,8 @@ typedef struct
 	fz_display_list *display_list;
 	fz_pixmap *pixmap;
 	int imgw, imgh;
-	char *svg_data;
-	size_t svg_size;
+	char *img_data;
+	size_t img_size;
 	PageStatus status;
 	pthread_mutex_t mutex;
 } CachedPage;
@@ -60,8 +60,6 @@ typedef struct
 	CachedPage *current_cached_page;
 	char *path;
 	int pagecount;
-	char *svg_background;
-	char *svg_foreground;
 	int current_page_number;
 	fz_rect page_bbox;
 	fz_outline *outline;

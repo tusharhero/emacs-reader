@@ -30,17 +30,16 @@ free_cached_page(DocState *state, CachedPage *cp)
 
 	cp->status = PAGE_STATUS_EMPTY;
 	fz_drop_display_list(state->ctx, cp->display_list);
-	free(cp->svg_data);
+	free(cp->img_data);
 	cp->display_list = NULL;
-	cp->svg_data = NULL;
-	cp->svg_size = 0;
+	cp->img_data = NULL;
+	cp->img_size = 0;
 }
 
 int
 load_page_dl(DocState *state, CachedPage *cp)
 {
 	fz_page *loaded_page = NULL;
-
 	fz_context *ctx = fz_clone_context(state->ctx);
 
 	clock_t start = clock();
@@ -139,23 +138,23 @@ draw_page_thread(void *arg)
 	fprintf(stderr, "Took %f to write pixmap as PPM\n", write_duration);
 
 	// Reset the pre-existing memory that we were pointing to
-	free(cp->svg_data);
-	cp->svg_data = NULL;
-	cp->svg_size = 0;
+	free(cp->img_data);
+	cp->img_data = NULL;
+	cp->img_size = 0;
 
-	cp->svg_size = buf->len;
-	cp->svg_data = (char *)malloc(cp->svg_size);
+	cp->img_size = buf->len;
+	cp->img_data = (char *)malloc(cp->img_size);
 
-	if (cp->svg_data == NULL)
+	if (cp->img_data == NULL)
 	{
-		fprintf(stderr, "Cannot allocate memory for SVG data\n");
+		fprintf(stderr, "Could not allocate memory for image data\n");
 		fz_close_output(ctx, out);
 		fz_drop_buffer(ctx, buf);
 		return NULL;
 	}
 
 	// Copy the data and null-terminate
-	memcpy(cp->svg_data, buf->data, cp->svg_size);
+	memcpy(cp->img_data, buf->data, cp->img_size);
 
 	fz_drop_output(ctx, out);
 	fz_drop_buffer(ctx, buf);
@@ -311,7 +310,6 @@ slide_cache_window_backward(DocState *state)
 {
 	int n = --state->current_page_number;
 	int pagecount = state->pagecount;
-	/* pthread_t th; */
 
 	if (n < 0)
 	{
@@ -368,7 +366,7 @@ slide_cache_window_backward(DocState *state)
  *   1. Emits debug messages to stderr about load status and page count.
  *   2. Exposes the total page count to Elisp via set_current_pagecount().
  *   3. Marks the render status true in Elisp via set_current_render_status().
- *   4. Creates a buffer-local SVG overlay via init_overlay().
+ *   4. Creates a buffer-local overlay via init_overlay().
  *   5. Renders the current page (and neighbors) to SVG via render_pages().
  *   6. Converts the SVG to an Emacs image object (svg2elisp_image), and
  * displays it in the overlay using overlay-put.
@@ -426,12 +424,12 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	set_current_pagecount(env, state);
 	set_current_render_status(env);
 	init_overlay(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 	CachedPage *cp = state->current_cached_page;
 
 	// Display CachedPage's image data into the overlay
-	display_img_to_overlay(env, state, cp->svg_data, cp->svg_size,
-			       current_svg_overlay);
+	display_img_to_overlay(env, state, cp->img_data, cp->img_size,
+			       current_doc_overlay);
 
 	// Create a user pointer and expose it to Emacs in a buffer-local
 	emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
@@ -452,7 +450,7 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)data;
 
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	if (state)
 	{
@@ -462,8 +460,8 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = cp;
-		display_img_to_overlay(env, state, cp->svg_data, cp->svg_size,
-				       current_svg_overlay);
+		display_img_to_overlay(env, state, cp->img_data, cp->img_size,
+				       current_doc_overlay);
 	}
 	else
 	{
@@ -481,7 +479,7 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * @data:  (ignored).
  *
  * Retrieves the current DocState and overlay, converts the next-page's SVG
- * data (`state->next_svg_data`) into an Emacs image, and updates the overlay to
+ * data (`state->next_img_data`) into an Emacs image, and updates the overlay to
  * display it. If not already at the last page, also advances the DocState's
  * page index by calling render_pages() on the next page.
  *
@@ -496,7 +494,7 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	if (state)
 	{
@@ -513,8 +511,8 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		draw_args->state = state;
 		draw_args->cp = next_cp;
 		draw_page_thread(draw_args);
-		display_img_to_overlay(env, state, next_cp->svg_data,
-				       next_cp->svg_size, current_svg_overlay);
+		display_img_to_overlay(env, state, next_cp->img_data,
+				       next_cp->img_size, current_doc_overlay);
 		slide_cache_window_forward(state);
 		return EMACS_T;
 	}
@@ -534,7 +532,7 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @data:  (ignored).
  *
  * Retrieves the current DocState and overlay. If on page > 0, converts the
- * previous-page's SVG data (`state->prev_svg_data`) into an Emacs image,
+ * previous-page's SVG data (`state->prev_img_data`) into an Emacs image,
  * updates the overlay, and re-renders pages at state->prev_page_number. If
  * already at the first page, emits a warning and returns nil.
  *
@@ -549,7 +547,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	if (state)
 	{
@@ -565,8 +563,8 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		draw_args->state = state;
 		draw_args->cp = prev_cp;
 		draw_page_thread(draw_args);
-		display_img_to_overlay(env, state, prev_cp->svg_data,
-				       prev_cp->svg_size, current_svg_overlay);
+		display_img_to_overlay(env, state, prev_cp->img_data,
+				       prev_cp->img_size, current_doc_overlay);
 		slide_cache_window_backward(state);
 		/* free(draw_args); */
 	}
@@ -600,7 +598,7 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	if (state)
 	{
@@ -615,8 +613,8 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 		build_cache_window(state, state->current_page_number);
 		CachedPage *first_cp = state->current_cached_page;
-		display_img_to_overlay(env, state, first_cp->svg_data,
-				       first_cp->svg_size, current_svg_overlay);
+		display_img_to_overlay(env, state, first_cp->img_data,
+				       first_cp->img_size, current_doc_overlay);
 	}
 	else
 	{
@@ -648,7 +646,7 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	if (state)
 	{
@@ -662,8 +660,8 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		build_cache_window(state, state->current_page_number);
 
 		CachedPage *last_cp = state->current_cached_page;
-		display_img_to_overlay(env, state, last_cp->svg_data,
-				       last_cp->svg_size, current_svg_overlay);
+		display_img_to_overlay(env, state, last_cp->img_data,
+				       last_cp->img_size, current_doc_overlay);
 	}
 	else
 	{
@@ -694,7 +692,7 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 	int page_number = env->extract_integer(env, args[0]);
 	DocState *state = get_doc_state_ptr(env);
-	emacs_value current_svg_overlay = get_current_svg_overlay(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	if (state)
 	{
@@ -703,9 +701,9 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 			state->current_page_number = page_number;
 			build_cache_window(state, state->current_page_number);
 			CachedPage *cp = state->current_cached_page;
-			display_img_to_overlay(env, state, cp->svg_data,
-					       cp->svg_size,
-					       current_svg_overlay);
+			display_img_to_overlay(env, state, cp->img_data,
+					       cp->img_size,
+					       current_doc_overlay);
 		}
 		else
 		{
@@ -748,7 +746,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	float scale_factor = env->extract_float(env, args[0]);
 	if (state)
 	{
-		emacs_value current_svg_overlay = get_current_svg_overlay(env);
+		emacs_value current_doc_overlay = get_current_doc_overlay(env);
 		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
@@ -756,8 +754,8 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		state->resolution = new_res;
 		draw_page_thread(draw_args);
 		display_img_to_overlay(
-		    env, state, state->current_cached_page->svg_data,
-		    state->current_cached_page->svg_size, current_svg_overlay);
+		    env, state, state->current_cached_page->img_data,
+		    state->current_cached_page->img_size, current_doc_overlay);
 	}
 	else
 	{
@@ -780,15 +778,15 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	if (state)
 	{
 		state->rotate += rotation_deg;
-		emacs_value current_svg_overlay = get_current_svg_overlay(env);
+		emacs_value current_doc_overlay = get_current_doc_overlay(env);
 		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
 
 		draw_page_thread(draw_args);
 		display_img_to_overlay(
-		    env, state, state->current_cached_page->svg_data,
-		    state->current_cached_page->svg_size, current_svg_overlay);
+		    env, state, state->current_cached_page->img_data,
+		    state->current_cached_page->img_size, current_doc_overlay);
 	}
 	else
 	{
@@ -819,12 +817,12 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "document "
 	    "through the internal (non-registered) `load_mupdf_doc'.\n 3. "
 	    "Exposes "
-	    "the total page count to Elisp\n 4. Create a bufer-local SVG "
+	    "the total page count to Elisp\n 4. Create a bufer-local "
 	    "overlay "
 	    "through `init_overlay'\n 5. Calls the main `render_page' function "
 	    "to "
 	    "render the current page and its adjacent ones.\n 6. Converts the "
-	    "SVG to "
+	    "raw PPM data to "
 	    "an Emacs image object and displays it in the overlay through "
 	    "`overlay-put'.\n 7. Wraps the C pointer for DocState as an user "
 	    "pointer "
@@ -837,7 +835,7 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    env, emacs_next_page, "reader-dyn--next-page", 0, 0,
 	    "Loads and renders the next page of the document.  It is wrapped "
 	    "around "
-	    "the Elisp function `reader-next-page'.  Since DocState stores SVG "
+	    "the Elisp function `reader-next-page'.  Since DocState stores PPM "
 	    "data "
 	    "for the previous and next page, all this does is render the data "
 	    "for "
@@ -890,8 +888,8 @@ emacs_module_init(struct emacs_runtime *runtime)
 	// Register the buffer-local value for the DocState user pointer
 	permanent_buffer_local_var(env, "reader-current-doc-state-ptr");
 
-	// Register the buffer-local value for reader-current-svg-overlay
-	permanent_buffer_local_var(env, "reader-current-svg-overlay");
+	// Register the buffer-local value for reader-current-doc-overlay
+	permanent_buffer_local_var(env, "reader-current-doc-overlay");
 
 	register_module_func(
 	    env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,

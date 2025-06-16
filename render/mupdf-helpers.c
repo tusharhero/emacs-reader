@@ -73,8 +73,6 @@ reset_doc_state(DocState *state)
                       .cache_window = NULL,
                       .current_window_index = 0,
                       .current_cached_page = NULL,
-                      .svg_background = "white",
-                      .svg_foreground = "black",
                       .current_page_number = 0,
                       .page_bbox =
                           {

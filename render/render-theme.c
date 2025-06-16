@@ -26,7 +26,7 @@ emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   (void)nargs;
   (void)args;
   DocState *state = get_doc_state_ptr(env);
-  emacs_value current_svg_overlay = get_current_svg_overlay(env);
+  emacs_value current_doc_overlay = get_current_doc_overlay(env);
   if (state)
   {
     state->invert ^= 1;
@@ -36,9 +36,9 @@ emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
     draw_args->state = state;
     draw_args->cp = cp;
     draw_page_thread(draw_args);
-    display_img_to_overlay(env, state, cp->svg_data,
-			   cp->svg_size,
-			   current_svg_overlay);
+    display_img_to_overlay(env, state, cp->img_data,
+			   cp->img_size,
+			   current_doc_overlay);
   }
   else
     {
