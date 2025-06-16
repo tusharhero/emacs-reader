@@ -92,11 +92,11 @@ draw_page_thread(void *arg)
 
 	fz_try(ctx)
 	{
-		if (cp->pixmap)
-		{
-			fz_drop_pixmap(ctx, cp->pixmap);
-			cp->pixmap = NULL;
-		}
+		/* if (cp->pixmap) */
+		/* { */
+		/* 	fz_drop_pixmap(ctx, cp->pixmap); */
+		/* 	cp->pixmap = NULL; */
+		/* } */
 		cp->pixmap = fz_new_pixmap_from_display_list(
 		    ctx, cp->display_list, ctm, fz_device_rgb(ctx), 0);
 		if (state->invert)
@@ -120,11 +120,8 @@ draw_page_thread(void *arg)
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
 		fz_write_pixmap_as_pnm(ctx, out, cp->pixmap);
-		/* fz_drop_pixmap( */
-		/*     ctx, cp->pixmap); // We don't need the pixmap anymore
-		 * since */
-		/* 			  // we already have the PPM data */
-		/* cp->pixmap = NULL; */
+		fz_drop_pixmap(ctx, cp->pixmap); // Drop the pixmap after using it
+		cp->pixmap = NULL;
 	}
 	fz_catch(ctx)
 	{
