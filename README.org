@@ -9,7 +9,7 @@ An all-in-one document reader for GNU Emacs, supporting all [[* Supported Format
 [[file:extras/emacs-reader-2025-05-14_04.32.41.gif]]
 
 * Supported Formats
-The Emacs Reader (via MuPDF) renders all the formats below by way of SVGs (Scalable Vector Graphics):
+The Emacs Reader (via MuPDF) can open all the formats below.
 
 ** Well-supported Formats
 + PDF
@@ -135,7 +135,7 @@ This will not work for testing auto loading though. You can try using =package-v
 * How It Works
 This package is entirely distinct from =DocView= and =pdf-tools= in both its architecture and implementation. It leverages Emacs’ dynamic/native modules which allows it to interoperate with other programming languages outside of its Emacs Lisp environment.
 
-Thus, we rely on the efficient MuPDF library as a shared object with which our dynamic modules work. All the tasks that require manual memory management, efficiently rendering SVGs, and so on are delegated to the C backend, and Emacs takes care of exclusively what it’s good at: displaying produced SVGs and buffer management.
+Thus, we rely on the efficient MuPDF library as a shared object with which our dynamic modules work. All the tasks that require manual memory management, efficiently dealing with the rendered pages, and so on are delegated to the C backend, and Emacs takes care of exclusively what it’s good at: displaying produced pages, buffer management, and all round integration with the rest of Emacs.
 
 For understanding how dynamic modules work within Emacs, please consult the following article I wrote:
 
