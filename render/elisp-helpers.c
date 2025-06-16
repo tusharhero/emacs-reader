@@ -121,18 +121,18 @@ register_module_func(emacs_env *env,
 }
 
 /**
- * svg2elisp_image - Create an Elisp image object from raw SVG data
+ * data2elisp_image - Create an Elisp image object from raw image data
  * @env: Emacs environment pointer
- * @svg_data: SVG data that is to be rendered as image, should usually be from
+ * @img_data: Image data that is to be rendered as image, should usually be from
  * the DocState.
- * @svg_size: The size of the SVG data that is going to be rendered, should
+ * @img_size: The size of the image data that is going to be rendered, should
  * usually be from the DocState.
  *
- * One needs to be extremely about handling the SVG data, and make sure it later
+ * One needs to be extremely about handling the image data, and make sure it later
  * gets dropped and freed accordingly.
  *
  * Returns: The Elisp image object, which will be a specific plist, and can be
-rendered in Emacs with `insert-image' or other means.
+ * rendered in Emacs with `insert-image' or other means.
 
  */
 
@@ -219,7 +219,7 @@ get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * @env:    The Emacs environment pointer.
  *
  * Interns the Elisp variable `doc-render-status` and sets it to `t`
- * (true) in the current buffer, indicating that the SVG rendering
+ * (true) in the current buffer, indicating that the image rendering
  * is up to date.
  */
 

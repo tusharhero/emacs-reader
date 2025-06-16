@@ -367,8 +367,8 @@ slide_cache_window_backward(DocState *state)
  *   2. Exposes the total page count to Elisp via set_current_pagecount().
  *   3. Marks the render status true in Elisp via set_current_render_status().
  *   4. Creates a buffer-local overlay via init_overlay().
- *   5. Renders the current page (and neighbors) to SVG via render_pages().
- *   6. Converts the SVG to an Emacs image object (svg2elisp_image), and
+ *   5. Renders the current page (and neighbors) to image via render_pages().
+ *   6. Converts the image to an Emacs image object (svg2elisp_image), and
  * displays it in the overlay using overlay-put.
  *   7. Wraps the DocState in a user pointer and stores it in the Elisp variable
  *      `reader-current-doc-state-ptr` for later access.
@@ -478,7 +478,7 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * @args:  (ignored).
  * @data:  (ignored).
  *
- * Retrieves the current DocState and overlay, converts the next-page's SVG
+ * Retrieves the current DocState and overlay, converts the next-page's image
  * data (`state->next_img_data`) into an Emacs image, and updates the overlay to
  * display it. If not already at the last page, also advances the DocState's
  * page index by calling render_pages() on the next page.
@@ -532,7 +532,7 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @data:  (ignored).
  *
  * Retrieves the current DocState and overlay. If on page > 0, converts the
- * previous-page's SVG data (`state->prev_img_data`) into an Emacs image,
+ * previous-page's image data (`state->prev_img_data`) into an Emacs image,
  * updates the overlay, and re-renders pages at state->prev_page_number. If
  * already at the first page, emits a warning and returns nil.
  *
@@ -584,7 +584,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @data:  (ignored).
  *
  * If not already on page zero, resets state->current_page_number to 0,
- * re-renders the pages, converts the current-page SVG into an Emacs image,
+ * re-renders the pages, converts the current-page image into an Emacs image,
  * and updates the overlay. Warns if the first page is already displayed.
  *
  * Return: Elisp `t` on success, `nil` if already at the first page.
@@ -632,7 +632,7 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @data:  (ignored).
  *
  * If not already on the last page, sets state->current_page_number to
- * pagecount–1, re-renders, converts the SVG, and updates the overlay.
+ * pagecount–1, re-renders, converts the image, and updates the overlay.
  * Warns and returns nil if already at end.
  *
  * Return: Elisp `t` on success, `nil` if already at the last page.
@@ -679,7 +679,7 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @data:  (ignored).
  *
  * Extracts the integer page_number from args[0]. If within (1..pagecount-2),
- * updates state->current_page_number, re-renders that page, converts SVG
+ * updates state->current_page_number, re-renders that page, converts image
  * to an image, and updates the overlay. Otherwise emits a bounds warning.
  *
  * Return: Elisp `t` on success or out-of-bounds (always `t`).
@@ -721,14 +721,14 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 }
 
 /**
- * emacs_doc_change_page_size - Scale the displayed SVG to a new size.
+ * emacs_doc_change_page_size - Scale the displayed image to a new size.
  * @env:   The Emacs environment pointer.
  * @nargs: Number of Elisp args (should be 1).
  * @args:  Array of Elisp argument values; args[0] is the float scale factor.
  * @data:  (ignored).
  *
  * Retrieves the current DocState and overlay, then:
- *   - Rebuilds the SVG image plist’s :width, :length, and :scale entries
+ *   - Rebuilds the image plist’s :width, :length, and :scale entries
  *     by multiplying the original page dimensions by the given factor.
  *   - Updates the image object via plist-put and setcdr.
  *   - Re-displays the modified image in the overlay.
@@ -847,7 +847,7 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "wrapped "
 	    "around the Elisp function `reader-prev-page'.  Since DocState "
 	    "stores "
-	    "SVG data for the previous and next page, all this does is render "
+	    "image data for the previous and next page, all this does is render "
 	    "the "
 	    "data for the previous page that was rendered and stored in memory "
 	    "previously.");
