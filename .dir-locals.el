@@ -1,8 +1,11 @@
-;; .dir-locals.el
-((c-mode . ((indent-tabs-mode . t)     ; Use spaces
-            (c-basic-offset . 2)         ; 2-space indent
-            (tab-width . 8)              ; Tab width (in case tabs are viewed)
-            (c-default-style . "gnu")    ; Use GNU C style
-            (fill-column . 80)))
- (nil . ((require-final-newline . t)
-         (show-trailing-whitespace . t))))
+;;; Directory Local Variables            -*- no-byte-compile: t -*-
+;;; For more information see (info "(emacs) Directory Variables")
+
+((nil . ((require-final-newline . t)
+	 (show-trailing-whitespace . t)))
+ (c-mode . ((indent-tabs-mode . t)
+	    (c-basic-offset . 2)
+	    (tab-width . 8)
+	    (c-default-style . "gnu")
+	    (fill-column . 80)))
+ (emacs-lisp-mode . ((mode . aggressive-indent))))
