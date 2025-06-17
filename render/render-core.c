@@ -30,8 +30,8 @@ free_cached_page(DocState *state, CachedPage *cp)
 
 	cp->status = PAGE_STATUS_EMPTY;
 	fz_drop_display_list(state->ctx, cp->display_list);
-	free(cp->img_data);
 	cp->display_list = NULL;
+	free(cp->img_data);
 	cp->img_data = NULL;
 	cp->img_size = 0;
 }
@@ -42,12 +42,10 @@ load_page_dl(DocState *state, CachedPage *cp)
 	fz_page *loaded_page = NULL;
 	fz_context *ctx = fz_clone_context(state->ctx);
 
-	clock_t start = clock();
-
+	fz_drop_display_list(ctx, cp->display_list);
 	if (cp->status == PAGE_STATUS_EMPTY)
 	{
 		cp->status = PAGE_STATUS_RENDERING;
-
 		fz_try(ctx)
 		{
 			loaded_page
@@ -56,14 +54,13 @@ load_page_dl(DocState *state, CachedPage *cp)
 			cp->display_list = fz_new_display_list_from_page(
 			    state->ctx, loaded_page);
 		}
-		fz_always(ctx) fz_drop_page(state->ctx, loaded_page);
+		fz_always(ctx)
+		{
+			fz_drop_page(state->ctx, loaded_page);
+			loaded_page = NULL;
+		}
 		fz_catch(ctx) fz_rethrow(ctx);
 	}
-
-	clock_t end = clock();
-
-	double duration = (double)(end - start) / CLOCKS_PER_SEC;
-	fprintf(stderr, "Took %f to load\n", duration);
 
 	fz_drop_context(ctx);
 	return EXIT_SUCCESS;
@@ -80,22 +77,20 @@ draw_page_thread(void *arg)
 	DocState *state = args->state;
 	CachedPage *cp = args->cp;
 
-	clock_t start = clock();
 	fz_context *ctx = fz_clone_context(state->ctx);
 
 	ctm = fz_transform_page(state->page_bbox, state->resolution,
 				state->rotate);
-
 	cp->imgh = 0;
 	cp->imgw = 0;
 
 	fz_try(ctx)
 	{
-		/* if (cp->pixmap) */
-		/* { */
-		/* 	fz_drop_pixmap(ctx, cp->pixmap); */
-		/* 	cp->pixmap = NULL; */
-		/* } */
+		if (cp->display_list == NULL)
+		{
+			fprintf(stderr, "Display list of page %d is empty\n",
+				cp->page_num);
+		}
 		cp->pixmap = fz_new_pixmap_from_display_list(
 		    ctx, cp->display_list, ctm, fz_device_rgb(ctx), 0);
 		if (state->invert)
@@ -108,18 +103,14 @@ draw_page_thread(void *arg)
 	}
 	fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
 	cp->status = PAGE_STATUS_READY;
-	clock_t end = clock();
 
-	double duration = (double)(end - start) / CLOCKS_PER_SEC;
-	fprintf(stderr, "Took %f to render\n", duration);
-
-	clock_t write_start = clock();
 	fz_try(ctx)
 	{
 		buf = fz_new_buffer(ctx, 1024);
 		out = fz_new_output_with_buffer(ctx, buf);
 		fz_write_pixmap_as_pnm(ctx, out, cp->pixmap);
-		fz_drop_pixmap(ctx, cp->pixmap); // Drop the pixmap after using it
+		fz_drop_pixmap(ctx,
+			       cp->pixmap); // Drop the pixmap after using it
 		cp->pixmap = NULL;
 	}
 	fz_catch(ctx)
@@ -131,17 +122,12 @@ draw_page_thread(void *arg)
 
 	fz_close_output(ctx, out);
 
-	clock_t write_end = clock();
-
-	double write_duration
-	    = (double)(write_end - write_start) / CLOCKS_PER_SEC;
-	fprintf(stderr, "Took %f to write pixmap as PPM\n", write_duration);
-
 	// Reset the pre-existing memory that we were pointing to
 	free(cp->img_data);
 	cp->img_data = NULL;
 	cp->img_size = 0;
 
+	// Prepare for assigning data from fz_buffer
 	cp->img_size = buf->len;
 	cp->img_data = (char *)malloc(cp->img_size);
 
@@ -279,19 +265,16 @@ slide_cache_window_forward(DocState *state)
 		{
 			free_cached_page(state, state->cache_window[0]);
 		}
-
 		memmove(&state->cache_window[0], &state->cache_window[1],
 			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
 		CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
 		state->cache_window[MAX_CACHE_SIZE - 1] = cp;
-
 		if (cp->status == PAGE_STATUS_EMPTY)
-		{
-			load_page_dl(state, cp);
-			async_render(state, cp);
-		}
-
+		  {
+		    load_page_dl(state, cp);
+		    async_render(state, cp);
+		  }
 		state->current_window_index = MAX_CACHE_WINDOW;
 	}
 	else
@@ -347,7 +330,7 @@ slide_cache_window_backward(DocState *state)
 	}
 
 	state->current_cached_page
-	    = state->cache_window[state->current_window_index];
+	  = state->cache_window[state->current_window_index];
 	return true;
 }
 
@@ -565,7 +548,6 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		display_img_to_overlay(env, state, prev_cp->img_data,
 				       prev_cp->img_size, current_doc_overlay);
 		slide_cache_window_backward(state);
-		/* free(draw_args); */
 	}
 	else
 	{
@@ -846,7 +828,8 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "wrapped "
 	    "around the Elisp function `reader-prev-page'.  Since DocState "
 	    "stores "
-	    "image data for the previous and next page, all this does is render "
+	    "image data for the previous and next page, all this does is "
+	    "render "
 	    "the "
 	    "data for the previous page that was rendered and stored in memory "
 	    "previously.");
