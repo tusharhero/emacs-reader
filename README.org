@@ -38,7 +38,7 @@ Using these formats is heavily discouraged, you should /always/ prefer the above
 * Dependencies
 Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule (More details at [[https://codeberg.org/divyaranjan/emacs-reader/issues/18][#18]]).
 
-So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the depencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
+So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the dependencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
 
 * Installation
 For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. This is different across platforms:
@@ -156,9 +156,9 @@ The streams happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the chan
 If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on [[https://libera.chat/][Libera]].
 
 * License
-Licensed under GPLv3. Check [[file:LICENSE][LICENSE]] and [[file:CONTRIBUTORS][CONTRIBUTORS]] for details.
+Unless another license is listed, all files in emacs-reader are licensed under the GNU General Public License version 3 (or at your option), any later version. See [[file:LICENSE][LICENSE]] and [[file:CONTRIBUTORS][CONTRIBUTORS]] for further details.
 
-The logo of the project was made by the author and is shared under [[http://creativecommons.org/licenses/by-sa/4.0/][CC-BY-SA-4.0]]. The logo uses the following artworks from GNU:
+The logo of the project was made by Divya Ranjan Pattanaik and is shared under [[http://creativecommons.org/licenses/by-sa/4.0/][CC-BY-SA-4.0]]. The logo uses the following artworks from GNU:
 
 - [[https://www.gnu.org/graphics/heckert_gnu.html][A Bold GNU Head by Aurélio A. Heckert]]
 - [[https://commons.wikimedia.org/wiki/File:Emacs_512.png][Icon for Emacs 23 by Kentaro Ohkouchi]]
