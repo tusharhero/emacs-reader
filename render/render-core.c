@@ -181,30 +181,30 @@ build_cache_window(DocState *state, int n)
 	int start, end;
 	int pagecount = state->pagecount;
 
-	if (n < MAX_CACHE_WINDOW)
+	if (n < MAX_CACHE_WINDOW_SIZE)
 	{
 		start = 0;
-		end = n + MAX_CACHE_WINDOW;
+		end = n + MAX_CACHE_WINDOW_SIZE;
 		if (end >= pagecount)
 			end = pagecount - 1;
 	}
-	else if (n > (pagecount - 1) - MAX_CACHE_WINDOW)
+	else if (n > (pagecount - 1) - MAX_CACHE_WINDOW_SIZE)
 	{
 		end = pagecount - 1;
-		start = n - MAX_CACHE_WINDOW;
+		start = n - MAX_CACHE_WINDOW_SIZE;
 		if (start < 0)
 			start = 0;
 	}
 	else
 	{
-		start = n - MAX_CACHE_WINDOW;
-		end = n + MAX_CACHE_WINDOW;
+	  start = n - MAX_CACHE_WINDOW_SIZE;
+	  end = n + MAX_CACHE_WINDOW_SIZE;
 	}
 
 	state->current_page_number = n;
 	state->current_window_index = n - start;
 
-	/* pthread_t threads[MAX_CACHE_WINDOW]; */
+	/* pthread_t threads[MAX_CACHE_WINDOW_SIZE]; */
 	/* int thread_count = 0; */
 
 	for (int i = 0; i < MAX_CACHE_SIZE; ++i)
@@ -258,25 +258,25 @@ slide_cache_window_forward(DocState *state)
 		return false;
 	}
 
-	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
-	{
-		// Free the leftmost page in the cache window
-		if (state->cache_window[0]->status == PAGE_STATUS_READY)
-		{
-			free_cached_page(state, state->cache_window[0]);
-		}
-		memmove(&state->cache_window[0], &state->cache_window[1],
-			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+	if (n - MAX_CACHE_WINDOW_SIZE > 0 && n + MAX_CACHE_WINDOW_SIZE < pagecount)
+	  {
+	    // Free the leftmost page in the cache window
+	    if (state->cache_window[0]->status == PAGE_STATUS_READY)
+	      {
+		free_cached_page(state, state->cache_window[0]);
+	      }
+	    memmove(&state->cache_window[0], &state->cache_window[1],
+		    sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-		CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW];
-		state->cache_window[MAX_CACHE_SIZE - 1] = cp;
-		if (cp->status == PAGE_STATUS_EMPTY)
-		  {
-		    load_page_dl(state, cp);
-		    async_render(state, cp);
-		  }
-		state->current_window_index = MAX_CACHE_WINDOW;
-	}
+	    CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW_SIZE];
+	    state->cache_window[MAX_CACHE_SIZE - 1] = cp;
+	    if (cp->status == PAGE_STATUS_EMPTY)
+	      {
+		load_page_dl(state, cp);
+		async_render(state, cp);
+	      }
+	    state->current_window_index = MAX_CACHE_WINDOW_SIZE;
+	  }
 	else
 	{
 		build_cache_window(state, n);
@@ -303,27 +303,27 @@ slide_cache_window_backward(DocState *state)
 		return false;
 	}
 
-	if (n - MAX_CACHE_WINDOW > 0 && n + MAX_CACHE_WINDOW < pagecount)
-	{
+	if (n - MAX_CACHE_WINDOW_SIZE > 0 && n + MAX_CACHE_WINDOW_SIZE < pagecount)
+	  {
 
-		// Free the rightmost page in the cache window
-		if (state->cache_window[MAX_CACHE_SIZE - 1]->status
-		    == PAGE_STATUS_READY)
-		{
-		  free_cached_page(
-				   state, state->cache_window[MAX_CACHE_SIZE - 1]);
-		}
-		memmove(&state->cache_window[1], &state->cache_window[0],
-			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
-		CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
-		state->cache_window[0] = cp;
-		if (cp->status == PAGE_STATUS_EMPTY)
-		{
-			load_page_dl(state, cp);
-			async_render(state, cp);
-		}
-		state->current_window_index = MAX_CACHE_WINDOW;
-	}
+	    // Free the rightmost page in the cache window
+	    if (state->cache_window[MAX_CACHE_SIZE - 1]->status
+		== PAGE_STATUS_READY)
+	      {
+		free_cached_page(
+				 state, state->cache_window[MAX_CACHE_SIZE - 1]);
+	      }
+	    memmove(&state->cache_window[1], &state->cache_window[0],
+		    sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+	    CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW_SIZE];
+	    state->cache_window[0] = cp;
+	    if (cp->status == PAGE_STATUS_EMPTY)
+	      {
+		load_page_dl(state, cp);
+		async_render(state, cp);
+	      }
+	    state->current_window_index = MAX_CACHE_WINDOW_SIZE;
+	  }
 	else
 	{
 		build_cache_window(state, n);

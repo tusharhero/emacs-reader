@@ -26,7 +26,7 @@
 #define MAX_POOL_SIZE 8
 #define MAX_QUEUE_SIZE 256
 #define MAX_CACHE_SIZE 11
-#define MAX_CACHE_WINDOW (MAX_CACHE_SIZE / 2)
+#define MAX_CACHE_WINDOW_SIZE (MAX_CACHE_SIZE / 2)
 
 typedef enum
 {
