@@ -324,15 +324,14 @@ slide_cache_window_backward(DocState *state)
 	{
 
 		// Free the rightmost page in the cache window
-		if (state->cache_window[MAX_CACHE_WINDOW - 1]->status
+		if (state->cache_window[MAX_CACHE_SIZE - 1]->status
 		    == PAGE_STATUS_READY)
 		{
-			free_cached_page(
-			    state, state->cache_window[MAX_CACHE_WINDOW - 1]);
+		  free_cached_page(
+				   state, state->cache_window[MAX_CACHE_SIZE - 1]);
 		}
 		memmove(&state->cache_window[1], &state->cache_window[0],
 			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
-
 		CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW];
 		state->cache_window[0] = cp;
 		if (cp->status == PAGE_STATUS_EMPTY)
