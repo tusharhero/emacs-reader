@@ -31,8 +31,8 @@ emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
   {
     state->invert ^= 1;
     CachedPage *cp = state->current_cached_page;
-    RenderThreadArgs *draw_args
-      = malloc(sizeof(RenderThreadArgs));
+    DrawThreadArgs *draw_args
+      = malloc(sizeof(DrawThreadArgs));
     draw_args->state = state;
     draw_args->cp = cp;
     draw_page_thread(draw_args);
