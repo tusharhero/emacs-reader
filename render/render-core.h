@@ -71,7 +71,7 @@ typedef struct
 {
 	DocState *state;
 	CachedPage *cp;
-} RenderThreadArgs;
+} DrawThreadArgs;
 
 typedef struct
 {

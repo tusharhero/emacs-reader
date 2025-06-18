@@ -73,7 +73,7 @@ draw_page_thread(void *arg)
 	fz_buffer *buf = NULL;
 	fz_matrix ctm;
 
-	RenderThreadArgs *args = (RenderThreadArgs *)arg;
+        DrawThreadArgs *args = (DrawThreadArgs *)arg;
 	DocState *state = args->state;
 	CachedPage *cp = args->cp;
 
@@ -157,7 +157,7 @@ async_render(DocState *state, CachedPage *cp)
 	/* return false; */
 	/* pthread_t th; */
 
-	RenderThreadArgs *render_args = malloc(sizeof(RenderThreadArgs));
+	DrawThreadArgs *render_args = malloc(sizeof(DrawThreadArgs));
 	render_args->state = state;
 	render_args->cp = cp;
 
@@ -439,7 +439,7 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		state->invert = 0;
 		state->rotate = 0;
 		CachedPage *cp = state->current_cached_page;
-		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = cp;
 		display_img_to_overlay(env, state, cp->img_data, cp->img_size,
@@ -489,7 +489,7 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		// Get the pointer for the next CachedPage in the window
 		CachedPage *next_cp
 		    = state->cache_window[state->current_window_index + 1];
-		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = next_cp;
 		draw_page_thread(draw_args);
@@ -541,7 +541,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 		CachedPage *prev_cp
 		    = state->cache_window[state->current_window_index - 1];
-		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = prev_cp;
 		draw_page_thread(draw_args);
@@ -728,7 +728,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	if (state)
 	{
 		emacs_value current_doc_overlay = get_current_doc_overlay(env);
-		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
 		double new_res = fz_clamp(scale_factor * 72, MINRES, MAXRES);
@@ -760,7 +760,7 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	{
 		state->rotate += rotation_deg;
 		emacs_value current_doc_overlay = get_current_doc_overlay(env);
-		RenderThreadArgs *draw_args = malloc(sizeof(RenderThreadArgs));
+		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
 
