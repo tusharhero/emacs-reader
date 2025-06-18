@@ -22,20 +22,6 @@
 
 int plugin_is_GPL_compatible;
 
-void
-free_cached_page(DocState *state, CachedPage *cp)
-{
-	if (cp->status != PAGE_STATUS_READY)
-		return; // already evicted or never loaded
-
-	cp->status = PAGE_STATUS_EMPTY;
-	fz_drop_display_list(state->ctx, cp->display_list);
-	cp->display_list = NULL;
-	free(cp->img_data);
-	cp->img_data = NULL;
-	cp->img_size = 0;
-}
-
 int
 load_page_dl(DocState *state, CachedPage *cp)
 {
