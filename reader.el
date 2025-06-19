@@ -78,9 +78,9 @@
         (when reader-command-queue
           (run-with-idle-timer 0.01 nil #'reader-process-command-queue))))))
 
-(defun reader-enqueue-command (cmd)
-  "Add CMD to the queue and start processing if needed."
-  (push cmd reader-command-queue)
+(defun reader-enqueue-command (cmd &rest args)
+  "Add CMD with ARGS to the queue and start processing if needed."
+  (push (apply #'apply-partially cmd args) reader-command-queue)
   (unless (or (active-minibuffer-window)
               (memq #'reader-process-command-queue post-command-hook))
     (add-hook 'post-command-hook #'reader-process-command-queue)))
