@@ -114,8 +114,7 @@ other file format will simply not show up as a candidate."
 (defun reader--next-page ()
   "Go to the next page of the document."
   (interactive)
-  (let* ((status (reader-dyn--next-page))
-	 (img (overlay-get reader-current-doc-overlay 'display)))
+  (let ((status (reader-dyn--next-page)))
     (when status
       (force-mode-line-update t))
     status))
@@ -615,6 +614,7 @@ Keybindings:
 
   (setq-local bookmark-make-record-function
 	      #'reader-bookmark-make-record)
+
   (unless reader-current-doc-render-status
     (reader--render-buffer))
 
@@ -622,6 +622,7 @@ Keybindings:
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
+
   (reader-fit-to-height)
   (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
