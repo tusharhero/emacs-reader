@@ -85,6 +85,36 @@
               (memq #'reader-process-command-queue post-command-hook))
     (add-hook 'post-command-hook #'reader-process-command-queue)))
 
+(defmacro reader--define-queue-command (name arglist docstring interactive &rest body)
+  "Define NAME as a reader command.
+Also define a necessary non-queue function.
+
+Much like `defun', except that ARGLIST, DOCSTRING, and INTERACTIVE are required.
+
+The reader--non-queue-NAME function is simply defined as a function with body BODY.
+The reader-NAME command is simply a wrapper around `reader-enqueue-command' with
+reader--non-queue-NAME as the argument."
+  (declare (indent defun))
+  (let* ((name (symbol-name name))
+	 (non-queue-function-name (concat "reader--non-queue-" name))
+	 (queue-function-name (concat "reader-" name)))
+    `(progn
+
+       (defun ,(intern non-queue-function-name) ,arglist
+	 ,(format "%s
+
+This is the actual function, see `%s' for the interactive version."
+		  docstring queue-function-name)
+	 ,(add-to-list 'body 'progn))
+
+       (defun ,(intern queue-function-name) ,arglist
+	 ,(format "%s
+
+This is the queuing function, see `%s' for the actual definition."
+		  docstring non-queue-function-name)
+	 ,interactive
+	 (reader-enqueue-command #',(intern non-queue-function-name))))))
+
 ;;;###autoload
 (defun reader-open-doc (document)
   "Open DOCUMENT for viewing.
@@ -107,29 +137,17 @@ other file format will simply not show up as a candidate."
   (reader-dyn--load-doc (expand-file-name document))
   (reader-mode))
 
-(defun reader-next-page ()
-  "Go to the next page of the document.
-
-It queues `reader--non-queue-next-page'."
-  (interactive)
-  (reader-enqueue-command #'reader--non-queue-next-page))
-
-(defun reader--non-queue-next-page ()
+(reader--define-queue-command next-page ()
   "Go to the next page of the document."
+  (interactive)
   (let ((status (reader-dyn--next-page)))
     (when status
       (force-mode-line-update t))
     status))
 
-(defun reader-previous-page ()
-  "Go to the previous page of the document.
-
-It queues `reader--non-queue-previous-page'."
-  (interactive)
-  (reader-enqueue-command #'reader--non-queue-previous-page))
-
-(defun reader--non-queue-previous-page ()
+(reader--define-queue-command previous-page ()
   "Go to the previous page of the document."
+  (interactive)
   (let ((status (reader-dyn--prev-page)))
     (when status
       (force-mode-line-update t))
