@@ -59,7 +59,7 @@ draw_page_thread(void *arg)
 	fz_buffer *buf = NULL;
 	fz_matrix ctm;
 
-        DrawThreadArgs *args = (DrawThreadArgs *)arg;
+	DrawThreadArgs *args = (DrawThreadArgs *)arg;
 	DocState *state = args->state;
 	CachedPage *cp = args->cp;
 
@@ -183,8 +183,8 @@ build_cache_window(DocState *state, int n)
 	}
 	else
 	{
-	  start = n - MAX_CACHE_WINDOW_SIZE;
-	  end = n + MAX_CACHE_WINDOW_SIZE;
+		start = n - MAX_CACHE_WINDOW_SIZE;
+		end = n + MAX_CACHE_WINDOW_SIZE;
 	}
 
 	state->current_page_number = n;
@@ -244,25 +244,28 @@ slide_cache_window_forward(DocState *state)
 		return false;
 	}
 
-	if (n - MAX_CACHE_WINDOW_SIZE > 0 && n + MAX_CACHE_WINDOW_SIZE < pagecount)
-	  {
-	    // Free the leftmost page in the cache window
-	    if (state->cache_window[0]->status == PAGE_STATUS_READY)
-	      {
-		free_cached_page(state, state->cache_window[0]);
-	      }
-	    memmove(&state->cache_window[0], &state->cache_window[1],
-		    sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+	if (n - MAX_CACHE_WINDOW_SIZE > 0
+	    && n + MAX_CACHE_WINDOW_SIZE < pagecount)
+	{
+		// Free the leftmost page in the cache window
+		if (state->cache_window[0] != NULL
+		    && state->cache_window[0]->status == PAGE_STATUS_READY)
+		{
+			free_cached_page(state, state->cache_window[0]);
+		}
+		memmove(&state->cache_window[0], &state->cache_window[1],
+			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
-	    CachedPage *cp = state->cached_pages_pool[n + MAX_CACHE_WINDOW_SIZE];
-	    state->cache_window[MAX_CACHE_SIZE - 1] = cp;
-	    if (cp->status == PAGE_STATUS_EMPTY)
-	      {
-		load_page_dl(state, cp);
-		async_render(state, cp);
-	      }
-	    state->current_window_index = MAX_CACHE_WINDOW_SIZE;
-	  }
+		CachedPage *cp
+		    = state->cached_pages_pool[n + MAX_CACHE_WINDOW_SIZE];
+		state->cache_window[MAX_CACHE_SIZE - 1] = cp;
+		if (cp->status == PAGE_STATUS_EMPTY)
+		{
+			load_page_dl(state, cp);
+			async_render(state, cp);
+		}
+		state->current_window_index = MAX_CACHE_WINDOW_SIZE;
+	}
 	else
 	{
 		build_cache_window(state, n);
@@ -289,34 +292,36 @@ slide_cache_window_backward(DocState *state)
 		return false;
 	}
 
-	if (n - MAX_CACHE_WINDOW_SIZE > 0 && n + MAX_CACHE_WINDOW_SIZE < pagecount)
-	  {
-
-	    // Free the rightmost page in the cache window
-	    if (state->cache_window[MAX_CACHE_SIZE - 1]->status
-		== PAGE_STATUS_READY)
-	      {
-		free_cached_page(
-				 state, state->cache_window[MAX_CACHE_SIZE - 1]);
-	      }
-	    memmove(&state->cache_window[1], &state->cache_window[0],
-		    sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
-	    CachedPage *cp = state->cached_pages_pool[n - MAX_CACHE_WINDOW_SIZE];
-	    state->cache_window[0] = cp;
-	    if (cp->status == PAGE_STATUS_EMPTY)
-	      {
-		load_page_dl(state, cp);
-		async_render(state, cp);
-	      }
-	    state->current_window_index = MAX_CACHE_WINDOW_SIZE;
-	  }
+	if (n - MAX_CACHE_WINDOW_SIZE > 0
+	    && n + MAX_CACHE_WINDOW_SIZE < pagecount)
+	{
+		// Free the rightmost page in the cache window
+		if (state->cache_window[MAX_CACHE_SIZE - 1] != NULL
+		    && state->cache_window[MAX_CACHE_SIZE - 1]->status
+			   == PAGE_STATUS_READY)
+		{
+			free_cached_page(
+			    state, state->cache_window[MAX_CACHE_SIZE - 1]);
+		}
+		memmove(&state->cache_window[1], &state->cache_window[0],
+			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+		CachedPage *cp
+		    = state->cached_pages_pool[n - MAX_CACHE_WINDOW_SIZE];
+		state->cache_window[0] = cp;
+		if (cp->status == PAGE_STATUS_EMPTY)
+		{
+			load_page_dl(state, cp);
+			async_render(state, cp);
+		}
+		state->current_window_index = MAX_CACHE_WINDOW_SIZE;
+	}
 	else
 	{
 		build_cache_window(state, n);
 	}
 
 	state->current_cached_page
-	  = state->cache_window[state->current_window_index];
+	    = state->cache_window[state->current_window_index];
 	return true;
 }
 
