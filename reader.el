@@ -416,7 +416,7 @@ Optionally specify the WINDOW, defaults to current window."
     ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
     (set-window-hscroll window (reader--right-most-window-hscroll window))))
 
-(defun reader-scroll-up-or-prev-page (&optional amount window)
+(reader--define-queue-command scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
 
 Optionally specify the WINDOW, defaults to current window."
@@ -430,7 +430,7 @@ Optionally specify the WINDOW, defaults to current window."
 	       (- image-height pixel-window-height)))
     (reader--set-window-vscroll window bottom-most-scroll-pixel t)))
 
-(defun reader-scroll-down-or-next-page (&optional amount window)
+(reader--define-queue-command scroll-down-or-next-page (&optional amount window)
   "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page.
 
 Optionally specify the WINDOW, defaults to current window."
@@ -440,28 +440,28 @@ Optionally specify the WINDOW, defaults to current window."
 	     (reader--non-queue-next-page)) ; if succeeds
     (reader--set-window-vscroll window 0)))
 
-(defun reader-scroll-up-screenful-or-prev-page (&optional window)
+(reader--define-queue-command scroll-up-screenful-or-prev-page (&optional window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
   (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
-    (reader-scroll-up-or-prev-page scroll window)))
+    (reader--non-queue-scroll-up-or-prev-page scroll window)))
 
-(defun reader-scroll-down-screenful-or-next-page (&optional window)
+(reader--define-queue-command scroll-down-screenful-or-next-page (&optional window)
   "Scroll down the current page by screenful, otherwise switch to the next page.
 
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
   (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
-    (reader-scroll-down-or-next-page scroll window)))
+    (reader--non-queue-scroll-down-or-next-page scroll window)))
 
 (defun reader-mwheel-scroll-up (event)
   "Scroll up or switch to the previous page, but also handle mouse EVENT.
 
-See also `reader-scroll-up-or-prev-page'."
+See also `reader-non-queue-scroll-up-or-prev-page'."
   (interactive "e")
   (let* ((event-type (car event))
 	 (amount (pcase event-type
@@ -470,12 +470,12 @@ See also `reader-scroll-up-or-prev-page'."
 		   ('triple-wheel-up 3)))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader-scroll-up-or-prev-page amount scrolled-window))))
+      (reader--non-queue-scroll-up-or-prev-page amount scrolled-window))))
 
 (defun reader-mwheel-scroll-down (event)
   "Scroll down or switch to the next page, but also handle mouse EVENT.
 
-See also `reader-scroll-down-or-next-page'."
+See also `reader--non-queue-scroll-down-or-next-page'."
   (interactive "e")
   (let* ((event-type (car event))
 	 (amount (pcase event-type
@@ -484,7 +484,7 @@ See also `reader-scroll-down-or-next-page'."
 		   ('triple-wheel-down 3)))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader-scroll-down-or-next-page amount scrolled-window))))
+      (reader--non-queue-scroll-down-or-next-page amount scrolled-window))))
 
 (defun reader-mwheel-scroll-left (event)
   "Scroll to the left, but also handle mouse EVENT.
