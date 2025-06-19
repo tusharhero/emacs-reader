@@ -108,24 +108,28 @@ other file format will simply not show up as a candidate."
   (reader-mode))
 
 (defun reader-next-page ()
-  (interactive)
-  (reader-enqueue-command #'reader--next-page))
+  "Go to the next page of the document.
 
-(defun reader--next-page ()
-  "Go to the next page of the document."
+It queues `reader--non-queue-next-page'."
   (interactive)
+  (reader-enqueue-command #'reader--non-queue-next-page))
+
+(defun reader--non-queue-next-page ()
+  "Go to the next page of the document."
   (let ((status (reader-dyn--next-page)))
     (when status
       (force-mode-line-update t))
     status))
 
 (defun reader-previous-page ()
-  (interactive)
-  (reader-enqueue-command #'reader--previous-page))
+  "Go to the previous page of the document.
 
-(defun reader--previous-page ()
-  "Go to the previous page of the document."
+It queues `reader--non-queue-previous-page'."
   (interactive)
+  (reader-enqueue-command #'reader--non-queue-previous-page))
+
+(defun reader--non-queue-previous-page ()
+  "Go to the previous page of the document."
   (let ((status (reader-dyn--prev-page)))
     (when status
       (force-mode-line-update t))
@@ -401,7 +405,7 @@ Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((and (= 0 (reader-scroll-up amount))
-		    (reader--previous-page))) ; if succeeds
+		    (reader--non-queue-previous-page))) ; if succeeds
 	      (image-height (cdr (reader--get-current-doc-image-size)))
 	      (pixel-window-height (window-pixel-height window))
 	      (bottom-most-scroll-pixel
@@ -415,7 +419,7 @@ Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
   (when (and (= 0 (reader-scroll-down amount window))
-	     (reader--next-page)) ; if succeeds
+	     (reader--non-queue-next-page)) ; if succeeds
     (reader--set-window-vscroll window 0)))
 
 (defun reader-scroll-up-screenful-or-prev-page (&optional window)
