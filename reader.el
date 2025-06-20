@@ -78,7 +78,7 @@
         (when reader-command-queue
           (run-with-idle-timer 0.01 nil #'reader-process-command-queue))))))
 
-(defun reader-enqueue-command (cmd &rest args)
+(defun reader-enqueue-command (cmd args)
   "Add CMD with ARGS to the queue and start processing if needed."
   (push (apply #'apply-partially cmd args) reader-command-queue)
   (unless (or (active-minibuffer-window)
@@ -113,7 +113,9 @@ This is the actual function, see `%s' for the interactive version."
 This is the queuing function, see `%s' for the actual definition."
 		  docstring non-queue-function-name)
 	 ,interactive
-	 (reader-enqueue-command #',(intern non-queue-function-name))))))
+	 (reader-enqueue-command #',(intern non-queue-function-name)
+				 ,(flatten-list
+				   `(list ,(remq '&optional arglist))))))))
 
 ;;;###autoload
 (defun reader-open-doc (document)
@@ -458,7 +460,7 @@ Optionally specify the WINDOW, defaults to current window."
 		   next-screen-context-lines)))
     (reader--non-queue-scroll-down-or-next-page scroll window)))
 
-(defun reader-mwheel-scroll-up (event)
+(reader--define-queue-command mwheel-scroll-up (event)
   "Scroll up or switch to the previous page, but also handle mouse EVENT.
 
 See also `reader-non-queue-scroll-up-or-prev-page'."
@@ -472,7 +474,7 @@ See also `reader-non-queue-scroll-up-or-prev-page'."
     (with-current-buffer (window-buffer scrolled-window)
       (reader--non-queue-scroll-up-or-prev-page amount scrolled-window))))
 
-(defun reader-mwheel-scroll-down (event)
+(reader--define-queue-command mwheel-scroll-down (event)
   "Scroll down or switch to the next page, but also handle mouse EVENT.
 
 See also `reader--non-queue-scroll-down-or-next-page'."
