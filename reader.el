@@ -94,7 +94,8 @@ Much like `defun', except that ARGLIST, DOCSTRING, and INTERACTIVE are required.
 The reader--non-queue-NAME function is simply defined as a function with body BODY.
 The reader-NAME command is simply a wrapper around `reader-enqueue-command' with
 reader--non-queue-NAME as the argument."
-  (declare (indent defun))
+  (declare (indent defun)
+	   (doc-string 3))
   (let* ((name (symbol-name name))
 	 (non-queue-function-name (concat "reader--non-queue-" name))
 	 (queue-function-name (concat "reader-" name)))
