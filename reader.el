@@ -65,23 +65,23 @@
   "The current page number of the document."
   (1+ (reader-dyn--current-doc-pagenumber)))
 
-(defvar reader-command-queue nil
+(defvar reader--command-queue nil
   "Queue of reader commands to be executed sequentially.")
 
-(defun reader-process-command-queue ()
+(defun reader--process-command-queue ()
   "Process the next command in the queue, ensuring UI updates."
-  (when-let* ((cmd (pop reader-command-queue)))
+  (when-let* ((cmd (pop reader--command-queue)))
     (funcall cmd)
     (redisplay)
-    (when reader-command-queue
-      (run-with-idle-timer 0.01 nil #'reader-process-command-queue))))
+    (when reader--command-queue
+      (run-with-idle-timer 0.01 nil #'reader--process-command-queue))))
 
-(defun reader-enqueue-command (cmd args)
+(defun reader--enqueue-command (cmd args)
   "Add CMD with ARGS to the queue and start processing if needed."
-  (push (apply #'apply-partially cmd args) reader-command-queue)
+  (push (apply #'apply-partially cmd args) reader--command-queue)
   (unless (or (active-minibuffer-window)
-              (memq #'reader-process-command-queue post-command-hook))
-    (add-hook 'post-command-hook #'reader-process-command-queue)))
+              (memq #'reader--process-command-queue post-command-hook))
+    (add-hook 'post-command-hook #'reader--process-command-queue)))
 
 (defmacro reader--define-queue-command (name arglist docstring interactive &rest body)
   "Define NAME as a reader command.
@@ -90,7 +90,7 @@ Also define a necessary non-queue function.
 Much like `defun', except that ARGLIST, DOCSTRING, and INTERACTIVE are required.
 
 The reader--non-queue-NAME function is simply defined as a function with body BODY.
-The reader-NAME command is simply a wrapper around `reader-enqueue-command' with
+The reader-NAME command is simply a wrapper around `reader--enqueue-command' with
 reader--non-queue-NAME as the argument."
   (declare (indent defun)
 	   (doc-string 3))
@@ -112,9 +112,9 @@ This is the actual function, see `%s' for the interactive version."
 This is the queuing function, see `%s' for the actual definition."
 		  docstring non-queue-function-name)
 	 ,interactive
-	 (reader-enqueue-command #',(intern non-queue-function-name)
-				 ,(flatten-list
-				   `(list ,(remq '&optional arglist))))))))
+	 (reader--enqueue-command #',(intern non-queue-function-name)
+				  ,(flatten-list
+				    `(list ,(remq '&optional arglist))))))))
 
 ;;;###autoload
 (defun reader-open-doc (document)
