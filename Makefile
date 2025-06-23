@@ -72,7 +72,7 @@ MUPDF_HEADERS := $(MUPDF_DIR)/include/
 CFLAGS += -Wall -Wextra -fPIC -I$(MUPDF_HEADERS) -I$(CURDIR)/render/
 
 # Source files and object targets
-SRCS := render/elisp-helpers.c render/mupdf-helpers.c render/render-core.c render/render-theme.c
+SRCS := render/elisp-helpers.c render/mupdf-helpers.c render/render-threads.c render/render-core.c render/render-theme.c
 OBJS := $(SRCS:%.c=%$(OBJ_EXT))
 
 .PHONY: all clean submodule
