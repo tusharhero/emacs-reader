@@ -1,6 +1,5 @@
 (specifications->manifest
-  '("emacs"
-    "gcc-toolchain"
+  '("gcc-toolchain"
     "clang" ; for clangd
     "mupdf"
     "make"))
