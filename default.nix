@@ -1,1 +1,7 @@
-{ pkgs ? import<nixpkgs> {} }: { pkgs.mkShell { packages = [ pkgs.mupdf-headless ]; }}
+{
+  pkgs ? import <nixpkgs> { },
+}:
+
+pkgs.mkShell {
+  packages = [ pkgs.mupdf-headless ];
+}
