@@ -19,8 +19,10 @@
 #include "emacs-module.h"
 #include "mupdf-helpers.h"
 #include "render-theme.h"
+#include "render-threads.h"
 
 int plugin_is_GPL_compatible;
+ThreadPool g_thread_pool;
 
 int
 load_page_dl(DocState *state, CachedPage *cp)
@@ -137,31 +139,6 @@ draw_page_thread(void *arg)
 }
 
 void
-async_render(DocState *state, CachedPage *cp)
-{
-	/* if (!cp) */
-	/* return false; */
-	/* pthread_t th; */
-
-	DrawThreadArgs *render_args = malloc(sizeof(DrawThreadArgs));
-	render_args->state = state;
-	render_args->cp = cp;
-
-	draw_page_thread(render_args);
-	/* int err = pthread_create(&th, NULL, render_page_thread, render_args);
-	 */
-	/* if (err) { */
-	/*   fprintf(stderr, "Failed to create render thread: %d\n", err); */
-	/*   free(render_args); */
-	/* return false; */
-	/* } */
-	/* pthread_join(th, NULL); */
-
-	/* return th; */
-	/* free(render_args); */
-}
-
-void
 build_cache_window(DocState *state, int n)
 {
 	int start, end;
@@ -190,9 +167,7 @@ build_cache_window(DocState *state, int n)
 	state->current_page_number = n;
 	state->current_window_index = n - start;
 
-	/* pthread_t threads[MAX_CACHE_WINDOW_SIZE]; */
-	/* int thread_count = 0; */
-
+	clock_t cache_start = clock();
 	for (int i = 0; i < MAX_CACHE_SIZE; ++i)
 	{
 		int idx = start + i;
@@ -204,11 +179,12 @@ build_cache_window(DocState *state, int n)
 			if (cp->status == PAGE_STATUS_EMPTY)
 			{
 				load_page_dl(state, cp);
-				/* pthread_t th = async_render(state, cp); */
-				/* if (th != 0) { */
-				/*   threads[thread_count++] = th; */
-				/* } */
-				async_render(state, cp);
+				DrawThreadArgs *draw_args
+				    = malloc(sizeof(DrawThreadArgs));
+				draw_args->state = state;
+				draw_args->cp = cp;
+				submit_job(draw_page_thread, draw_args,
+					   &g_thread_pool);
 			}
 		}
 		else
@@ -216,13 +192,11 @@ build_cache_window(DocState *state, int n)
 			state->cache_window[i] = NULL;
 		}
 	}
-	/* for (int j = 0; j < thread_count; j++) { */
-	/*   pthread_join(threads[j], NULL); */
-	/* } */
 
-	/* for (int k = 0; k < thread_count; k++) { */
-	/*   CachedPage *cp = state->cache_window[k]; */
-	/* } */
+	clock_t cache_end = clock();
+	double cache_duration
+	    = (double)(cache_end - cache_start) / CLOCKS_PER_SEC;
+	fprintf(stderr, "Took %fs to build cache window\n", cache_duration);
 
 	state->current_cached_page
 	    = state->cache_window[state->current_window_index];
@@ -233,7 +207,6 @@ slide_cache_window_forward(DocState *state)
 {
 	int n = ++state->current_page_number;
 	int pagecount = state->pagecount;
-	/* pthread_t th; */
 
 	if (state->current_page_number + 1 >= state->pagecount)
 	{
@@ -262,7 +235,11 @@ slide_cache_window_forward(DocState *state)
 		if (cp->status == PAGE_STATUS_EMPTY)
 		{
 			load_page_dl(state, cp);
-			async_render(state, cp);
+			DrawThreadArgs *draw_args
+			    = malloc(sizeof(DrawThreadArgs));
+			draw_args->state = state;
+			draw_args->cp = cp;
+			submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		}
 		state->current_window_index = MAX_CACHE_WINDOW_SIZE;
 	}
@@ -311,7 +288,11 @@ slide_cache_window_backward(DocState *state)
 		if (cp->status == PAGE_STATUS_EMPTY)
 		{
 			load_page_dl(state, cp);
-			async_render(state, cp);
+			DrawThreadArgs *draw_args
+			    = malloc(sizeof(DrawThreadArgs));
+			draw_args->state = state;
+			draw_args->cp = cp;
+			submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		}
 		state->current_window_index = MAX_CACHE_WINDOW_SIZE;
 	}
@@ -393,7 +374,6 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	}
 
 	build_cache_window(state, state->current_page_number);
-
 	set_current_pagecount(env, state);
 	set_current_render_status(env);
 	init_overlay(env);
@@ -433,6 +413,7 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = cp;
+		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		display_img_to_overlay(env, state, cp->img_data, cp->img_size,
 				       current_doc_overlay);
 	}
@@ -483,7 +464,8 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = next_cp;
-		draw_page_thread(draw_args);
+		submit_job(draw_page_thread, draw_args, &g_thread_pool);
+
 		display_img_to_overlay(env, state, next_cp->img_data,
 				       next_cp->img_size, current_doc_overlay);
 		slide_cache_window_forward(state);
@@ -535,7 +517,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = prev_cp;
-		draw_page_thread(draw_args);
+		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		display_img_to_overlay(env, state, prev_cp->img_data,
 				       prev_cp->img_size, current_doc_overlay);
 		slide_cache_window_backward(state);
@@ -724,7 +706,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		draw_args->cp = state->current_cached_page;
 		double new_res = fz_clamp(scale_factor * 72, MINRES, MAXRES);
 		state->resolution = new_res;
-		draw_page_thread(draw_args);
+		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		display_img_to_overlay(
 		    env, state, state->current_cached_page->img_data,
 		    state->current_cached_page->img_size, current_doc_overlay);
@@ -754,8 +736,7 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
-
-		draw_page_thread(draw_args);
+		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		display_img_to_overlay(
 		    env, state, state->current_cached_page->img_data,
 		    state->current_cached_page->img_size, current_doc_overlay);
@@ -884,6 +865,11 @@ emacs_module_init(struct emacs_runtime *runtime)
 	// Provide the current dynamic module as a feature to Emacs
 	provide(env, "render-core");
 	fprintf(stderr, "Emacs module initialized successfully.\n");
+
+	// Initialize the global thread pool
+	threadpool_init(&g_thread_pool);
+	fprintf(stderr, "%d threads have been initialized in the pool\n",
+		MAX_POOL_SIZE);
 
 	return 0;
 }
