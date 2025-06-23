@@ -13,4 +13,5 @@
 	       (tab-width . 8)
 	       (c-default-style . "gnu")
 	       (fill-column . 80)))
- (emacs-lisp-mode . ((mode . aggressive-indent))))
+ (emacs-lisp-mode . ((mode . aggressive-indent)))
+ (scheme-mode . ((mode . aggressive-indent))))
