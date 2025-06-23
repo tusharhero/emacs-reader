@@ -23,8 +23,6 @@
 
 #define MINRES 18
 #define MAXRES 850
-#define MAX_POOL_SIZE 8
-#define MAX_QUEUE_SIZE 256
 #define MAX_CACHE_SIZE 11
 #define MAX_CACHE_WINDOW_SIZE (MAX_CACHE_SIZE / 2)
 
@@ -72,12 +70,6 @@ typedef struct
 	DocState *state;
 	CachedPage *cp;
 } DrawThreadArgs;
-
-typedef struct
-{
-	void *(*func)(void *);
-	void *arg;
-} ThreadJob;
 
 int
 load_page_dl(DocState *state, CachedPage *cp);
