@@ -77,8 +77,7 @@
   (when-let* ((cmd (pop reader--command-queue)))
     (funcall cmd)
     (redisplay)
-    (when reader--command-queue
-      (run-with-idle-timer 0.01 nil #'reader--process-command-queue))))
+    (run-with-idle-timer 0.01 nil #'reader--process-command-queue)))
 
 (defun reader--enqueue-command (cmd args)
   "Add CMD with ARGS to the queue and start processing if needed."
@@ -117,8 +116,7 @@ This is the queuing function, see `%s' for the actual definition."
 		  docstring non-queue-function-name)
 	 ,interactive
 	 (reader--enqueue-command #',(intern non-queue-function-name)
-				  ,(flatten-list
-				    `(list ,(remq '&optional arglist))))))))
+				  ,(remq '&optional (add-to-list 'arglist 'list)))))))
 
 ;;;###autoload
 (defun reader-open-doc (document)
