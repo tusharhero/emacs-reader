@@ -65,6 +65,10 @@
   "The current page number of the document."
   (1+ (reader-dyn--current-doc-pagenumber)))
 
+;; We queue some commands because the user is expected to use the
+;; commands repeatedly, such as by simply spamming a key. If we don't
+;; queue the commands, Emacs may start skipping intermediate commands.
+
 (defvar reader--command-queue nil
   "Queue of reader commands to be executed sequentially.")
 
