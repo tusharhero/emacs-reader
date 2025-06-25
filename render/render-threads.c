@@ -15,8 +15,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render-threads.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 void
 job_queue_init(JobQueue *queue)
@@ -101,9 +99,9 @@ thread_routine(void *arg)
 		}
 
 		job->func(job->arg);
-		free(job);
 	}
 
+	free(arg);
 	return NULL;
 }
 

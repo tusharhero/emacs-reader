@@ -17,6 +17,7 @@
 #include "render-theme.h"
 #include "elisp-helpers.h"
 #include "render-core.h"
+#include "render-threads.h"
 
 emacs_value
 emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
