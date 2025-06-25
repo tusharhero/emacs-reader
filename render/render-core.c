@@ -90,7 +90,6 @@ draw_page_thread(void *arg)
 		cp->imgw = fz_pixmap_width(ctx, cp->pixmap);
 	}
 	fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
-	cp->status = PAGE_STATUS_READY;
 
 	fz_try(ctx)
 	{
@@ -133,6 +132,11 @@ draw_page_thread(void *arg)
 	fz_drop_output(ctx, out);
 	fz_drop_buffer(ctx, buf);
 	fz_drop_context(ctx);
+
+	pthread_mutex_lock(&cp->mutex);
+	cp->status = PAGE_STATUS_READY;
+	pthread_cond_signal(&cp->cond);
+	pthread_mutex_unlock(&cp->mutex);
 
 	free(args);
 	return NULL;
