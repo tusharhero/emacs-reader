@@ -44,6 +44,7 @@ typedef struct
 	size_t img_size;
 	PageStatus status;
 	pthread_mutex_t mutex;
+	pthread_cond_t cond;
 } CachedPage;
 
 typedef struct

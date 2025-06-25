@@ -371,6 +371,8 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		state->cached_pages_pool[i] = &block[i];
 		state->cached_pages_pool[i]->page_num = i;
 		pthread_mutex_init(&state->cached_pages_pool[i]->mutex, NULL);
+		pthread_cond_init(&state->cached_pages_pool[i]->cond, NULL);
+		state->cached_pages_pool[i]->status = PAGE_STATUS_EMPTY;
 	}
 
 	build_cache_window(state, state->current_page_number);
