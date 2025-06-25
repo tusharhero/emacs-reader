@@ -384,9 +384,13 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	set_current_render_status(env);
 	init_overlay(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+
 	CachedPage *cp = state->current_cached_page;
 
-	// Display CachedPage's image data into the overlay
+	// Wait until getting a signal from render threads
+	pthread_mutex_lock(&cp->mutex);
+	pthread_cond_wait(&cp->cond, &cp->mutex);
+	pthread_mutex_unlock(&cp->mutex);
 	display_img_to_overlay(env, state, cp->img_data, cp->img_size,
 			       current_doc_overlay);
 
@@ -420,6 +424,10 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		draw_args->state = state;
 		draw_args->cp = cp;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
+
+		pthread_mutex_lock(&cp->mutex);
+		pthread_cond_wait(&cp->cond, &cp->mutex);
+		pthread_mutex_unlock(&cp->mutex);
 		display_img_to_overlay(env, state, cp->img_data, cp->img_size,
 				       current_doc_overlay);
 	}
@@ -472,6 +480,10 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		draw_args->cp = next_cp;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 
+		// Wait for the thread to signal before displaying
+		pthread_mutex_lock(&next_cp->mutex);
+		pthread_cond_wait(&next_cp->cond, &next_cp->mutex);
+		pthread_mutex_unlock(&next_cp->mutex);
 		display_img_to_overlay(env, state, next_cp->img_data,
 				       next_cp->img_size, current_doc_overlay);
 		slide_cache_window_forward(state);
@@ -524,6 +536,10 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		draw_args->state = state;
 		draw_args->cp = prev_cp;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
+
+		pthread_mutex_lock(&prev_cp->mutex);
+		pthread_cond_wait(&prev_cp->cond, &prev_cp->mutex);
+		pthread_mutex_unlock(&prev_cp->mutex);
 		display_img_to_overlay(env, state, prev_cp->img_data,
 				       prev_cp->img_size, current_doc_overlay);
 		slide_cache_window_backward(state);
@@ -573,6 +589,9 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 		build_cache_window(state, state->current_page_number);
 		CachedPage *first_cp = state->current_cached_page;
+		pthread_mutex_lock(&first_cp->mutex);
+		pthread_cond_wait(&first_cp->cond, &first_cp->mutex);
+		pthread_mutex_unlock(&first_cp->mutex);
 		display_img_to_overlay(env, state, first_cp->img_data,
 				       first_cp->img_size, current_doc_overlay);
 	}
@@ -618,8 +637,10 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 		state->current_page_number = state->pagecount - 1;
 		build_cache_window(state, state->current_page_number);
-
 		CachedPage *last_cp = state->current_cached_page;
+		pthread_mutex_lock(&last_cp->mutex);
+		pthread_cond_wait(&last_cp->cond, &last_cp->mutex);
+		pthread_mutex_unlock(&last_cp->mutex);
 		display_img_to_overlay(env, state, last_cp->img_data,
 				       last_cp->img_size, current_doc_overlay);
 	}
@@ -661,6 +682,10 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 			state->current_page_number = page_number;
 			build_cache_window(state, state->current_page_number);
 			CachedPage *cp = state->current_cached_page;
+
+			pthread_mutex_lock(&cp->mutex);
+			pthread_cond_wait(&cp->cond, &cp->mutex);
+			pthread_mutex_unlock(&cp->mutex);
 			display_img_to_overlay(env, state, cp->img_data,
 					       cp->img_size,
 					       current_doc_overlay);
@@ -704,6 +729,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)data;
 	DocState *state = get_doc_state_ptr(env);
 	float scale_factor = env->extract_float(env, args[0]);
+
 	if (state)
 	{
 		emacs_value current_doc_overlay = get_current_doc_overlay(env);
@@ -713,6 +739,12 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		double new_res = fz_clamp(scale_factor * 72, MINRES, MAXRES);
 		state->resolution = new_res;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
+
+		pthread_mutex_lock(&state->current_cached_page->mutex);
+		pthread_cond_wait(&state->current_cached_page->cond,
+				  &state->current_cached_page->mutex);
+		pthread_mutex_unlock(&state->current_cached_page->mutex);
+
 		display_img_to_overlay(
 		    env, state, state->current_cached_page->img_data,
 		    state->current_cached_page->img_size, current_doc_overlay);
