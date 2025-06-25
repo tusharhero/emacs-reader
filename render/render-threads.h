@@ -17,10 +17,8 @@
 #ifndef RENDER_THREADS_H
 #define RENDER_THREADS_H
 
+#include "render-core.h"
 #include <pthread.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 
 #define MAX_POOL_SIZE 8 // Max no. of threads to be used
 
@@ -46,6 +44,12 @@ typedef struct
 	int leader_exists;
 	JobQueue job_queue;
 } ThreadPool;
+
+typedef struct
+{
+	DocState *state;
+	CachedPage *cp;
+} DrawThreadArgs;
 
 void
 job_queue_init(JobQueue *queue);

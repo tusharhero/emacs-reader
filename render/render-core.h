@@ -66,12 +66,6 @@ typedef struct
 	int invert;
 } DocState;
 
-typedef struct
-{
-	DocState *state;
-	CachedPage *cp;
-} DrawThreadArgs;
-
 int
 load_page_dl(DocState *state, CachedPage *cp);
 void *
