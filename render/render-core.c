@@ -389,8 +389,10 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 	// Wait until getting a signal from render threads
 	pthread_mutex_lock(&cp->mutex);
-	pthread_cond_wait(&cp->cond, &cp->mutex);
+	while (cp->status != PAGE_STATUS_READY)
+		pthread_cond_wait(&cp->cond, &cp->mutex);
 	pthread_mutex_unlock(&cp->mutex);
+
 	display_img_to_overlay(env, state, cp->img_data, cp->img_size,
 			       current_doc_overlay);
 
