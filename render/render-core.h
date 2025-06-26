@@ -23,6 +23,7 @@
 
 #define MINRES 18
 #define MAXRES 850
+#define MAX_CACHE_DOCS 8
 #define MAX_CACHE_SIZE 11
 #define MAX_CACHE_WINDOW_SIZE (MAX_CACHE_SIZE / 2)
 
@@ -49,9 +50,19 @@ typedef struct
 
 typedef struct
 {
+	int thread_idx;
+	char *path;
+	fz_document *doc;
+} OpenedDoc;
+
+typedef struct
+{
 	fz_context *ctx;
 	fz_locks_context locks;
 	fz_document *doc;
+	pthread_mutex_t doc_mutex;
+	OpenedDoc opened_docs[MAX_CACHE_DOCS];
+	int n_docs;
 	float resolution;
 	CachedPage **cached_pages_pool;
 	CachedPage *cache_window[MAX_CACHE_SIZE];

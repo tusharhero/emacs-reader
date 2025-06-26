@@ -133,9 +133,10 @@ init_main_ctx(DocState *state)
 }
 
 int
-load_mupdf_doc(DocState *state)
+load_main_doc(DocState *state)
 {
-
+	state->n_docs = 0;
+	pthread_mutex_init(&state->doc_mutex, NULL);
 	fz_try(state->ctx)
 	{
 		state->doc = fz_open_document(state->ctx, state->path);
@@ -150,6 +151,49 @@ load_mupdf_doc(DocState *state)
 	}
 
 	return EXIT_SUCCESS;
+}
+
+fz_document *
+get_doc_with_path(DocState *state, fz_context *ctx, int thread_index)
+{
+	fz_document *doc = NULL;
+
+	pthread_mutex_lock(&state->doc_mutex);
+
+	// Look for an existing document opened by this thread
+	for (int i = 0; i < state->n_docs; ++i)
+	{
+		if (state->opened_docs[i].thread_idx == thread_index)
+		{
+			doc = state->opened_docs[i].doc;
+			pthread_mutex_unlock(&state->doc_mutex);
+			return doc;
+		}
+	}
+
+	// If we’ve already opened max docs, give up
+	if (state->n_docs >= MAX_CACHE_DOCS)
+	{
+		pthread_mutex_unlock(&state->doc_mutex);
+		return NULL;
+	}
+
+	// Unlock while we do the slow I/O
+	pthread_mutex_unlock(&state->doc_mutex);
+
+	// Open a fresh document for this thread
+	fz_try(ctx) { doc = fz_open_document(ctx, state->path); }
+	fz_catch(ctx) return NULL;
+
+	// Relock and record it under this thread’s slot
+	pthread_mutex_lock(&state->doc_mutex);
+	int slot = state->n_docs++;
+	state->opened_docs[slot].thread_idx = thread_index;
+	state->opened_docs[slot].path = strdup(state->path);
+	state->opened_docs[slot].doc = doc;
+	pthread_mutex_unlock(&state->doc_mutex);
+
+	return doc;
 }
 
 void
