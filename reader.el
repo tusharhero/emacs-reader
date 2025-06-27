@@ -574,11 +574,16 @@ buffer is not in `reader-mode'."
       (reader-dyn--load-doc file)
     (message "No file associated with buffer.")))
 
+;; We explicitly bind default keys because relying on the rebinding
+;; mechanism can lead to them not being bound at all if users have
+;; overridden the defaults with other commands.
 (defvar-keymap reader-mode-map
   :doc "Keymap for `reader-mode'."
   "n"       #'reader-next-page
   "p"       #'reader-previous-page
 
+  "C-p"     #'reader-scroll-up-or-prev-page
+  "C-n"     #'reader-scroll-down-or-next-page
   "<remap> <previous-line>" #'reader-scroll-up-or-prev-page
   "<remap> <next-line>" #'reader-scroll-down-or-next-page
   "<remap> <next>" #'reader-scroll-down-or-next-page
@@ -590,6 +595,8 @@ buffer is not in `reader-mode'."
   "S-<wheel-up>" #'reader-mwheel-scroll-left
   "S-<wheel-down>" #'reader-mwheel-scroll-right
 
+  "C-v"      #'reader-scroll-up-screenful
+  "M-v"      #'reader-scroll-down-screenful
   "<remap> <scroll-down-command>" #'reader-scroll-up-screenful
   "<remap> <scroll-up-command>" #'reader-scroll-down-screenful
 
@@ -597,15 +604,23 @@ buffer is not in `reader-mode'."
   "DEL"     #'reader-scroll-up-screenful-or-prev-page
   "S-SPC"   #'reader-scroll-up-screenful-or-prev-page
 
+  "C-f"     #'reader-scroll-right
+  "C-b"     #'reader-scroll-left
   "<remap> <forward-char>" #'reader-scroll-right
-  "<remap> <backward-char>"  #'reader-scroll-left
+  "<remap> <backward-char>" #'reader-scroll-left
 
+  "C-e"     #'reader-scroll-right-most
+  "C-a"     #'reader-scroll-left-most
   "<remap> <move-end-of-line>" #'reader-scroll-right-most
   "<remap> <move-beginning-of-line>" #'reader-scroll-left-most
 
+  "M-<" #'reader-first-page
+  "M->" #'reader-last-page
   "<remap> <beginning-of-buffer>" #'reader-first-page
   "<remap> <end-of-buffer>" #'reader-last-page
 
+  "M-g g"   #'reader-goto-page
+  "M-g M-g" #'reader-goto-page
   "<remap> <goto-line>"   #'reader-goto-page
 
   "="       #'reader-enlarge-size
