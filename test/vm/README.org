@@ -1,0 +1,15 @@
+#+TITLE: GNU Guix VM for testing.
+#+AUTHOR: tusharhero
+
+See =(info "(guix) Invoking guix system")=.
+
+The basic command is:
+#+begin_src bash
+  sudo -sE $(guix system vm x.scm --share=$PWD/../../=/emacs-reader) -m 2048
+#+end_src
+
++ =-m= describes the amount of memory available to the vm.
++ =--share= shares the emacs-reader project with the vm at
+  /emacs-reader.
+
+Adjust the command accordingly.
