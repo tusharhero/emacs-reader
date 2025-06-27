@@ -650,7 +650,8 @@ Keybindings:
   (setq-local buffer-read-only t
 	      global-linum-mode nil
 	      cursor-type 'hollow
-	      display-line-numbers-mode nil)
+	      display-line-numbers-mode nil
+	      left-fringe-width nil) ; messes up centering(line-prefix).
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
 
