@@ -1,7 +1,8 @@
 ;;; Directory Local Variables            -*- no-byte-compile: t -*-
 ;;; For more information see (info "(emacs) Directory Variables")
 
-((nil . ((require-final-newline . t)
+((nil . ((mode . envrc)
+	 (require-final-newline . t)
 	 (show-trailing-whitespace . t)))
  (c-mode . ((indent-tabs-mode . t)
 	    (c-basic-offset . 2)
