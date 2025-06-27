@@ -621,6 +621,8 @@ buffer is not in `reader-mode'."
   "r"       #'reader-rotate-clockwise
   "R"       #'reader-rotate-counter-clockwise
 
+  "<f5>"    #'reader-presentation-mode
+
   "Q"       #'reader-kill-buffer)
 
 ;;;###autoload
@@ -669,6 +671,15 @@ Keybindings:
     (reader-doc-scale-page reader-current-doc-scale-value)))
 
 (define-globalized-minor-mode reader-global-dark-mode reader-dark-mode reader-dark-mode)
+
+(define-minor-mode reader-presentation-mode
+  "Toggle presentation view for current reader document."
+  :lighter ""
+  (if reader-presentation-mode
+      (progn
+        (setq-local mode-line-format nil)
+        (reader-fit-to-height))
+    (kill-local-variable 'mode-line-format)))
 
 ;; see `reader-saveplace' for details.
 ;;;###autoload
