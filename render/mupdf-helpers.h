@@ -36,9 +36,7 @@ unlock_mutex(void *user, int lock);
 int
 init_main_ctx(DocState *state);
 int
-load_main_doc(DocState *state);
-fz_document *
-get_doc_with_path(DocState *state, fz_context *ctx, int thread_index);
+load_mupdf_doc(DocState *state);
 
 void
 reset_doc_state(DocState *state);
