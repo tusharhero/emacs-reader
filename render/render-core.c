@@ -752,8 +752,7 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 }
 
 emacs_value
-emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-		     void *data)
+emacs_doc_rotate(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 {
 	(void)nargs;
 	(void)data;
@@ -767,6 +766,11 @@ emacs_doc_rotate_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
+		// Wait for the thread to signal before displaying
+		pthread_mutex_lock(&state->current_cached_page->mutex);
+		pthread_cond_wait(&state->current_cached_page->cond,
+				  &state->current_cached_page->mutex);
+		pthread_mutex_unlock(&state->current_cached_page->mutex);
 		display_img_to_overlay(
 		    env, state, state->current_cached_page->img_data,
 		    state->current_cached_page->img_size, current_doc_overlay);
@@ -888,9 +892,8 @@ emacs_module_init(struct emacs_runtime *runtime)
 			     "Sets the current document to have a dark theme. "
 			     "It simply inverts the pixmap.");
 
-	register_module_func(env, emacs_doc_rotate_doc,
-			     "reader-dyn--rotate-doc", 1, 1,
-			     "Rotates the page by the given DEGREE.");
+	register_module_func(env, emacs_doc_rotate, "reader-dyn--rotate-doc", 1,
+			     1, "Rotates the page by the given DEGREE.");
 
 	// Provide the current dynamic module as a feature to Emacs
 	provide(env, "render-core");
