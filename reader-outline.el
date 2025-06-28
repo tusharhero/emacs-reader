@@ -105,7 +105,7 @@ Adds SOURCE-BUFFER and page as text properties."
     (unless (and (numberp page) src)
       (user-error "Missing page or source buffer info"))
     (select-window (display-buffer src))
-    (reader-goto-page page)))
+    (reader-goto-page (1+ page))))
 
 (provide 'reader-outline)
 ;;; reader-outline.el ends here
