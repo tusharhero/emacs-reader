@@ -18,6 +18,7 @@
 
 #include "elisp-helpers.h"
 #include "emacs-module.h"
+#include "render-core.h"
 
 /**
  * elisp_2_c_str - Convert an Elisp string to a C string.
@@ -128,7 +129,8 @@ register_module_func(emacs_env *env,
  * @img_size: The size of the image data that is going to be rendered, should
  * usually be from the DocState.
  *
- * One needs to be extremely about handling the image data, and make sure it later
+ * One needs to be extremely about handling the image data, and make sure it
+ later
  * gets dropped and freed accordingly.
  *
  * Returns: The Elisp image object, which will be a specific plist, and can be
@@ -346,4 +348,16 @@ display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
 	    = { buffer_overlay, env->intern(env, "display"), elisp_img };
 	env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 	env->funcall(env, env->intern(env, "clear-image-cache"), 0, NULL);
+}
+
+void
+outline2plist(emacs_env *env, fz_outline *outline)
+{
+	emacs_value outline_title
+	    = env->make_string(env, outline->title, strlen(outline->title));
+	emacs_value plist_args[5]
+	    = { env->intern(env, ":title"), env->intern(env, ":header"),
+		env->intern(env, ":page"), env->intern(env, ":children") };
+	emacs_value outline_plist
+	    = env->funcall(env, env->intern(env, "list"), 5, plist_args);
 }

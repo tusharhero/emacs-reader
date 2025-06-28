@@ -879,6 +879,9 @@ emacs_module_init(struct emacs_runtime *runtime)
 	// Register the buffer-local value for reader-current-doc-overlay
 	permanent_buffer_local_var(env, "reader-current-doc-overlay");
 
+	// Register buffer-local variable for outline structure as a plist
+	permanent_buffer_local_var(env, "reader-current-doc-outline");
+
 	register_module_func(
 	    env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,
 	    "Scales the current page of the document by a given FACTOR. It "
