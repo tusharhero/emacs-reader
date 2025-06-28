@@ -638,6 +638,8 @@ buffer is not in `reader-mode'."
 
   "<f5>"    #'reader-presentation-mode
 
+  "O"       #'reader-show-outline
+
   "Q"       #'reader-kill-buffer)
 
 ;;;###autoload

@@ -21,8 +21,10 @@
 
 (require 'reader)
 (require 'imenu)
+(require 'outline)
 
 ;;; Imenu
+
 ;;;###autoload
 (defun reader--make-imenu-entry (plist)
   "Convert one outline PLIST to an imenu entry using `reader-goto-page'."
@@ -47,6 +49,65 @@
   "Switch to PAGE, ignores the NAME argument.
 Wraps `reader-goto-page' for imenu compatibility."
   (reader-goto-page (1+ page)))
+
+;;; Outline
+
+(defvar-local reader-outline--source-buffer nil
+  "Buffer from which the Reader outline was generated.")
+
+(defvar-local reader-outline--data nil
+  "Copy of the outline plist used in the Reader outline buffer.")
+
+(defun reader-show-outline ()
+  "Show the document outline in a separate buffer."
+  (interactive)
+  (unless (derived-mode-p 'reader-mode)
+    (user-error "Not in a reader-mode buffer"))
+  (unless reader-current-doc-outline
+    (user-error "This document has no outline"))
+  (let ((source-buffer (current-buffer))
+        (outline-data reader-current-doc-outline))
+    (with-current-buffer (get-buffer-create "*Reader Outline*")
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (reader-outline-buffer-mode)
+        (setq reader-outline--source-buffer source-buffer)
+        (setq reader-outline--data outline-data)
+        (reader--insert-outline outline-data 1))
+      (goto-char (point-min)))
+    (pop-to-buffer "*Reader Outline*")))
+
+(defun reader--insert-outline (outline level)
+  "Recursively insert OUTLINE entries at LEVEL."
+  (dolist (entry outline)
+    (let ((title    (plist-get entry :title))
+          (page     (plist-get entry :page))
+          (children (plist-get entry :children)))
+      (let ((start (point)))
+        (insert (make-string level ?*) " " title "\n")
+        (when (numberp page)
+          (put-text-property start (point) 'reader-page page)))
+      (when children
+        (reader--insert-outline children (1+ level))))))
+
+(define-derived-mode reader-outline-buffer-mode outline-mode "Reader-Outline"
+  "Major mode for navigating document outlines."
+  (setq buffer-read-only t)
+  (setq-local outline-regexp "^\\*+ ")
+  (use-local-map (copy-keymap outline-mode-map))
+  (define-key reader-outline-buffer-mode-map (kbd "RET") #'reader-outline-visit-page))
+
+(defun reader-outline-visit-page ()
+  "Jump to the page at point in the associated reader buffer."
+  (interactive)
+  (let* ((page (get-text-property (point) 'reader-page))
+         (src (or reader-outline--source-buffer
+                  (user-error "No source buffer set"))))
+    (unless (numberp page)
+      (user-error "No page info at this line"))
+    ;; Switch to source buffer and call `reader-goto-page`
+    (select-window (display-buffer src))
+    (reader-goto-page page)))
 
 (provide 'reader-outline)
 ;;; reader-outline.el ends here
