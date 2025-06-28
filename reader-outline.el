@@ -139,8 +139,8 @@ Each heading title is its own clickable button."
   "Jump to the page at point in the associated reader buffer."
   (interactive)
   (save-excursion
-    (end-of-line)
-    (backward-char)
+    (end-of-line)   ; This is done to make sure the we always have a
+    (backward-char) ; button at point.
     (reader-outline-goto-entry (button-at (point)))))
 
 (provide 'reader-outline)
