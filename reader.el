@@ -661,6 +661,12 @@ Keybindings:
   (unless reader-current-doc-render-status
     (reader--render-buffer))
 
+  (setq-local imenu-create-index-function #'reader--imenu-create-index
+	      imenu-default-goto-function #'reader--imenu-goto
+	      imenu-submenus-on-top nil
+	      imenu-sort-function nil
+              imenu-auto-rescan t)
+
   (use-local-map reader-mode-map)
   (setq major-mode 'reader-mode)
   (setq mode-name "Emacs Reader")
@@ -676,13 +682,14 @@ Keybindings:
                 "/" (:eval (number-to-string reader-current-doc-pagecount)))))
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
+(add-hook 'reader-mode-hook #'imenu-add-menubar-index)
 
 (define-minor-mode reader-dark-mode
   "Toggle dark-mode for current reader document."
   :lighter " Dark"
   (when (eq major-mode 'reader-mode)
     (if reader-dark-mode
-      (reader-dyn--set-dark-theme)
+	(reader-dyn--set-dark-theme)
       (reader-dyn--redisplay-doc))
     (reader-doc-scale-page reader-current-doc-scale-value)))
 
