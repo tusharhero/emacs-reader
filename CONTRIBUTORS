@@ -10,21 +10,29 @@ Divya Ranjan Pattanaik <divya@subvertising.org>:
 
 Tushar <tusharhero@sdf.org>:
 
-- changed the reader-center-page in reader.el to accomodate
-  edge cases.
+- changed the reader-center-page in reader.el to accommodate edge
+  cases.
 - fixed several errors in centering and scrolling in reader.el
 for the v0.2.0 release
-- Added bookmark and saveplace feature for 0.2.2
-- Fixed autoloading issues
-- Refactored reader.el significantly for readability and extensibility
-- Refactor mouse wheel scrolling in reader.el
-- Major refactor to the page centering logic in reader.el for 0.2.6
-- Implemented the elisp side reader-dark-mode
-- Refactored reader's keymap in reader.el
-- Major refactor to the scrolling logic in reader.el for 0.2.7
+- added bookmark and saveplace feature for v0.2.2
+- fixed autoloading issues
+- refactored reader.el significantly for readability and extensibility
+- refactored mouse wheel scrolling in reader.el
+- refactored the page centering logic in reader.el for v0.2.6
+- implemented the elisp side reader-dark-mode
+- refactored reader's keymap in reader.el
+- refactored the scrolling logic in reader.el for v0.2.7
 
 * Other Contributions (Not Legally Significant)
 
-shuxiao9058
+shuxiao9058 (Codeberg user):
 
-- Fixed the MacOS port for the build system
+- fixed the MacOS port for the build system
+
+* highlighting settings
+# Local Variables:
+# mode: org
+# eval: (highlight-regexp ".*:" 'emacs-authors-author)
+# eval: (highlight-regexp (rx (or "wrote" "changed" "fixed" "added" "refactored" "implemented")) 'emacs-authors-descriptor)
+# eval: (highlight-regexp (rx (seq "v" (one-or-more (any num)) nonl (one-or-more (any num)) nonl (one-or-more (any num)))) 'success)
+# End:
