@@ -94,15 +94,14 @@ Each heading title is its own clickable button."
     (let ((title    (plist-get entry :title))
           (page     (plist-get entry :page))
           (children (plist-get entry :children)))
-      ;; Insert the outline stars and space
-      (insert (make-string level ?*) " ")
       (insert-text-button
-       title
+       ;; Insert the outline stars and space in front of the title.
+       (concat (make-string level ?*) " " title)
        'reader-page page
        'reader-source-buffer source-buffer
        'action #'reader-outline--button-action
        'follow-link t
-       'help-echo "Click to jump to this page in the document")
+       'help-echo "Click to jump to this section in the document")
       (insert "\n")
       (when children
         (reader--insert-outline children (1+ level) source-buffer)))))
