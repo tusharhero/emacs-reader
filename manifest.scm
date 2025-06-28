@@ -1,5 +1,6 @@
 (specifications->manifest
-  '("gcc-toolchain"
-    "clang" ; for clangd
-    "mupdf"
-    "make"))
+ '("gcc-toolchain"
+   "gdb"
+   "clang" ; for clangd
+   "mupdf"
+   "make"))
