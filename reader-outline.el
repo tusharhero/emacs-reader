@@ -52,6 +52,9 @@ Wraps `reader-goto-page' for imenu compatibility."
 
 ;;; Outline
 
+(defvar-local reader-outline--doc-buffer nil
+  "The document buffer whose outline was generated.")
+
 ;;;###autoload
 (defun reader-show-outline ()
   "Show the document outline in a separate buffer.
@@ -69,6 +72,7 @@ document it was created from."
       (let ((inhibit-read-only t))
         (erase-buffer)
         (reader-outline-mode)
+	(setq reader-outline--doc-buffer source-buffer)
         (reader--insert-outline outline-data 1 source-buffer))
       (goto-char (point-min)))
     (pop-to-buffer bufname)))
@@ -103,9 +107,16 @@ Each heading title is its own clickable button."
       (when children
         (reader--insert-outline children (1+ level) source-buffer)))))
 
+(defun reader-outline-select-doc-window ()
+  "Display and switch to the original document's window."
+  (interactive)
+  (select-window (display-buffer reader-outline--doc-buffer)))
+
 ;;;###autoload
 (defvar-keymap reader-outline-mode-map
-  "o"        #'reader-toggle-outline
+  :doc "Keymap for `reader-outline-mode'"
+  "o"        #'reader-outline-select-doc-window
+  "q"        #'quit-window
   "M-RET"    #'reader-outline-visit-page)
 
 ;;;###autoload
