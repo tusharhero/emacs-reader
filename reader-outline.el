@@ -25,7 +25,7 @@
 ;;; Imenu
 ;;;###autoload
 (defun reader--make-imenu-entry (plist)
-  "Convert one outline PLIST to an imenu entry using `reader-goto-page`."
+  "Convert one outline PLIST to an imenu entry using `reader-goto-page'."
   (let* ((title    (plist-get plist :title))
          (page     (plist-get plist :page))
          (children (plist-get plist :children)))
@@ -44,8 +44,8 @@
 
 ;;;###autoload
 (defun reader--imenu-goto (name page)
-  "Wraps reader-goto-page for imenu compatibility,
-ignores the name argument."
+  "Switch to PAGE, ignores the NAME argument.
+Wraps `reader-goto-page' for imenu compatibility."
   (reader-goto-page (1+ page)))
 
 (provide 'reader-outline)
