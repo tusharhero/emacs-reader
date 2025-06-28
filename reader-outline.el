@@ -37,9 +37,10 @@
 ;;;###autoload
 (defun reader--imenu-create-index ()
   "Turn `reader-current-doc-outline' into an imenu index."
-  (when reader-current-doc-outline
-    (mapcar #'reader--make-imenu-entry
-            reader-current-doc-outline)))
+  (if reader-current-doc-outline
+      (mapcar #'reader--make-imenu-entry
+	      reader-current-doc-outline)
+    (error "Document lacks a proper outline!")))
 
 ;;;###autoload
 (defun reader--imenu-goto (name page)

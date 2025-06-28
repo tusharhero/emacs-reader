@@ -353,13 +353,12 @@ display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
 emacs_value
 outline2plist(emacs_env *env, fz_outline *node)
 {
+	emacs_value outline_plist = EMACS_NIL;
 	if (!node)
 	{
-		emacs_message(env,
-			      "This document doesn't have a proper outline!");
+		return outline_plist;
 	}
 
-	emacs_value outline_plist = EMACS_NIL;
 	while (node)
 	{
 		if (!node->title)
