@@ -15,7 +15,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Detect Guix or Nix environment
+# Detect platforms
+OS_NAME := $(shell uname)
 HAVE_GUIX := $(shell command -v guix >/dev/null 2>&1 && echo yes || echo no)
 HAVE_NIX  := $(shell command -v nix >/dev/null 2>&1 && echo yes || echo no)
 USE_PKGCONFIG := yes
@@ -26,6 +27,9 @@ ifeq ($(HAVE_GUIX),yes)
 else ifeq ($(HAVE_NIX),yes)
   $(info Nix detected: skipping pkg-config checks.)
   USE_PKGCONFIG := no
+else ifeq ($(OS_NAME),Darwin)
+  $(info macOS detected: skipping pkg-config and using Homebrew for MuPDF paths.)
+  USE_PKGCONFIG := no
 endif
 
 # Compiler and base flags
@@ -33,8 +37,6 @@ CC := gcc
 CFLAGS += -Wall -Wextra -fPIC
 LDFLAGS :=
 
-# Platform-specific flags
-OS_NAME := $(shell uname)
 ifeq ($(OS_NAME),Darwin)
   CFLAGS += -DMACOS
   LDFLAGS += -dynamiclib
@@ -46,7 +48,7 @@ endif
 # Required MuPDF version
 REQUIRED_VERSION := 1.26.0
 
-# pkg-config handling (unless inside Guix/Nix)
+# --- MuPDF detection and flags ---
 ifeq ($(USE_PKGCONFIG),yes)
   PKG_EXISTS := $(shell pkg-config --exists mupdf && echo yes || echo no)
   ifeq ($(PKG_EXISTS),no)
@@ -61,30 +63,39 @@ ifeq ($(USE_PKGCONFIG),yes)
 
   CFLAGS += $(shell pkg-config --cflags mupdf)
   LDFLAGS += $(shell pkg-config --libs mupdf)
+else ifeq ($(OS_NAME),Darwin)
+  # macOS manual detection via brew
+  BREW_PREFIX := $(shell brew --prefix mupdf 2>/dev/null)
+  ifeq ($(BREW_PREFIX),)
+    $(error "MuPDF not found via Homebrew. Run: brew install mupdf")
+  endif
+  MUPDF_VERSION := $(shell grep -o '[0-9][^"]*' $(BREW_PREFIX)/include/mupdf/fitz/version.h | head -n1)
+  VER_OK := $(shell [ "$$(printf '%s\n' $(REQUIRED_VERSION) $(MUPDF_VERSION) | sort -V | head -n1)" = "$(REQUIRED_VERSION)" ] && echo yes || echo no)
+  ifeq ($(VER_OK),no)
+    $(error "MuPDF version $(MUPDF_VERSION) too old. Require ≥ $(REQUIRED_VERSION).")
+  endif
+  CFLAGS += -I$(BREW_PREFIX)/include
+  LDFLAGS += -L$(BREW_PREFIX)/lib -lmupdf
 else
-  # Trust the environment to provide MuPDF correctly (Guix/Nix shell)
+  # Generic fallback for Guix/Nix
   CFLAGS += -DMUPDF_NO_PKGCONFIG
   LDFLAGS += -lmupdf
 endif
 
-# Output and source files
+# --- Build Rules ---
 LIB_NAME := render-core.so
 SRCS := render/elisp-helpers.c render/mupdf-helpers.c render/render-threads.c render/render-core.c render/render-theme.c
 OBJS := $(SRCS:%.c=%.o)
 
 .PHONY: all clean
 
-# Default target
 all: $(LIB_NAME)
 
-# Link shared library
 $(LIB_NAME): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-# Compile .c to .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean build artifacts
 clean:
 	rm -f $(OBJS) $(LIB_NAME)
