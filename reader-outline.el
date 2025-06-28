@@ -93,12 +93,12 @@ document it was created from."
 
 Each heading title is its own clickable button."
   (dolist (entry outline)
-    (let ((title    (plist-get entry :title))
-          (page     (plist-get entry :page))
-          (children (plist-get entry :children)))
+    (let* ((title    (plist-get entry :title))
+           (page     (plist-get entry :page))
+	   (label (concat (make-string level ?*) " " title))
+           (children (plist-get entry :children)))
       (insert-text-button
-       ;; Insert the outline stars and space in front of the title.
-       (concat (make-string level ?*) " " title)
+       label
        'reader-page page
        'reader-source-buffer source-buffer
        'action #'reader-outline--button-action
