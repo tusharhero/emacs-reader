@@ -15,58 +15,76 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Detect platform
-OS_NAME := $(shell uname)
-ifeq ($(OS),Windows_NT)
-  PLATFORM := windows
-else ifeq ($(OS_NAME),Darwin)
-  PLATFORM := macos
-else
-  PLATFORM := linux
+# Detect Guix or Nix environment
+HAVE_GUIX := $(shell command -v guix >/dev/null 2>&1 && echo yes || echo no)
+HAVE_NIX  := $(shell command -v nix >/dev/null 2>&1 && echo yes || echo no)
+USE_PKGCONFIG := yes
+
+ifeq ($(HAVE_GUIX),yes)
+  $(info Guix detected: skipping pkg-config checks.)
+  USE_PKGCONFIG := no
+else ifeq ($(HAVE_NIX),yes)
+  $(info Nix detected: skipping pkg-config checks.)
+  USE_PKGCONFIG := no
 endif
 
-# Shared library extension and object file extension per platform
-ifeq ($(PLATFORM),macos)
-  OBJ_EXT := .o
-  CC := gcc
-  ifneq (,$(shell which port 2>/dev/null))
-    CFLAGS += -DMACOS -I/opt/local/include
-    LDFLAGS := -dynamiclib -L/opt/local/lib -lmupdf
-  else ifneq (,$(shell which brew 2>/dev/null))
-    HOMEBREW_PREFIX := $(shell brew --prefix)
-    CFLAGS += -DMACOS -I/$(HOMEBREW_PREFIX)/include
-    LDFLAGS := -dynamiclib -L$(HOMEBREW_PREFIX)/lib -lmupdf
-  endif
-else
-  OBJ_EXT := .o
-  CC := gcc
-  CFLAGS += -DLINUX -pthread
-  LDFLAGS := -shared -lmupdf -lpthread
-endif
-
-# Module filenames and library paths
-LIB_NAME := render-core.so
-
-# Compiler and headers
+# Compiler and base flags
+CC := gcc
 CFLAGS += -Wall -Wextra -fPIC
+LDFLAGS :=
 
-# Source files and object targets
+# Platform-specific flags
+OS_NAME := $(shell uname)
+ifeq ($(OS_NAME),Darwin)
+  CFLAGS += -DMACOS
+  LDFLAGS += -dynamiclib
+else
+  CFLAGS += -DLINUX -pthread
+  LDFLAGS += -shared -lpthread
+endif
+
+# Required MuPDF version
+REQUIRED_VERSION := 1.26.0
+
+# pkg-config handling (unless inside Guix/Nix)
+ifeq ($(USE_PKGCONFIG),yes)
+  PKG_EXISTS := $(shell pkg-config --exists mupdf && echo yes || echo no)
+  ifeq ($(PKG_EXISTS),no)
+    $(error "MuPDF not found via pkg-config. Please install it or set PKG_CONFIG_PATH.")
+  endif
+
+  MUPDF_VERSION := $(shell pkg-config --modversion mupdf)
+  VER_OK := $(shell [ "$$(printf '%s\n' $(REQUIRED_VERSION) $(MUPDF_VERSION) | sort -V | head -n1)" = "$(REQUIRED_VERSION)" ] && echo yes || echo no)
+  ifeq ($(VER_OK),no)
+    $(error "MuPDF version $(MUPDF_VERSION) too old. Require ≥ $(REQUIRED_VERSION).")
+  endif
+
+  CFLAGS += $(shell pkg-config --cflags mupdf)
+  LDFLAGS += $(shell pkg-config --libs mupdf)
+else
+  # Trust the environment to provide MuPDF correctly (Guix/Nix shell)
+  CFLAGS += -DMUPDF_NO_PKGCONFIG
+  LDFLAGS += -lmupdf
+endif
+
+# Output and source files
+LIB_NAME := render-core.so
 SRCS := render/elisp-helpers.c render/mupdf-helpers.c render/render-threads.c render/render-core.c render/render-theme.c
-OBJS := $(SRCS:%.c=%$(OBJ_EXT))
+OBJS := $(SRCS:%.c=%.o)
 
-.PHONY: all clean submodule
+.PHONY: all clean
 
-# Default build target
+# Default target
 all: $(LIB_NAME)
 
-# Build render-core.so
+# Link shared library
 $(LIB_NAME): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $^
 
-# Compile C sources into platform-specific object files
-%$(OBJ_EXT): %.c
+# Compile .c to .o
+%.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean artifacts
+# Clean build artifacts
 clean:
 	rm -f $(OBJS) $(LIB_NAME)
