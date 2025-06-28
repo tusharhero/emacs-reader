@@ -71,6 +71,15 @@ Wraps `reader-goto-page' for imenu compatibility."
     (pop-to-buffer "*Emacs Reader Outline*")))
 
 ;;;###autoload
+(defun reader-toggle-outline ()
+  "Toggle the Reader outline buffer for the current reader-mode buffer."
+  (interactive)
+  (let ((buf (get-buffer "*Emacs Reader Outline*")))
+    (if (and buf (get-buffer-window buf))
+        (quit-window nil (get-buffer-window buf))
+      (reader-show-outline))))
+
+;;;###autoload
 (defun reader--insert-outline (outline level source-buffer)
   "Recursively insert OUTLINE entries at LEVEL.
 Each heading title is its own clickable button."
@@ -93,6 +102,7 @@ Each heading title is its own clickable button."
 
 ;;;###autoload
 (defvar-keymap reader-outline-mode-map
+  "o"        #'reader-toggle-outline
   "M-RET"    #'reader-outline-visit-page)
 
 ;;;###autoload

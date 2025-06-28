@@ -638,7 +638,7 @@ buffer is not in `reader-mode'."
 
   "<f5>"    #'reader-presentation-mode
 
-  "o"       #'reader-show-outline
+  "o"       #'reader-toggle-outline
 
   "Q"       #'reader-kill-buffer)
 
