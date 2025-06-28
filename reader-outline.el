@@ -71,12 +71,11 @@ document it was created from."
          (source-buffer (current-buffer))
          (bufname (format "*Outline of %s*" (buffer-name source-buffer))))
     (with-current-buffer (get-buffer-create bufname)
-      (let ((inhibit-read-only t))
-        (erase-buffer)
+      (when-let* ((empty (= 0 (buffer-size)))
+		  (inhibit-read-only t))
         (reader-outline-mode)
 	(setq reader-outline--doc-buffer source-buffer)
-        (reader--insert-outline outline-data 1 source-buffer))
-      (goto-char (point-min)))
+        (reader--insert-outline outline-data 1 source-buffer)))
     (pop-to-buffer bufname)))
 
 ;;;###autoload
@@ -109,8 +108,9 @@ Each heading title is its own clickable button."
        'follow-link t
        'help-echo "Click to jump to this section in the document")
       (insert "\n")
-      (when children
-        (reader--insert-outline children (1+ level) source-buffer)))))
+      (if children
+          (reader--insert-outline children (1+ level) source-buffer)
+	(goto-char (point-min))))))
 
 (defun reader-outline-select-doc-window ()
   "Display and switch to the original document's window."
