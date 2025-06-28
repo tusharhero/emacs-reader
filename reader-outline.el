@@ -62,50 +62,69 @@ Wraps `reader-goto-page' for imenu compatibility."
     (user-error "This document has no outline"))
   (let ((outline-data reader-current-doc-outline)
         (source-buffer (current-buffer)))
-    (with-current-buffer (get-buffer-create "*Reader Outline*")
+    (with-current-buffer (get-buffer-create "*Emacs Reader Outline*")
       (let ((inhibit-read-only t))
         (erase-buffer)
         (reader-outline-mode)
         (reader--insert-outline outline-data 1 source-buffer))
       (goto-char (point-min)))
-    (pop-to-buffer "*Reader Outline*")))
+    (pop-to-buffer "*Emacs Reader Outline*")))
 
 ;;;###autoload
 (defun reader--insert-outline (outline level source-buffer)
   "Recursively insert OUTLINE entries at LEVEL.
-Adds SOURCE-BUFFER and page as text properties."
+Each heading title is its own clickable button."
   (dolist (entry outline)
-    (let* ((title (plist-get entry :title))
-           (page (plist-get entry :page))
-           (children (plist-get entry :children))
-           (line (concat (make-string level ?*) " " title "\n")))
-      (let ((start (point)))
-        (insert line)
-        (when (numberp page)
-          (put-text-property start (point) 'reader-page page)
-          (put-text-property start (point) 'reader-buffer source-buffer)))
+    (let ((title    (plist-get entry :title))
+          (page     (plist-get entry :page))
+          (children (plist-get entry :children)))
+      ;; Insert the outline stars and space
+      (insert (make-string level ?*) " ")
+      (insert-text-button
+       title
+       'reader-page page
+       'reader-source-buffer source-buffer
+       'action #'reader-outline--button-action
+       'follow-link t
+       'help-echo "Click to jump to this page in the document")
+      (insert "\n")
       (when children
         (reader--insert-outline children (1+ level) source-buffer)))))
 
+;;;###autoload
 (defvar-keymap reader-outline-mode-map
   "M-RET"    #'reader-outline-visit-page)
 
-(define-derived-mode reader-outline-mode outline-mode "Reader Outline"
+;;;###autoload
+(define-derived-mode reader-outline-mode outline-mode "Emacs Reader Outline"
   "Major mode for navigating document outlines."
   (setq buffer-read-only t)
   (setq-local outline-regexp "^\\*+ ")
   (use-local-map reader-outline-mode-map))
 
 ;;;###autoload
-(defun reader-outline-visit-page ()
-  "Jump to the page at point using properties."
-  (interactive)
-  (let* ((page (get-text-property (point) 'reader-page))
-         (src  (get-text-property (point) 'reader-buffer)))
-    (unless (and (numberp page) src)
-      (user-error "Missing page or source buffer info"))
+(defun reader--goto-outline-entry (button)
+  "Shared logic to jump to an outline BUTTON."
+  (let* ((page (button-get button 'reader-page))
+         (src  (button-get button 'reader-source-buffer)))
+    (unless (and (numberp page) (buffer-live-p src))
+      (user-error "Invalid outline entry: no page or buffer info"))
     (select-window (display-buffer src))
     (reader-goto-page (1+ page))))
+
+;;;###autoload
+(defun reader-outline--button-action (button)
+  "Jump to the page associated with BUTTON."
+  (reader--goto-outline-entry button))
+
+;;;###autoload
+(defun reader-outline-visit-page ()
+  "Jump to the page at point in the associated reader buffer."
+  (interactive)
+  (let ((button (button-at (point))))
+    (unless button
+      (user-error "No button at point"))
+    (reader--goto-outline-entry button)))
 
 (provide 'reader-outline)
 ;;; reader-outline.el ends here
