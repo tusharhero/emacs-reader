@@ -5,5 +5,5 @@
 
 pkgs.mkShell {
   packages =
-    [ pkgs.mupdf-headless pkgs.gnumake pkgs.clang-tools pkgs.gcc ];
+    [ pkgs.mupdf-headless pkgs.gnumake pkgs.clang-tools pkgs.gcc pkgs.gdb ];
 }
