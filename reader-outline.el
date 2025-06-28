@@ -127,7 +127,7 @@ Each heading title is its own clickable button."
   (use-local-map reader-outline-mode-map))
 
 ;;;###autoload
-(defun reader--goto-outline-entry (button)
+(defun reader-outline-goto-entry (button)
   "Shared logic to jump to an outline BUTTON."
   (let* ((page (button-get button 'reader-page))
          (src  (button-get button 'reader-source-buffer)))
@@ -139,7 +139,7 @@ Each heading title is its own clickable button."
 ;;;###autoload
 (defun reader-outline--button-action (button)
   "Jump to the page associated with BUTTON."
-  (reader--goto-outline-entry button))
+  (reader-outline-goto-entry button))
 
 ;;;###autoload
 (defun reader-outline-visit-page ()
@@ -148,7 +148,7 @@ Each heading title is its own clickable button."
   (let ((button (button-at (point))))
     (unless button
       (user-error "No button at point"))
-    (reader--goto-outline-entry button)))
+    (reader-outline-goto-entry button)))
 
 (provide 'reader-outline)
 ;;; reader-outline.el ends here
