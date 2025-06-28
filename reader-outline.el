@@ -27,26 +27,26 @@
 ;;; Imenu
 
 ;;;###autoload
-(defun reader--make-imenu-entry (plist)
+(defun reader--outline-make-imenu-entry (plist)
   "Convert one outline PLIST to an imenu entry using `reader-goto-page'."
   (let* ((title    (plist-get plist :title))
          (page     (plist-get plist :page))
          (children (plist-get plist :children)))
     (if children
         (cons title
-              (mapcar #'reader--make-imenu-entry children))
+              (mapcar #'reader--outline-make-imenu-entry children))
       (cons title page))))
 
 ;;;###autoload
-(defun reader--imenu-create-index ()
+(defun reader--outline-imenu-create-index ()
   "Turn `reader-current-doc-outline' into an imenu index."
   (if reader-current-doc-outline
-      (mapcar #'reader--make-imenu-entry
+      (mapcar #'reader--outline-make-imenu-entry
 	      reader-current-doc-outline)
     (error "Document lacks a proper outline!")))
 
 ;;;###autoload
-(defun reader--imenu-goto (name page)
+(defun reader--outline-imenu-goto (name page)
   "Switch to PAGE, ignores the NAME argument.
 
 Wraps `reader-goto-page' for imenu compatibility."
@@ -58,7 +58,7 @@ Wraps `reader-goto-page' for imenu compatibility."
   "The document buffer whose outline was generated.")
 
 ;;;###autoload
-(defun reader-show-outline ()
+(defun reader-outline-show ()
   "Show the document outline in a separate buffer.
 
 The outline buffer inherits it's name from the original
@@ -72,14 +72,14 @@ document it was created from."
          (source-buffer (current-buffer))
          (bufname (format "*Outline of %s*" (buffer-name source-buffer))))
     (with-current-buffer (get-buffer-create bufname)
-      (when-let* ((empty (= 0 (buffer-size)))
+      (when-let* ((emptyp (= 0 (buffer-size)))
 		  (inhibit-read-only t))
         (reader-outline-mode)
 	(setq reader-outline--doc-buffer source-buffer)
-        (reader--insert-outline outline-data 1 source-buffer)))
+        (reader--outline-insert-outline outline-data 1 source-buffer)))
     (pop-to-buffer bufname)))
 
-(defun reader--insert-outline (outline level source-buffer)
+(defun reader--outline-insert-outline (outline level source-buffer)
   "Recursively insert OUTLINE from SOURCE-BUFFER entries at LEVEL.
 
 Each heading title is its own clickable button."
@@ -94,12 +94,12 @@ Each heading title is its own clickable button."
        title
        'reader-page page
        'reader-source-buffer source-buffer
-       'action #'reader-outline--button-action
+       'action #'reader--outline-button-action
        'follow-link t
        'help-echo "Click to jump to this section in the document")
       (insert "\n")
       (if children
-          (reader--insert-outline children (1+ level) source-buffer)
+          (reader--outline-insert-outline children (1+ level) source-buffer)
 	(goto-char (point-min))))))
 
 (defun reader-outline-select-doc-window ()
@@ -131,7 +131,7 @@ Each heading title is its own clickable button."
     (select-window (display-buffer src))
     (reader-goto-page (1+ page))))
 
-(defun reader-outline--button-action (button)
+(defun reader--outline-button-action (button)
   "Jump to the page associated with BUTTON."
   (reader-outline-goto-entry button))
 

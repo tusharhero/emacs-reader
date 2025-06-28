@@ -638,7 +638,7 @@ buffer is not in `reader-mode'."
 
   "<f5>"    #'reader-presentation-mode
 
-  "o"       #'reader-show-outline
+  "o"       #'reader-outline-show
 
   "Q"       #'reader-kill-buffer)
 
@@ -663,8 +663,8 @@ Keybindings:
   (unless reader-current-doc-render-status
     (reader--render-buffer))
 
-  (setq-local imenu-create-index-function #'reader--imenu-create-index
-	      imenu-default-goto-function #'reader--imenu-goto
+  (setq-local imenu-create-index-function #'reader--outline-imenu-create-index
+	      imenu-default-goto-function #'reader--outline-imenu-goto
 	      imenu-submenus-on-top nil
 	      imenu-sort-function nil
               imenu-auto-rescan t)
