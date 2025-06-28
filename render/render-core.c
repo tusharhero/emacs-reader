@@ -365,6 +365,7 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 	init_main_ctx(state);  // Creates mupdf context with locks
 	load_mupdf_doc(state); // Opens the doc and sets pagecount
+	outline2plist(env, state->outline);
 
 	state->cached_pages_pool
 	    = malloc(state->pagecount * sizeof(*state->cached_pages_pool));

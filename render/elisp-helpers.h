@@ -59,5 +59,7 @@ permanent_buffer_local_var(emacs_env *env, char *symbol);
 void
 display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
 		       size_t img_size, emacs_value buffer_overlay);
+emacs_value
+outline2plist(emacs_env *env, fz_outline *node);
 
 #endif

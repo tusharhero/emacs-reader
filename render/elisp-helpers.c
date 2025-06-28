@@ -350,14 +350,64 @@ display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
 	env->funcall(env, env->intern(env, "clear-image-cache"), 0, NULL);
 }
 
-void
-outline2plist(emacs_env *env, fz_outline *outline)
+emacs_value
+outline2plist(emacs_env *env, fz_outline *node)
 {
-	emacs_value outline_title
-	    = env->make_string(env, outline->title, strlen(outline->title));
-	emacs_value plist_args[5]
-	    = { env->intern(env, ":title"), env->intern(env, ":header"),
-		env->intern(env, ":page"), env->intern(env, ":children") };
-	emacs_value outline_plist
-	    = env->funcall(env, env->intern(env, "list"), 5, plist_args);
+	if (!node)
+	{
+		emacs_message(env,
+			      "This document doesn't have a proper outline!");
+	}
+
+	emacs_value outline_plist = EMACS_NIL;
+	while (node)
+	{
+		if (!node->title)
+		{
+			node = node->next;
+			continue;
+		}
+
+		/* Build the base plist: (:title TITLE :page PAGE) */
+		emacs_value node_title
+		    = env->make_string(env, node->title, strlen(node->title));
+		emacs_value node_page = env->make_integer(env, node->page.page);
+		emacs_value base_args[]
+		    = { env->intern(env, ":title"), node_title,
+			env->intern(env, ":page"), node_page };
+		emacs_value node_plist
+		    = env->funcall(env, env->intern(env, "list"), 4, base_args);
+
+		/* If there are children, recurse and append as :children key */
+		if (node->down)
+		{
+			emacs_value children = outline2plist(env, node->down);
+			emacs_value child_pair_args[]
+			    = { env->intern(env, ":children"), children };
+			emacs_value children_pair = env->funcall(
+			    env, env->intern(env, "list"), 2, child_pair_args);
+			/* Append the (:children CHILDREN) onto this node's
+			 * plist */
+			node_plist = env->funcall(
+			    env, env->intern(env, "append"), 2,
+			    (emacs_value[]){ node_plist, children_pair });
+		}
+
+		/* Cons this node_plist onto our accumulator */
+		outline_plist = env->funcall(
+		    env, env->intern(env, "cons"), 2,
+		    (emacs_value[]){ node_plist, outline_plist });
+		node = node->next;
+	}
+
+	/* Reverse to preserve original document order */
+	outline_plist = env->funcall(env, env->intern(env, "nreverse"), 1,
+				     &outline_plist);
+
+	/* Store in reader-current-doc-outline and return */
+	env->funcall(
+	    env, env->intern(env, "set"), 2,
+	    (emacs_value[]){ env->intern(env, "reader-current-doc-outline"),
+			     outline_plist });
+	return outline_plist;
 }
