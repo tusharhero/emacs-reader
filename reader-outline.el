@@ -83,9 +83,13 @@ document it was created from."
 (defun reader-toggle-outline ()
   "Toggle the Reader outline buffer for the current reader-mode buffer."
   (interactive)
-  (let ((buf (get-buffer "*Emacs Reader Outline*")))
-    (if (and buf (get-buffer-window buf))
-        (quit-window nil (get-buffer-window buf))
+  (unless (derived-mode-p 'reader-mode)
+    (user-error "Not in a reader-mode buffer"))
+  (let* ((source-buffer (current-buffer))
+         (outline-buffer-name (format "*Outline of %s*" (buffer-name source-buffer)))
+         (outline-buffer (get-buffer outline-buffer-name)))
+    (if (and outline-buffer (get-buffer-window outline-buffer))
+        (quit-window nil (get-buffer-window outline-buffer))
       (reader-show-outline))))
 
 (defun reader--insert-outline (outline level source-buffer)
