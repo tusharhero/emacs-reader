@@ -54,21 +54,24 @@ Wraps `reader-goto-page' for imenu compatibility."
 
 ;;;###autoload
 (defun reader-show-outline ()
-  "Show the document outline in a separate buffer."
+  "Show the document outline in a separate buffer.
+The outline buffer inherits it's name from the original
+document it was created from."
   (interactive)
   (unless (derived-mode-p 'reader-mode)
     (user-error "Not in a reader-mode buffer"))
   (unless reader-current-doc-outline
     (user-error "This document has no outline"))
-  (let ((outline-data reader-current-doc-outline)
-        (source-buffer (current-buffer)))
-    (with-current-buffer (get-buffer-create "*Emacs Reader Outline*")
+  (let* ((outline-data reader-current-doc-outline)
+         (source-buffer (current-buffer))
+         (bufname (format "*Outline of %s*" (buffer-name source-buffer))))
+    (with-current-buffer (get-buffer-create bufname)
       (let ((inhibit-read-only t))
         (erase-buffer)
         (reader-outline-mode)
         (reader--insert-outline outline-data 1 source-buffer))
       (goto-char (point-min)))
-    (pop-to-buffer "*Emacs Reader Outline*")))
+    (pop-to-buffer bufname)))
 
 ;;;###autoload
 (defun reader-toggle-outline ()
