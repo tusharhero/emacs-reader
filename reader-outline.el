@@ -78,19 +78,6 @@ document it was created from."
         (reader--insert-outline outline-data 1 source-buffer)))
     (pop-to-buffer bufname)))
 
-;;;###autoload
-(defun reader-toggle-outline ()
-  "Toggle the Reader outline buffer for the current reader-mode buffer."
-  (interactive)
-  (unless (derived-mode-p 'reader-mode)
-    (user-error "Not in a reader-mode buffer"))
-  (let* ((source-buffer (current-buffer))
-         (outline-buffer-name (format "*Outline of %s*" (buffer-name source-buffer)))
-         (outline-buffer (get-buffer outline-buffer-name)))
-    (if (and outline-buffer (get-buffer-window outline-buffer))
-        (quit-window nil (get-buffer-window outline-buffer))
-      (reader-show-outline))))
-
 (defun reader--insert-outline (outline level source-buffer)
   "Recursively insert OUTLINE from SOURCE-BUFFER entries at LEVEL.
 
