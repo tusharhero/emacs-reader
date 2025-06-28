@@ -119,6 +119,8 @@ Each heading title is its own clickable button."
 
 (defvar-keymap reader-outline-mode-map
   :doc "Keymap for `reader-outline-mode'"
+  "p"        #'previous-line
+  "n"        #'next-line
   "o"        #'reader-outline-select-doc-window
   "q"        #'quit-window
   "M-RET"    #'reader-outline-visit-page)
