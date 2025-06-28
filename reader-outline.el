@@ -47,6 +47,7 @@
 ;;;###autoload
 (defun reader--imenu-goto (name page)
   "Switch to PAGE, ignores the NAME argument.
+
 Wraps `reader-goto-page' for imenu compatibility."
   (reader-goto-page (1+ page)))
 
@@ -58,6 +59,7 @@ Wraps `reader-goto-page' for imenu compatibility."
 ;;;###autoload
 (defun reader-show-outline ()
   "Show the document outline in a separate buffer.
+
 The outline buffer inherits it's name from the original
 document it was created from."
   (interactive)
@@ -86,9 +88,9 @@ document it was created from."
         (quit-window nil (get-buffer-window buf))
       (reader-show-outline))))
 
-;;;###autoload
 (defun reader--insert-outline (outline level source-buffer)
-  "Recursively insert OUTLINE entries at LEVEL.
+  "Recursively insert OUTLINE from SOURCE-BUFFER entries at LEVEL.
+
 Each heading title is its own clickable button."
   (dolist (entry outline)
     (let ((title    (plist-get entry :title))
@@ -111,21 +113,18 @@ Each heading title is its own clickable button."
   (interactive)
   (select-window (display-buffer reader-outline--doc-buffer)))
 
-;;;###autoload
 (defvar-keymap reader-outline-mode-map
   :doc "Keymap for `reader-outline-mode'"
   "o"        #'reader-outline-select-doc-window
   "q"        #'quit-window
   "M-RET"    #'reader-outline-visit-page)
 
-;;;###autoload
 (define-derived-mode reader-outline-mode outline-mode "Emacs Reader Outline"
   "Major mode for navigating document outlines."
   (setq buffer-read-only t)
   (setq-local outline-regexp "^\\*+ ")
   (use-local-map reader-outline-mode-map))
 
-;;;###autoload
 (defun reader-outline-goto-entry (button)
   "Shared logic to jump to an outline BUTTON."
   (let* ((page (button-get button 'reader-page))
@@ -135,12 +134,10 @@ Each heading title is its own clickable button."
     (select-window (display-buffer src))
     (reader-goto-page (1+ page))))
 
-;;;###autoload
 (defun reader-outline--button-action (button)
   "Jump to the page associated with BUTTON."
   (reader-outline-goto-entry button))
 
-;;;###autoload
 (defun reader-outline-visit-page ()
   "Jump to the page at point in the associated reader buffer."
   (interactive)
