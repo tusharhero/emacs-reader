@@ -84,12 +84,14 @@ document it was created from."
 
 Each heading title is its own clickable button."
   (dolist (entry outline)
-    (let* ((title    (plist-get entry :title))
-           (page     (plist-get entry :page))
-	   (label (concat (make-string level ?*) " " title))
+    (let ((title (plist-get entry :title))
+           (page  (plist-get entry :page))
            (children (plist-get entry :children)))
+      ;; This cannot be part of label (title) because that will
+      ;; obscure the outline TAB bindings with button bindings.
+      (insert (concat (make-string level ?*) " "))
       (insert-text-button
-       label
+       title
        'reader-page page
        'reader-source-buffer source-buffer
        'action #'reader-outline--button-action
@@ -111,6 +113,7 @@ Each heading title is its own clickable button."
   "n"        #'next-line
   "o"        #'reader-outline-select-doc-window
   "q"        #'quit-window
+  "RET"      #'reader-outline-visit-page
   "M-RET"    #'reader-outline-visit-page)
 
 (define-derived-mode reader-outline-mode outline-mode "Emacs Reader Outline"
@@ -135,10 +138,10 @@ Each heading title is its own clickable button."
 (defun reader-outline-visit-page ()
   "Jump to the page at point in the associated reader buffer."
   (interactive)
-  (let ((button (button-at (point))))
-    (unless button
-      (user-error "No button at point"))
-    (reader-outline-goto-entry button)))
+  (save-excursion
+    (end-of-line)
+    (backward-char)
+    (reader-outline-goto-entry (button-at (point)))))
 
 (provide 'reader-outline)
 ;;; reader-outline.el ends here
