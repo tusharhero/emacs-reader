@@ -573,6 +573,17 @@ Intended for use in `kill-buffer-hook'."
   (when (yes-or-no-p "Are you sure you want to close the current document?")
     (kill-buffer (current-buffer))))
 
+(defun reader-refresh-doc ()
+  (interactive)
+  (when buffer-file-name
+    (let ((page (reader-current-pagenumber))
+	  (scale reader-current-doc-scale-value))
+      (remove-overlays)
+      (reader--render-buffer)
+      (reader-goto-page page)
+      (reader-doc-scale-page scale))))
+(add-hook 'after-revert-hook #'reader-refresh-doc)
+
 (defun reader--render-buffer ()
   "Render the document file current buffer is associated with.
 
@@ -665,6 +676,7 @@ Keybindings:
 	      left-fringe-width nil) ; messes up centering(line-prefix).
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
+  (auto-revert-mode 1)
 
   (setq-local bookmark-make-record-function
 	      #'reader-bookmark-make-record)
