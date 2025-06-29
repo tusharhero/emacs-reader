@@ -201,6 +201,12 @@ build_cache_window(DocState *state, int n)
 		}
 	}
 
+	// Wait for the current page's cache to be ready if it isn't
+	while (state->cache_window[state->current_window_index]->status
+	       != PAGE_STATUS_READY)
+		fprintf(
+		    stderr, "Waiting for page %d to be ready\n",
+		    state->cache_window[state->current_window_index]->page_num);
 	state->current_cached_page
 	    = state->cache_window[state->current_window_index];
 }
@@ -251,6 +257,12 @@ slide_cache_window_forward(DocState *state)
 		build_cache_window(state, n);
 	}
 
+	// Wait for the current page's cache to be ready if it isn't
+	while (state->cache_window[state->current_window_index]->status
+	       != PAGE_STATUS_READY)
+		fprintf(
+		    stderr, "Waiting for page %d to be ready\n",
+		    state->cache_window[state->current_window_index]->page_num);
 	state->current_cached_page
 	    = state->cache_window[state->current_window_index];
 
@@ -304,8 +316,15 @@ slide_cache_window_backward(DocState *state)
 		build_cache_window(state, n);
 	}
 
+	// Wait for the current page's cache to be ready if it isn't
+	while (state->cache_window[state->current_window_index]->status
+	       != PAGE_STATUS_READY)
+		fprintf(
+		    stderr, "Waiting for page %d to be ready\n",
+		    state->cache_window[state->current_window_index]->page_num);
 	state->current_cached_page
 	    = state->cache_window[state->current_window_index];
+
 	return true;
 }
 
@@ -590,11 +609,6 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		state->current_page_number = 0;
 		build_cache_window(state, state->current_page_number);
 		CachedPage *first_cp = state->current_cached_page;
-
-		// Wait for first_cp to be rendered ready
-		while (first_cp->status != PAGE_STATUS_READY)
-			fprintf(stderr, "Waiting for page %d to be ready!\n",
-				first_cp->page_num);
 		display_img_to_overlay(env, state, first_cp->img_data,
 				       first_cp->img_size, current_doc_overlay);
 	}
@@ -641,11 +655,6 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		state->current_page_number = state->pagecount - 1;
 		build_cache_window(state, state->current_page_number);
 		CachedPage *last_cp = state->current_cached_page;
-
-		// Wait for last_cp to be rendered ready if it isn't
-		while (last_cp->status != PAGE_STATUS_READY)
-			fprintf(stderr, "Waiting for page %d to be ready!\n",
-				last_cp->page_num);
 		display_img_to_overlay(env, state, last_cp->img_data,
 				       last_cp->img_size, current_doc_overlay);
 	}
@@ -687,12 +696,6 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 			state->current_page_number = page_number;
 			build_cache_window(state, state->current_page_number);
 			CachedPage *cp = state->current_cached_page;
-
-			// Wait for the page to be rendered ready if it isn't
-			while (cp->status != PAGE_STATUS_READY)
-				fprintf(stderr,
-					"Waiting for page %d to be ready!\n",
-					cp->page_num);
 			display_img_to_overlay(env, state, cp->img_data,
 					       cp->img_size,
 					       current_doc_overlay);
