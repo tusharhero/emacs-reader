@@ -30,7 +30,7 @@
  * @size: Pointer to the length of the string after being converted, as
  * type size_t.
  *
- * @Return: true on success, false on error
+ * Return: true on success, false on error
  */
 
 bool
@@ -327,6 +327,20 @@ permanent_buffer_local_var(emacs_env *env, char *symbol)
 				      EMACS_T });
 }
 
+/**
+ * Display image data in an Emacs overlay.
+ *
+ * Converts raw image data into an Emacs image spec and sets it as the
+ * `display` property of the given overlay. Clears the image cache to
+ * ensure the image is rendered fresh.
+ *
+ * @param env            Emacs module environment.
+ * @param state          Document state (used by image conversion).
+ * @param img_data       Pointer to raw image bytes (e.g., PNG).
+ * @param img_size       Size of the image data.
+ * @param buffer_overlay Emacs overlay to attach the image to.
+ */
+
 void
 display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
 		       size_t img_size, emacs_value buffer_overlay)
@@ -338,6 +352,20 @@ display_img_to_overlay(emacs_env *env, DocState *state, char *img_data,
 	env->funcall(env, env->intern(env, "overlay-put"), 3, overlay_put_args);
 	env->funcall(env, env->intern(env, "clear-image-cache"), 0, NULL);
 }
+
+/**
+ * Convert a fz_outline tree to an Emacs plist structure.
+ *
+ * Recursively traverses the outline linked list and builds a nested
+ * plist representation for Emacs: each node becomes a plist with
+ * `:title`, `:page`, and optionally `:children` keys.
+ *
+ * Stores the result in `reader-current-doc-outline` and returns it.
+ *
+ * @param env    Emacs module environment.
+ * @param node   Root of the fz_outline tree (from MuPDF).
+ * Return:       Emacs Lisp list of plists representing the outline.
+ */
 
 emacs_value
 outline2plist(emacs_env *env, fz_outline *node)
