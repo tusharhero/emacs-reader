@@ -15,8 +15,8 @@ Tushar <tusharhero@sdf.org>:
 
 - changed the reader-center-page in reader.el to accommodate edge
   cases.
-- fixed several errors in centering and scrolling in reader.el
-for the v0.2.0 release
+- fixed several errors in centering and scrolling in reader.el for the
+  v0.2.0 release
 - added bookmark and saveplace feature for v0.2.2
 - fixed autoloading issues
 - refactored reader.el significantly for readability and extensibility
@@ -32,6 +32,8 @@ for the v0.2.0 release
 - refactored button interface of reader-outline.el
 - renaming functions properly in reader-outline.el and newer reader.el functions.
 - updated docstrings in both C and Elisp modules for v0.3.0
+- added guix system configurations in test/vm/x11.scm and
+  test/vm/wayland.scm.
 
 * Other Contributions (Not Legally Significant)
 
