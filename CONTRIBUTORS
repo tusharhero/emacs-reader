@@ -47,5 +47,5 @@ idilip (Codeberg user):
 # mode: org
 # eval: (highlight-regexp ".*:" 'custom-group-tag-1)
 # eval: (highlight-regexp (rx (or "wrote" "changed" "fixed" "added" "refactored" "implemented" "cleaned" "renaming" "updated")) 'compilation-warning)
-# eval: (highlight-regexp (rx (seq "v" (one-or-more (any num)) nonl (one-or-more (any num)) nonl (one-or-more (any num)))) 'success)
+# eval: (highlight-regexp (rx (or (seq "v" (one-or-more (any num)) nonl (one-or-more (any num)) nonl (one-or-more (any num))) (seq "PR #" (one-or-more (any num))))) 'success)
 # End:
