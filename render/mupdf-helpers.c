@@ -18,7 +18,6 @@
 
 #include "mupdf-helpers.h"
 #include "render-core.h"
-#include <pthread.h>
 
 pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
 
@@ -169,10 +168,25 @@ free_cached_page(DocState *state, CachedPage *cp)
 void
 free_cache_window(DocState *state)
 {
+	fprintf(stderr, "Freeing the cache window for current document...\n");
 	for (int i = 0; i < MAX_CACHE_SIZE; i++)
 	{
 		if (state->cache_window[i]->status == PAGE_STATUS_READY)
 			free_cached_page(state, state->cache_window[i]);
 	}
 	*state->cache_window = NULL;
+}
+
+void
+free_cached_pages_pool(DocState *state)
+{
+	fprintf(stderr, "Freeing the entire cached pages pool for current "
+			"document...\n");
+	for (int i = 0; i < state->pagecount; i++)
+	{
+		pthread_mutex_destroy(&state->cached_pages_pool[i]->mutex);
+		pthread_cond_destroy(&state->cached_pages_pool[i]->cond);
+	}
+	free(state->cached_pages_pool[0]);
+	free(state->cached_pages_pool);
 }

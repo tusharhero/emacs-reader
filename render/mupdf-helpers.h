@@ -44,5 +44,7 @@ void
 free_cached_page(DocState *state, CachedPage *cp);
 void
 free_cache_window(DocState *state);
+void
+free_cached_pages_pool(DocState *state);
 
 #endif
