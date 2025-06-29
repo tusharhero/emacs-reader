@@ -15,6 +15,8 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render-threads.h"
+#include <pthread.h>
+#include <stdio.h>
 
 void
 job_queue_init(JobQueue *queue)
@@ -114,9 +116,21 @@ threadpool_init(ThreadPool *pool)
 	job_queue_init(&pool->job_queue);
 
 	for (int i = 0; i < MAX_POOL_SIZE; i++)
-	{
 		pthread_create(&pool->threads[i], NULL, thread_routine, pool);
-	}
+}
+
+void
+threadpool_shutdown(ThreadPool *pool)
+{
+	fprintf(stderr,
+		"Joining %d threads and shutting down the thread pool...\n",
+		MAX_POOL_SIZE);
+	for (int i = 0; i < MAX_POOL_SIZE; i++)
+		pthread_join(pool->threads[i], NULL);
+	fprintf(stderr, "Destroying the thread job queue..\n");
+	job_queue_destroy(&pool->job_queue);
+	pthread_mutex_destroy(&pool->leader_mutex);
+	pthread_cond_destroy(&pool->leader_cond);
 }
 
 void
