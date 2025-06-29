@@ -907,22 +907,6 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "Returns the current page number the document is at "
 	    "from DocState as an Elisp value.");
 
-	// Register the buffer-local page number
-	permanent_buffer_local_var(env, "reader-current-doc-pagecount");
-
-	// Register the buffer-local variable to indicate whether a buffer has
-	// been rendered
-	permanent_buffer_local_var(env, "reader-current-doc-render-status");
-
-	// Register the buffer-local value for the DocState user pointer
-	permanent_buffer_local_var(env, "reader-current-doc-state-ptr");
-
-	// Register the buffer-local value for reader-current-doc-overlay
-	permanent_buffer_local_var(env, "reader-current-doc-overlay");
-
-	// Register buffer-local variable for outline structure as a plist
-	permanent_buffer_local_var(env, "reader-current-doc-outline");
-
 	register_module_func(
 	    env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,
 	    "Scales the current page of the document by a given FACTOR. It "
@@ -938,6 +922,13 @@ emacs_module_init(struct emacs_runtime *runtime)
 
 	register_module_func(env, emacs_doc_rotate, "reader-dyn--rotate-doc", 1,
 			     1, "Rotates the page by the given DEGREE.");
+
+	// Register buffer-local variables.
+	permanent_buffer_local_var(env, "reader-current-doc-pagecount");
+	permanent_buffer_local_var(env, "reader-current-doc-render-status");
+	permanent_buffer_local_var(env, "reader-current-doc-state-ptr");
+	permanent_buffer_local_var(env, "reader-current-doc-overlay");
+	permanent_buffer_local_var(env, "reader-current-doc-outline");
 
 	// Provide the current dynamic module as a feature to Emacs
 	provide(env, "render-core");
