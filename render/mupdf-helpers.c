@@ -63,7 +63,7 @@ doc_page_height(DocState *state)
 void
 reset_doc_state(DocState *state)
 {
-	fprintf(stderr, "Freeing the existing DocState\n");
+	fprintf(stderr, "Resetting the existing DocState\n");
 	*state = (DocState){
 		.ctx = NULL,
                       .locks = NULL,
@@ -171,7 +171,8 @@ free_cache_window(DocState *state)
 	fprintf(stderr, "Freeing the cache window for current document...\n");
 	for (int i = 0; i < MAX_CACHE_SIZE; i++)
 	{
-		if (state->cache_window[i]->status == PAGE_STATUS_READY)
+		if (state->cache_window[i]
+		    && state->cache_window[i]->status == PAGE_STATUS_READY)
 			free_cached_page(state, state->cache_window[i]);
 	}
 	*state->cache_window = NULL;
