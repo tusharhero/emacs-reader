@@ -217,7 +217,7 @@ slide_cache_window_forward(DocState *state)
 	int n = ++state->current_page_number;
 	int pagecount = state->pagecount;
 
-	if (state->current_page_number + 1 >= state->pagecount)
+	if (n >= pagecount)
 	{
 		fprintf(stderr,
 			"slide_cache_window_right: cannot slide past end (page "
@@ -923,8 +923,7 @@ emacs_module_init(struct emacs_runtime *runtime)
 
 	// Initialize the global thread pool
 	threadpool_init(&g_thread_pool);
-	fprintf(stderr, "%d threads have been initialized in the pool\n",
-		MAX_POOL_SIZE);
+	fprintf(stderr, "%d threads have been initialized.\n", MAX_POOL_SIZE);
 
 	return 0;
 }
