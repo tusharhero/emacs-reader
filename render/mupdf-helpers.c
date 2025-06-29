@@ -53,11 +53,6 @@ doc_page_height(DocState *state)
  * reset_doc_state - Reset all fields of a DocState to their initial values.
  * @state: Pointer to the DocState to be reset.
  *
- * Clears out any existing data in the DocState by overwriting it with
- * an initializer that sets all pointers to NULL, integer/page-number
- * fields to zero, and the page bounding box to zero coordinates.
- * Use this after dropping pages or closing the document to ensure the
- * state is clean before reuse.
  */
 
 void
