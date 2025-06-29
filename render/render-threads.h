@@ -51,6 +51,8 @@ typedef struct
 	CachedPage *cp;
 } DrawThreadArgs;
 
+extern ThreadPool g_thread_pool;
+
 void
 job_queue_init(JobQueue *queue);
 void
