@@ -36,9 +36,7 @@ Using these formats is heavily discouraged, you should /always/ prefer the above
 + XLSX
 
 * Dependencies
-Technically the only thing this package depends on is =mupdf=, but for various reasons, the way it is packaged in most distributions (at least GNU Guix and Arch) is that it has a conflict with on of its own dependencies, effectively making the package unusable. So for now, =mupdf= is provided as a submodule in the repository. We have spoken to the =mupdf= developers, and they have fixed it upstream, we will wait for GNU/Linux distributions to follow before removing the submodule (More details at [[https://codeberg.org/divyaranjan/emacs-reader/issues/18][#18]]).
-
-So, since you’d be building =mupdf= from source to produce the shared object =libmupdf.so= which the package relies on, you’d need to have the dependencies that =mupdf= has, check them from [[https://mupdf.readthedocs.io/en/1.25.0/quick-start-guide.html#get-the-mupdf-source-code][here]] and make sure you have them installed. But most of them are actually bundled with =mupdf= itself.
+The only thing this package depends on is =mupdf=, at minimum =v1.26.0=.
 
 * Installation
 For now, until the package has been published to GNU ELPA, the only way to install and use it is through locally cloning the repo and building it. This is different across platforms:
@@ -61,8 +59,6 @@ On GNU/Linux all you need is: =gcc= and =make=. Then you can simply install thro
      	      :files ("*.el" "render-core.so")
      	      :pre-build ("make" "all")))
    #+end_src
-
-*NOTE:* Both of these commands will take a /long/ time, because they’re going to invoke the =make= command which will recursively fetch the submodule and it’s dependencies. *It’ll hang your Emacs for a good ~15-20m, so be careful.*
 
 ** MacOS
 Since MacOS’ package manager Homebrew already has the latest version of MuPDF (1.26.0), you don’t need the submodule at all. You just need to do:
