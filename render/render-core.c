@@ -336,24 +336,7 @@ slide_cache_window_backward(DocState *state)
  * @args:  Array of Elisp argument values; args[0] is the file path string.
  * @data:  User-supplied callback data (ignored).
  *
- * Allocates and resets a new DocState, converts the provided Elisp string for
- * the file path in args[0] to a C string and stores it in state->path. Attempts
- * to open the document via load_mupdf_doc(); on success:
- *   1. Emits debug messages to stderr about load status and page count.
- *   2. Exposes the total page count to Elisp via set_current_pagecount().
- *   3. Marks the render status true in Elisp via set_current_render_status().
- *   4. Creates a buffer-local overlay via init_overlay().
- *   5. Renders the current page (and neighbors) to image via render_pages().
- *   6. Converts the image to an Emacs image object (svg2elisp_image), and
- * displays it in the overlay using overlay-put.
- *   7. Wraps the DocState in a user pointer and stores it in the Elisp variable
- *      `reader-current-doc-state-ptr` for later access.
- *
- * If the path conversion fails, prints an error and returns `nil`.  Any other
- * failures during loading or rendering emit an error to stderr but still return
- * `t` to Elisp (the render step logs its own failure).
- *
- * Return: Elisp `t` on completion (or `nil` if path conversion failed).
+ * Return: Elisp `t` on completion (`nil` otherwise).
  */
 
 emacs_value
@@ -485,12 +468,7 @@ emacs_close_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @args:  (ignored).
  * @data:  (ignored).
  *
- * Retrieves the current DocState and overlay, converts the next-page's image
- * data (`state->next_img_data`) into an Emacs image, and updates the overlay to
- * display it. If not already at the last page, also advances the DocState's
- * page index by calling render_pages() on the next page.
- *
- * Return: Elisp `t` on completion.
+ * Return: Elisp `t` on completion, `nil` otherwise.
  */
 
 emacs_value
@@ -543,12 +521,7 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @args:  (ignored).
  * @data:  (ignored).
  *
- * Retrieves the current DocState and overlay. If on page > 0, converts the
- * previous-page's image data (`state->prev_img_data`) into an Emacs image,
- * updates the overlay, and re-renders pages at state->prev_page_number. If
- * already at the first page, emits a warning and returns nil.
- *
- * Return: Elisp `t` if page moved, `nil` if already at first page.
+ * Return: Elisp `t` if page moved, `nil` if already at first page (and warn).
  */
 
 emacs_value
@@ -598,11 +571,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @args:  (ignored).
  * @data:  (ignored).
  *
- * If not already on page zero, resets state->current_page_number to 0,
- * re-renders the pages, converts the current-page image into an Emacs image,
- * and updates the overlay. Warns if the first page is already displayed.
- *
- * Return: Elisp `t` on success, `nil` if already at the first page.
+ * Return: Elisp `t` on success, `nil` if already at the first page (and warn).
  */
 
 emacs_value
@@ -645,11 +614,7 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @args:  (ignored).
  * @data:  (ignored).
  *
- * If not already on the last page, sets state->current_page_number to
- * pagecount–1, re-renders, converts the image, and updates the overlay.
- * Warns and returns nil if already at end.
- *
- * Return: Elisp `t` on success, `nil` if already at the last page.
+ * Return: Elisp `t` on success, `nil` if already at the last page (and warn).
  */
 
 emacs_value
@@ -691,11 +656,8 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @args:  Array of Elisp argument values; args[0] is desired page index.
  * @data:  (ignored).
  *
- * Extracts the integer page_number from args[0]. If within (1..pagecount-2),
- * updates state->current_page_number, re-renders that page, converts image
- * to an image, and updates the overlay. Otherwise emits a bounds warning.
- *
- * Return: Elisp `t` on success or out-of-bounds (always `t`).
+ * Return: Elisp `t` on success or out-of-bounds (always `t`), otherwise emits a
+ * bounds warning.
  */
 
 emacs_value
@@ -740,13 +702,7 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
  * @args:  Array of Elisp argument values; args[0] is the float scale factor.
  * @data:  (ignored).
  *
- * Retrieves the current DocState and overlay, then:
- *   - Rebuilds the image plist’s :width, :length, and :scale entries
- *     by multiplying the original page dimensions by the given factor.
- *   - Updates the image object via plist-put and setcdr.
- *   - Re-displays the modified image in the overlay.
- *
- * Return: Elisp `t` on completion.
+ * Return: Elisp `t` on completion, `nil` otherwise.
  */
 
 emacs_value
@@ -786,6 +742,16 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
 	return EMACS_T;
 }
+
+/**
+ * emacs_doc_rotate - rotate the displayed image by rotation angle.
+ * @env:   The Emacs environment pointer.
+ * @nargs: Number of Elisp args (should be 1).
+ * @args:  Array of Elisp argument values, args[0] is the angle (in degrees).
+ * @data:  (ignored).
+ *
+ * Return: Elisp `t` on completion, `nil` otherwise.
+ */
 
 emacs_value
 emacs_doc_rotate(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
