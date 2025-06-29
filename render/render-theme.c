@@ -19,6 +19,20 @@
 #include "render-core.h"
 #include "render-threads.h"
 
+/**
+ * Toggle dark theme rendering for the current document page.
+ *
+ * Inverts the `invert` flag in the DocState, re-renders the current
+ * page in a background thread, waits for it to finish, and updates
+ * the Emacs overlay with the new image.
+ *
+ * @param env    Emacs module environment.
+ * @param nargs  Argument count (unused).
+ * @param args   Argument values (unused).
+ * @param data   Additional data (unused).
+ * Return:       EMACS_T on success, EMACS_NIL if no DocState is available.
+ */
+
 emacs_value
 emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		     void *data)
