@@ -460,6 +460,24 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	return EMACS_T;
 }
 
+emacs_value
+emacs_close_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
+
+	DocState *state = get_doc_state_ptr(env);
+	free_cache_window(state);
+	free_cached_pages_pool(state);
+	fz_drop_outline(state->ctx, state->outline);
+	fz_drop_document(state->ctx, state->doc);
+	fz_drop_context(state->ctx);
+	reset_doc_state(state);
+	free(state);
+	return EMACS_T;
+}
+
 /**
  * emacs_next_page - Move to and display the next page in the overlay.
  * @env:   The Emacs environment pointer.
@@ -837,6 +855,10 @@ emacs_module_init(struct emacs_runtime *runtime)
 	register_module_func(
 	    env, emacs_redisplay_doc, "reader-dyn--redisplay-doc", 0, 0,
 	    "Redisplays the document at the current page and scale.");
+	register_module_func(env, emacs_close_doc, "reader-dyn--close-doc", 0,
+			     0,
+			     "Frees the DocState in memory and all other "
+			     "artifacts related to the current document.");
 	register_module_func(
 	    env, emacs_next_page, "reader-dyn--next-page", 0, 0,
 	    "Loads and renders the next page of the document.  It is wrapped "
