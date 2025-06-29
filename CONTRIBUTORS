@@ -32,7 +32,7 @@ shuxiao9058 (Codeberg user):
 * highlighting settings
 # Local Variables:
 # mode: org
-# eval: (highlight-regexp ".*:" 'emacs-authors-author)
-# eval: (highlight-regexp (rx (or "wrote" "changed" "fixed" "added" "refactored" "implemented")) 'emacs-authors-descriptor)
+# eval: (highlight-regexp ".*:" 'custom-group-tag-1)
+# eval: (highlight-regexp (rx (or "wrote" "changed" "fixed" "added" "refactored" "implemented")) 'compilation-warning)
 # eval: (highlight-regexp (rx (seq "v" (one-or-more (any num)) nonl (one-or-more (any num)) nonl (one-or-more (any num)))) 'success)
 # End:
