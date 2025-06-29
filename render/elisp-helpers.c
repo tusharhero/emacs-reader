@@ -92,11 +92,11 @@ provide(emacs_env *env, const char *value)
 registered.
  * @symbol: The symbol for which the function is to be registered.
  * @min_args: The minimum number of arguments this function must be provided
- with.
+ * with.
  * @max_args: The maximum number of arguments this function can take.
  * @docstring: The string which would act as the docstring for the module
- function. Equivalent to the docstring in Elisp functions, and visible from
- C-h f.
+ * function. Equivalent to the docstring in Elisp functions, and visible from
+ * C-h f.
  *
  * The @module_func must be not only compile-able but also it must respect the
  * Elisp runtime of Emacs, any sort of undefined or unpredictable behavior would
@@ -130,8 +130,7 @@ register_module_func(emacs_env *env,
  * usually be from the DocState.
  *
  * One needs to be extremely about handling the image data, and make sure it
- later
- * gets dropped and freed accordingly.
+ * later gets dropped and freed accordingly.
  *
  * Returns: The Elisp image object, which will be a specific plist, and can be
  * rendered in Emacs with `insert-image' or other means.
@@ -164,11 +163,8 @@ data2elisp_image(emacs_env *env, DocState *state, char *img_data,
  * get_doc_state_ptr - Retrieve the DocState pointer stored in Elisp.
  * @env:    The Emacs environment pointer.
  *
- * Looks up the Elisp symbol `doc-state-ptr`, obtains its value,
- * and converts that Lisp object into a native C pointer to `DocState`.
- * Returns NULL if the symbol is unbound or not a valid user pointer.
- *
- * Return: A pointer to the current `DocState`.
+ * Return: A pointer to the current `DocState` (or NULL if the symbol is unbound
+ * or not a valid user pointer.).
  */
 
 DocState *
@@ -188,9 +184,7 @@ get_doc_state_ptr(emacs_env *env)
  * @args:   Argument values passed by Elisp (ignored).
  * @data:   Callback data (ignored).
  *
- * Reads the `current_page_number` from the `DocState` and returns it
- * as an Elisp integer. Intended to be registered as an interactive
- * Elisp primitive.
+ * Intended to be registered as an interactive Elisp primitive.
  *
  * Return: An Elisp integer representing the current page number.
  */
@@ -220,9 +214,8 @@ get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
  * set_current_render_status - Mark the buffer’s render status as true.
  * @env:    The Emacs environment pointer.
  *
- * Interns the Elisp variable `doc-render-status` and sets it to `t`
- * (true) in the current buffer, indicating that the image rendering
- * is up to date.
+ * Sets the Elisp variable `doc-render-status` to `t` in the current buffer,
+ * indicating that the image rendering is up to date.
  */
 
 void
@@ -240,9 +233,8 @@ set_current_render_status(emacs_env *env)
  * @env:    The Emacs environment pointer.
  * @state:  Pointer to the `DocState` containing the pagecount.
  *
- * Sets the Elisp variable `current-doc-pagecount` in the current buffer
- * to the integer value of `state->pagecount`, so that Elisp code can
- * inspect how many pages the document has.
+ * Sets the Elisp variable `current-doc-pagecount` in the current buffer to the
+ * number of pages the document has.
  */
 
 void
@@ -258,9 +250,8 @@ set_current_pagecount(emacs_env *env, DocState *state)
  * init_overlay - Create and register an overlay covering the whole buffer.
  * @env:    The Emacs environment pointer.
  *
- * Calls `point-min` and `point-max` to get buffer bounds, then
- * makes an overlay spanning the entire buffer. Stores the overlay
- * object in the Elisp variable `reader-current-doc-overlay` for later use.
+ * Makes an overlay spanning the entire buffer. Stores the overlay object in the
+ * Elisp variable `reader-current-doc-overlay` for later use.
  */
 
 void
@@ -284,9 +275,6 @@ init_overlay(emacs_env *env)
  * get_current_doc_overlay - Retrieve the stored overlay object for the
  * document.
  * @env:    The Emacs environment pointer.
- *
- * Looks up the Elisp variable `reader-current-doc-overlay` and returns its
- * value, which should be the overlay previously created by `init_overlay`.
  *
  * Return: The Elisp overlay object, or an unbound value if not set.
  */
