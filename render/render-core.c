@@ -171,7 +171,6 @@ build_cache_window(DocState *state, int n)
 	state->current_page_number = n;
 	state->current_window_index = n - start;
 
-	clock_t cache_start = clock();
 	for (int i = 0; i < MAX_CACHE_SIZE; ++i)
 	{
 		int idx = start + i;
@@ -196,11 +195,6 @@ build_cache_window(DocState *state, int n)
 			state->cache_window[i] = NULL;
 		}
 	}
-
-	clock_t cache_end = clock();
-	double cache_duration
-	    = (double)(cache_end - cache_start) / CLOCKS_PER_SEC;
-	fprintf(stderr, "Took %fs to build cache window\n", cache_duration);
 
 	state->current_cached_page
 	    = state->cache_window[state->current_window_index];
@@ -589,9 +583,13 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		}
 
 		state->current_page_number = 0;
-
 		build_cache_window(state, state->current_page_number);
 		CachedPage *first_cp = state->current_cached_page;
+
+		// Wait for first_cp to be rendered ready
+		while (first_cp->status != PAGE_STATUS_READY)
+			fprintf(stderr, "Waiting for page %d to be ready!\n",
+				first_cp->page_num);
 		display_img_to_overlay(env, state, first_cp->img_data,
 				       first_cp->img_size, current_doc_overlay);
 	}
@@ -638,6 +636,11 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		state->current_page_number = state->pagecount - 1;
 		build_cache_window(state, state->current_page_number);
 		CachedPage *last_cp = state->current_cached_page;
+
+		// Wait for last_cp to be rendered ready if it isn't
+		while (last_cp->status != PAGE_STATUS_READY)
+			fprintf(stderr, "Waiting for page %d to be ready!\n",
+				last_cp->page_num);
 		display_img_to_overlay(env, state, last_cp->img_data,
 				       last_cp->img_size, current_doc_overlay);
 	}
@@ -679,6 +682,12 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 			state->current_page_number = page_number;
 			build_cache_window(state, state->current_page_number);
 			CachedPage *cp = state->current_cached_page;
+
+			// Wait for the page to be rendered ready if it isn't
+			while (cp->status != PAGE_STATUS_READY)
+				fprintf(stderr,
+					"Waiting for page %d to be ready!\n",
+					cp->page_num);
 			display_img_to_overlay(env, state, cp->img_data,
 					       cp->img_size,
 					       current_doc_overlay);
@@ -767,6 +776,7 @@ emacs_doc_rotate(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		draw_args->state = state;
 		draw_args->cp = state->current_cached_page;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
+
 		// Wait for the thread to signal before displaying
 		pthread_mutex_lock(&state->current_cached_page->mutex);
 		pthread_cond_wait(&state->current_cached_page->cond,
