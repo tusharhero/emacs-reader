@@ -15,8 +15,15 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "render-threads.h"
-#include <pthread.h>
-#include <stdio.h>
+ThreadPool g_thread_pool;
+
+/**
+ * Initialize the job queue.
+ *
+ * Sets head and tail to NULL and initializes the mutex and condition variable.
+ *
+ * @param queue  Pointer to the JobQueue to initialize.
+ */
 
 void
 job_queue_init(JobQueue *queue)
@@ -26,12 +33,29 @@ job_queue_init(JobQueue *queue)
 	pthread_cond_init(&queue->q_cond, NULL);
 }
 
+/**
+ * Destroy the job queue.
+ *
+ * Destroys the associated mutex and condition variable.
+ *
+ * @param queue  Pointer to the JobQueue to destroy.
+ */
+
 void
 job_queue_destroy(JobQueue *queue)
 {
 	pthread_mutex_destroy(&queue->q_mutex);
 	pthread_cond_destroy(&queue->q_cond);
 }
+
+/**
+ * Push a job into the job queue.
+ *
+ * Appends the job to the end of the queue and signals waiting threads.
+ *
+ * @param queue  Pointer to the JobQueue.
+ * @param job    Pointer to the ThreadJob to enqueue.
+ */
 
 void
 job_queue_push(JobQueue *queue, ThreadJob *job)
@@ -47,6 +71,15 @@ job_queue_push(JobQueue *queue, ThreadJob *job)
 	pthread_mutex_unlock(&queue->q_mutex);
 }
 
+/**
+ * Pop a job from the job queue.
+ *
+ * Blocks until a job is available, then removes and returns it.
+ *
+ * @param queue  Pointer to the JobQueue.
+ * @return       Pointer to the next ThreadJob.
+ */
+
 ThreadJob *
 job_queue_pop(JobQueue *queue)
 {
@@ -60,6 +93,17 @@ job_queue_pop(JobQueue *queue)
 	pthread_mutex_unlock(&queue->q_mutex);
 	return job;
 }
+
+/**
+ * Worker thread routine for the thread pool.
+ *
+ * Continuously fetches and runs jobs from the job queue, using a
+ * leader/follower pattern to manage scheduling. Terminates on receiving a job
+ * with a NULL function.
+ *
+ * @param arg  Pointer to the ThreadPool.
+ * @return     NULL on termination.
+ */
 
 void *
 thread_routine(void *arg)
@@ -107,6 +151,14 @@ thread_routine(void *arg)
 	return NULL;
 }
 
+/**
+ * Initialize the thread pool.
+ *
+ * Initializes the leader lock, job queue, and spawns worker threads.
+ *
+ * @param pool  Pointer to the ThreadPool to initialize.
+ */
+
 void
 threadpool_init(ThreadPool *pool)
 {
@@ -118,6 +170,14 @@ threadpool_init(ThreadPool *pool)
 	for (int i = 0; i < MAX_POOL_SIZE; i++)
 		pthread_create(&pool->threads[i], NULL, thread_routine, pool);
 }
+
+/**
+ * Shutdown the thread pool.
+ *
+ * Joins all threads and destroys the job queue and synchronization primitives.
+ *
+ * @param pool  Pointer to the ThreadPool to shut down.
+ */
 
 void
 threadpool_shutdown(ThreadPool *pool)
@@ -132,6 +192,17 @@ threadpool_shutdown(ThreadPool *pool)
 	pthread_mutex_destroy(&pool->leader_mutex);
 	pthread_cond_destroy(&pool->leader_cond);
 }
+
+/**
+ * Submit a job to the thread pool.
+ *
+ * Wraps the given function and argument into a ThreadJob and pushes it to the
+ * queue.
+ *
+ * @param func  Function pointer representing the job.
+ * @param arg   Argument to pass to the job function.
+ * @param pool  Pointer to the ThreadPool to submit the job to.
+ */
 
 void
 submit_job(void *(*func)(void *arg), void *arg, ThreadPool *pool)
