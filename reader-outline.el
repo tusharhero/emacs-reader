@@ -28,7 +28,7 @@
 
 ;;;###autoload
 (defun reader--outline-make-imenu-entry (plist)
-  "Convert one outline PLIST to an imenu entry using `reader-goto-page'."
+  "Convert one outline PLIST to an imenu entry."
   (let* ((title    (plist-get plist :title))
          (page     (plist-get plist :page))
          (children (plist-get plist :children)))
@@ -49,7 +49,7 @@
 (defun reader--outline-imenu-goto (name page)
   "Switch to PAGE, ignores the NAME argument.
 
-Wraps `reader-goto-page' for imenu compatibility."
+Just wraps `reader-goto-page' for imenu compatibility."
   (reader-goto-page (1+ page)))
 
 ;;; Outline
@@ -96,7 +96,7 @@ Each heading title is its own clickable button."
        'reader-source-buffer source-buffer
        'action #'reader--outline-button-action
        'follow-link t
-       'help-echo "Click to jump to this section in the document")
+       'help-echo "Jump to section.")
       (insert "\n")
       (if children
           (reader--outline-insert-outline children (1+ level) source-buffer)
