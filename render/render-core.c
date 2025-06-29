@@ -179,6 +179,11 @@ build_cache_window(DocState *state, int n)
 			CachedPage *cp = state->cached_pages_pool[idx];
 			state->cache_window[i] = cp;
 
+			if (cp->status == PAGE_STATUS_READY)
+			{
+				free_cached_page(state, state->cache_window[i]);
+			}
+
 			if (cp->status == PAGE_STATUS_EMPTY)
 			{
 				load_page_dl(state, cp);
