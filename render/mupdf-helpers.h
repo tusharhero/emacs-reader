@@ -42,5 +42,7 @@ void
 reset_doc_state(DocState *state);
 void
 free_cached_page(DocState *state, CachedPage *cp);
+void
+free_cache_window(DocState *state);
 
 #endif

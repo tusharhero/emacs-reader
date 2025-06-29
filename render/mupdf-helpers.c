@@ -165,3 +165,14 @@ free_cached_page(DocState *state, CachedPage *cp)
 	cp->img_data = NULL;
 	cp->img_size = 0;
 }
+
+void
+free_cache_window(DocState *state)
+{
+	for (int i = 0; i < MAX_CACHE_SIZE; i++)
+	{
+		if (state->cache_window[i]->status == PAGE_STATUS_READY)
+			free_cached_page(state, state->cache_window[i]);
+	}
+	*state->cache_window = NULL;
+}
