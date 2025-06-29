@@ -23,7 +23,18 @@
 #include "render-threads.h"
 
 int plugin_is_GPL_compatible;
-ThreadPool g_thread_pool;
+
+/**
+ * Load and cache the display list for a page.
+ *
+ * If the page is empty, sets its status to rendering, loads the page,
+ * computes its bounding box, and generates a display list. Uses a
+ * cloned MuPDF context for thread safety.
+ *
+ * @param state  Pointer to the current DocState.
+ * @param cp     Pointer to the CachedPage to load.
+ * Return:       EXIT_SUCCESS on success (errors are rethrown via MuPDF).
+ */
 
 int
 load_page_dl(DocState *state, CachedPage *cp)
@@ -54,6 +65,18 @@ load_page_dl(DocState *state, CachedPage *cp)
 	fz_drop_context(ctx);
 	return EXIT_SUCCESS;
 }
+
+/**
+ * Thread function to render a page and encode it as a PNM image.
+ *
+ * Uses the page's display list to generate a pixmap, optionally inverts
+ * and gamma-corrects it, then encodes it to PNM and stores it in
+ * `cp->img_data'. Updates image dimensions and status, and signals
+ * completion via a condition variable.
+ *
+ * @param arg  Pointer to DrawThreadArgs (contains DocState and CachedPage).
+ * Return:     NULL (result is stored in CachedPage).
+ */
 
 void *
 draw_page_thread(void *arg)
@@ -143,6 +166,17 @@ draw_page_thread(void *arg)
 	return NULL;
 }
 
+/**
+ * Build a sliding cache window around the given page.
+ *
+ * Determines a window of pages centered around page `n', clears any
+ * previously rendered pages, loads display lists for empty ones, and
+ * submits rendering jobs. Waits for the current page to be fully cached.
+ *
+ * @param state  Pointer to the current DocState.
+ * @param n      Page number to center the cache window around.
+ */
+
 void
 build_cache_window(DocState *state, int n)
 {
@@ -212,6 +246,18 @@ build_cache_window(DocState *state, int n)
 	    = state->cache_window[state->current_window_index];
 }
 
+/**
+ * Slide the cache window forward by one page.
+ *
+ * Advances to the next page, shifts the cache window if within bounds,
+ * reuses or frees cached pages, and spawns rendering jobs as needed.
+ * Falls back to full rebuild if near document edges. Waits until the
+ * new current page is ready.
+ *
+ * @param state  Pointer to the current DocState.
+ * Return:       true if sliding succeeded, false if at end of document.
+ */
+
 bool
 slide_cache_window_forward(DocState *state)
 {
@@ -269,6 +315,18 @@ slide_cache_window_forward(DocState *state)
 
 	return true;
 }
+
+/**
+ * Slide the cache window backward by one page.
+ *
+ * Moves to the previous page, shifts the cache window if within bounds,
+ * frees or reuses cached pages, and triggers rendering if needed.
+ * Falls back to a full rebuild near document start. Waits until the
+ * new current page is ready.
+ *
+ * @param state  Pointer to the current DocState.
+ * Return:       true if sliding succeeded, false if at start of document.
+ */
 
 bool
 slide_cache_window_backward(DocState *state)
@@ -409,6 +467,20 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	return EMACS_T;
 }
 
+/**
+ * Redisplay the current document page in Emacs.
+ *
+ * Resets visual state (no rotation/inversion), re-renders the current
+ * cached page in a background thread, waits for completion, and updates
+ * the image in the associated Emacs overlay.
+ *
+ * @param env    Emacs module environment.
+ * @param nargs  Argument count (unused).
+ * @param args   Argument values (unused).
+ * @param data   Additional data (unused).
+ * Return:       EMACS_T on success, EMACS_NIL if state is not available.
+ */
+
 emacs_value
 emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		    void *data)
@@ -443,6 +515,19 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 
 	return EMACS_T;
 }
+
+/**
+ * Close the currently loaded document and free all resources.
+ *
+ * Frees the cache window and cached pages pool, drops the outline,
+ * document, and MuPDF context, resets the DocState, and frees it.
+ *
+ * @param env    Emacs module environment.
+ * @param nargs  Argument count (unused).
+ * @param args   Argument values (unused).
+ * @param data   Additional data (unused).
+ * Return:       EMACS_T after successful cleanup.
+ */
 
 emacs_value
 emacs_close_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
