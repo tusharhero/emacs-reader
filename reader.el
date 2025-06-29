@@ -559,10 +559,12 @@ See also `reader-shrink-size'."
   (reader-dyn--rotate-doc -90)
   (reader--center-page))
 
-(defun reader-kill-buffer ()
-  "Kill the current buffer and the document."
+(defun reader-close-doc ()
+  "Smoothly close the current document and free it's memory."
   (interactive)
-  (kill-buffer (current-buffer)))
+  (when (yes-or-no-p "Are you sure you want to permanently close the current document?")
+    (reader-dyn--close-doc)
+    (kill-buffer (current-buffer))))
 
 (defun reader--render-buffer ()
   "Render the document file current buffer is associated with.
@@ -640,7 +642,7 @@ buffer is not in `reader-mode'."
 
   "o"       #'reader-outline-show
 
-  "Q"       #'reader-kill-buffer)
+  "Q"       #'reader-close-doc)
 
 ;;;###autoload
 (define-derived-mode reader-mode special-mode "Emacs Reader"
