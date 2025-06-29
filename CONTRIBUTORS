@@ -22,17 +22,30 @@ for the v0.2.0 release
 - implemented the elisp side reader-dark-mode
 - refactored reader's keymap in reader.el
 - refactored the scrolling logic in reader.el for v0.2.7
+- cleaned up older documentation and handled renaming in PR #98
+- refactored the command queuening mechanism in PR #98
+- added mwheel functionality to new scaling mechanism in PR #98
+- added development environment configurations in PR #98
+- refactored button interface of reader-outline.el
+- renaming functions properly in reader-outline.el and newer reader.el functions.
+- updated docstrings in both C and Elisp modules for v0.3.0
 
 * Other Contributions (Not Legally Significant)
 
 shuxiao9058 (Codeberg user):
 
-- fixed the MacOS port for the build system
+- fixed the MacOS port for the build system (PR #66)
+
+idilip (Codeberg user):
+
+- implemented a basic presentation mode for v0.3.0 (PR #100)
+
+
 
 * highlighting settings
 # Local Variables:
 # mode: org
 # eval: (highlight-regexp ".*:" 'custom-group-tag-1)
-# eval: (highlight-regexp (rx (or "wrote" "changed" "fixed" "added" "refactored" "implemented")) 'compilation-warning)
+# eval: (highlight-regexp (rx (or "wrote" "changed" "fixed" "added" "refactored" "implemented" "cleaned" "renaming" "updated")) 'compilation-warning)
 # eval: (highlight-regexp (rx (seq "v" (one-or-more (any num)) nonl (one-or-more (any num)) nonl (one-or-more (any num)))) 'success)
 # End:
