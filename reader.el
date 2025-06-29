@@ -574,6 +574,9 @@ Intended for use in `kill-buffer-hook'."
     (kill-buffer (current-buffer))))
 
 (defun reader-refresh-doc ()
+  "Refresh the buffer document with file on disk.
+
+Intended for use in `after-revert-hook'."
   (interactive)
   (when buffer-file-name
     (let ((page (reader-current-pagenumber))
