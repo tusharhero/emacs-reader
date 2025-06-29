@@ -19,7 +19,6 @@
 
 #include "emacs-module.h"
 #include <mupdf/fitz.h>
-#include <pthread.h>
 
 #define MINRES 18
 #define MAXRES 850

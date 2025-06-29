@@ -19,6 +19,7 @@
 
 #include "emacs-module.h"
 #include "mupdf-helpers.h"
+#include "render-core.h"
 #include <stdbool.h>
 #include <stddef.h>
 
