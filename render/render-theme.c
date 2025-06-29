@@ -23,28 +23,32 @@ emacs_value
 emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 		     void *data)
 {
-  (void)data;
-  (void)nargs;
-  (void)args;
-  DocState *state = get_doc_state_ptr(env);
-  emacs_value current_doc_overlay = get_current_doc_overlay(env);
-  if (state)
-  {
-    state->invert ^= 1;
-    CachedPage *cp = state->current_cached_page;
-    DrawThreadArgs *draw_args
-      = malloc(sizeof(DrawThreadArgs));
-    draw_args->state = state;
-    draw_args->cp = cp;
-    draw_page_thread(draw_args);
-    display_img_to_overlay(env, state, cp->img_data,
-			   cp->img_size,
-			   current_doc_overlay);
-  }
-  else
-    {
-      return EMACS_NIL;
-    }
+	(void)data;
+	(void)nargs;
+	(void)args;
+	DocState *state = get_doc_state_ptr(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	if (state)
+	{
+		state->invert ^= 1;
+		CachedPage *cp = state->current_cached_page;
+		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
+		draw_args->state = state;
+		draw_args->cp = cp;
+		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 
-  return EMACS_T;
+		// Wait for the thread to signal before displaying
+		pthread_mutex_lock(&cp->mutex);
+		pthread_cond_wait(&cp->cond, &cp->mutex);
+		pthread_mutex_unlock(&cp->mutex);
+
+		display_img_to_overlay(env, state, cp->img_data, cp->img_size,
+				       current_doc_overlay);
+	}
+	else
+	{
+		return EMACS_NIL;
+	}
+
+	return EMACS_T;
 }
