@@ -559,11 +559,18 @@ See also `reader-shrink-size'."
   (reader-dyn--rotate-doc -90)
   (reader--center-page))
 
+(defun reader--clear-doc-memory ()
+  "Clear document memory if we are in `reader-mode'.
+
+Intended for use in `kill-buffer-hook'."
+  (when (derived-mode-p 'reader-mode)
+    (reader-dyn--close-doc)))
+(add-hook 'kill-buffer-hook 'reader--clear-doc-memory)
+
 (defun reader-close-doc ()
-  "Smoothly close the current document and free it's memory."
+  "Close the current document, also prompt the user for confirmation."
   (interactive)
-  (when (yes-or-no-p "Are you sure you want to permanently close the current document?")
-    (reader-dyn--close-doc)
+  (when (yes-or-no-p "Are you sure you want to close the current document?")
     (kill-buffer (current-buffer))))
 
 (defun reader--render-buffer ()
