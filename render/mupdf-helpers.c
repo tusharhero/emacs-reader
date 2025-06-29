@@ -18,6 +18,7 @@
 
 #include "mupdf-helpers.h"
 #include "render-core.h"
+#include <pthread.h>
 
 pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
 
@@ -104,6 +105,17 @@ unlock_mutex(void *user, int lock)
 		fail("pthread_mutex_unlock()");
 }
 
+/**
+ * Initialize the main MuPDF context with thread-safe locking.
+ *
+ * Sets up mutexes for MuPDF's internal locking, assigns them to the
+ * document state's lock structure, and creates a new `fz_context'.
+ * Also registers default document handlers.
+ *
+ * @param state  Pointer to the DocState to initialize.
+ * Return:       EXIT_SUCCESS on success, EXIT_FAILURE on error.
+ */
+
 int
 init_main_ctx(DocState *state)
 {
@@ -126,6 +138,17 @@ init_main_ctx(DocState *state)
 	return EXIT_SUCCESS;
 }
 
+/**
+ * Load fz_document using MuPDF.
+ *
+ * Opens the document at `state->path', loads its outline and page count,
+ * and stores them in the DocState. Handles errors via MuPDF's exception
+ * mechanism.
+ *
+ * @param state  Pointer to the DocState with initialized context and path.
+ * Return:       EXIT_SUCCESS on success, EXIT_FAILURE on failure.
+ */
+
 int
 load_mupdf_doc(DocState *state)
 {
@@ -146,6 +169,16 @@ load_mupdf_doc(DocState *state)
 	return EXIT_SUCCESS;
 }
 
+/**
+ * Free resources associated with a CachedPage.
+ *
+ * Drops the display list and frees any associated image data
+ * if the page was marked as ready. Marks the page as empty.
+ *
+ * @param state  Document state containing the MuPDF context.
+ * @param cp     Pointer to the CachedPage to be freed.
+ */
+
 void
 free_cached_page(DocState *state, CachedPage *cp)
 {
@@ -160,6 +193,15 @@ free_cached_page(DocState *state, CachedPage *cp)
 	cp->img_size = 0;
 }
 
+/**
+ * Free all ready pages in the document's cache window.
+ *
+ * Iterates through the cache window and frees pages marked as ready.
+ * Resets the cache window pointer afterward.
+ *
+ * @param state  Pointer to the current DocState.
+ */
+
 void
 free_cache_window(DocState *state)
 {
@@ -172,6 +214,15 @@ free_cache_window(DocState *state)
 	}
 	*state->cache_window = NULL;
 }
+
+/**
+ * Free the entire cached pages pool for the document.
+ *
+ * Destroys all mutexes and condition variables in the pool,
+ * then frees the underlying memory.
+ *
+ * @param state  Pointer to the current DocState.
+ */
 
 void
 free_cached_pages_pool(DocState *state)
