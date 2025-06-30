@@ -10,6 +10,7 @@ Divya Ranjan Pattanaik <divya@subvertising.org>:
   mupdf-helpers.c, render-theme.c, render-core.c, elisp-helpers.c, and
   render-threads.c.
 - wrote Makefile.
+- wrote README.org
 
 Tushar <tusharhero@sdf.org>:
 
@@ -34,16 +35,22 @@ Tushar <tusharhero@sdf.org>:
 - updated docstrings in both C and Elisp modules for v0.3.0
 - added guix system configurations in test/vm/x11.scm and
   test/vm/wayland.scm.
+- updated README.org for clarification, typos, also added some
+  sections to it.
+
+prom (Codeberg user):
+- fixed support for MS Windows in the Makefile
+- updated  README.org with MS Windows instructions.
 
 * Other Contributions (Not Legally Significant)
 
 shuxiao9058 (Codeberg user):
 
-- fixed the MacOS port for the build system (PR #66)
+- fixed the MacOS port for the build system in Makefile (PR #66)
 
 idilip (Codeberg user):
 
-- implemented a basic presentation mode for v0.3.0 (PR #100)
+- implemented a basic presentation mode in reader.el for v0.3.0 (PR #100)
 
 
 
