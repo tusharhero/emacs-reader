@@ -32,6 +32,14 @@ else ifeq ($(OS_NAME),Darwin)
   USE_PKGCONFIG := no
 endif
 
+ifeq ($(OS_NAME),Darwin)
+  SO := dylib
+else ifneq ($(filter MINGW%, $(OS_NAME)),)
+  SO := dll
+else
+  SO := so
+endif
+
 # Compiler and base flags
 CC := gcc
 CFLAGS += -Wall -Wextra -fPIC
@@ -83,7 +91,7 @@ else
 endif
 
 # --- Build Rules ---
-LIB_NAME := render-core.so
+LIB_NAME := render-core.$(SO)
 SRCS := render/elisp-helpers.c render/mupdf-helpers.c render/render-threads.c render/render-core.c render/render-theme.c
 OBJS := $(SRCS:%.c=%.o)
 
