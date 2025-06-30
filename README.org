@@ -25,7 +25,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 An all-in-one document reader for GNU Emacs, supporting all [[* Supported Formats][major document formats]]. This package intends to take from =doc-view=, =nov.el=, and =pdf-tools= and make them better. And as such, it is effectively a *drop-in replacement* for them
 
 * Screencast
-[[file:extras/emacs-reader-2025-05-14_04.32.41.gif]]
+[[https://codeberg.org/divyaranjan/emacs-reader/raw/commit/9d62d26fe4ae63e5cecf57bc399b20f7feefb620/extras/emacs-reader-2025-05-14_04.32.41.gif]]
 
 * Supported Formats
 The Emacs Reader (via MuPDF) can open all the formats below.
