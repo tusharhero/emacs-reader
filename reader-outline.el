@@ -76,7 +76,8 @@ document it was created from."
 		  (inhibit-read-only t))
         (reader-outline-mode)
 	(setq reader-outline--doc-buffer source-buffer)
-        (reader--outline-insert-outline outline-data 1 source-buffer)))
+        (reader--outline-insert-outline outline-data 1 source-buffer)
+	(goto-char (point-min))))
     (pop-to-buffer bufname)))
 
 (defun reader--outline-insert-outline (outline level source-buffer)
@@ -85,8 +86,8 @@ document it was created from."
 Each heading title is its own clickable button."
   (dolist (entry outline)
     (let ((title (plist-get entry :title))
-           (page  (plist-get entry :page))
-           (children (plist-get entry :children)))
+          (page  (plist-get entry :page))
+          (children (plist-get entry :children)))
       ;; This cannot be part of label (title) because that will
       ;; obscure the outline TAB bindings with button bindings.
       (insert (concat (make-string level ?*) " "))
@@ -99,8 +100,7 @@ Each heading title is its own clickable button."
        'help-echo "Jump to section.")
       (insert "\n")
       (if children
-          (reader--outline-insert-outline children (1+ level) source-buffer)
-	(goto-char (point-min))))))
+          (reader--outline-insert-outline children (1+ level) source-buffer)))))
 
 (defun reader-outline-select-doc-window ()
   "Display and switch to the original document's window."
