@@ -984,11 +984,14 @@ emacs_module_init(struct emacs_runtime *runtime)
 
 	// Provide the current dynamic module as a feature to Emacs
 	provide(env, "render-core");
-	fprintf(stderr, "Emacs module initialized successfully.\n");
 
 	// Initialize the global thread pool
 	threadpool_init(&g_thread_pool);
-	fprintf(stderr, "%d threads have been initialized.\n", MAX_POOL_SIZE);
+	fprintf(stderr, "reader: %d threads have been initialized.\n",
+		MAX_POOL_SIZE);
+
+	fprintf(stderr,
+		"reader: dynamic module has been loaded successfully.\n");
 
 	return 0;
 }
