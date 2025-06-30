@@ -50,6 +50,12 @@
   :group 'reader
   :type 'number)
 
+(defcustom reader-default-fit 'reader-fit-to-height
+  "The default fitting for documents."
+  :group 'reader
+  :type '(radio (function-item reader-fit-to-height)
+		(function-item reader-fit-to-width)))
+
 (defvar-local reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
 
@@ -700,7 +706,7 @@ Keybindings:
   (setq mode-name "Emacs Reader")
   (run-hooks 'reader-mode-hook)
 
-  (reader-fit-to-height)
+  (funcall reader-default-fit)
   (add-hook 'window-size-change-functions #'reader--center-page nil t))
 
 (defun reader-mode-line ()
