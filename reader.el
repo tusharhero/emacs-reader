@@ -676,7 +676,9 @@ Keybindings:
 	      global-linum-mode nil
 	      cursor-type 'hollow
 	      display-line-numbers-mode nil
-	      left-fringe-width nil) ; messes up centering(line-prefix).
+	      ;; messes up centering(line-prefix) otherwise, the
+	      ;; default value is 8, so we keep it at that.
+	      left-fringe-width 8)
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
   (auto-revert-mode 1)
