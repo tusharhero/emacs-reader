@@ -214,6 +214,12 @@ Optionally scale it by the SCALING-FACTOR."
   (reader-doc-scale-page scaling-factor)
   (reader--center-page))
 
+(defun reader-reset-size ()
+  "Reset the size of the current page to 1.0."
+  (interactive)
+  (reader-doc-scale-page 1.0)
+  (reader--center-page))
+
 (defun reader-fit-to-height ()
   "Scale the current page to fit its height perfectly within the window."
   (interactive)
@@ -658,6 +664,8 @@ buffer is not in `reader-mode'."
 
   "-"       #'reader-shrink-size
   "C-<wheel-down>" #'reader-mwheel-shrink-size
+
+  "0"       #'reader-reset-size
 
   "H"       #'reader-fit-to-height
   "W"       #'reader-fit-to-width
