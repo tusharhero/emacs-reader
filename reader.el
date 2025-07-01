@@ -622,7 +622,7 @@ buffer is not in `reader-mode'."
   "<remap> <previous-line>" #'reader-scroll-up-or-prev-page
   "<remap> <next-line>" #'reader-scroll-down-or-next-page
   "<remap> <next>" #'reader-scroll-down-or-next-page
-  "<remap> <prior>" #'reader-scroll-down-or-next-page
+  "<remap> <prior>" #'reader-scroll-up-or-prev-page
 
   "<wheel-up>" #'reader-mwheel-scroll-up
   "<wheel-down>" #'reader-mwheel-scroll-down
