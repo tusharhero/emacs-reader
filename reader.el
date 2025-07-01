@@ -697,6 +697,11 @@ Keybindings:
   (blink-cursor-mode 0)
   (auto-revert-mode 1)
 
+  ;; Disable `pixel-scroll-precision-mode' locally because it doesn't
+  ;; work nicely with `reader-mode'.
+  (when (bound-and-true-p pixel-scroll-precision-mode)
+    (setq-local pixel-scroll-precision-mode nil))
+
   (setq-local bookmark-make-record-function
 	      #'reader-bookmark-make-record)
 
