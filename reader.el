@@ -588,19 +588,23 @@ Intended for use in `kill-buffer-hook'."
   (when (yes-or-no-p "Are you sure you want to close the current document?")
     (kill-buffer (current-buffer))))
 
-(defun reader-refresh-doc ()
+(defun reader-refresh-doc-buffer (&optional ignore-auto noconfirm preserve-modes)
   "Refresh the buffer document with file on disk.
 
-Intended for use in `after-revert-hook'."
+It reloads the entire document while preserving the previous state.
+This function is replaced as `revert-buffer-function' for `reader-mode' buffers."
   (interactive)
   (when buffer-file-name
     (let ((page (reader-current-pagenumber))
-	  (scale reader-current-doc-scale-value))
+	  (scale reader-current-doc-scale-value)
+	  (theme reader-current-doc-theme))
       (remove-overlays)
       (reader--render-buffer)
+      (when (eq theme 'dark)
+	(reader-dark-mode 1))
+      (reader-doc-scale-page scale)
       (reader-goto-page page)
-      (reader-doc-scale-page scale))))
-(add-hook 'after-revert-hook #'reader-refresh-doc)
+      (reader--center-page))))
 
 (defun reader--render-buffer ()
   "Render the document file current buffer is associated with.
@@ -699,6 +703,7 @@ Keybindings:
   (set-buffer-modified-p nil)
   (blink-cursor-mode 0)
   (auto-revert-mode 1)
+  (setq-local revert-buffer-function #'reader-refresh-doc-buffer)
 
   ;; Disable `pixel-scroll-precision-mode' locally because it doesn't
   ;; work nicely with `reader-mode'.
