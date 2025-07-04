@@ -1,0 +1,15 @@
+;;; -*- mode: auto-fill; mode: org; -*-
+See =(info "(standards) NEWS File")=. User facing changes per release
+are to be recorded here.
+
+* Version 0.3.1
+- Start NEWS file.
+- Fix MS Windows build.
+- Fix the order of reader outline, where the last heading would show
+  up at the beginning, now they show up at the end.
+- Fix bug where setting the left-fringe-width would disable the
+  centering.
+- Add new customize option, =reader-default-fit=, for setting the
+  default fitting (fit to height or fit to width).
+- Add a new command, =reader-reset-size=, to reset scaling to 1.0.
+- Fix scrolling when =pixel-scroll-precision-mode= is enabled.
