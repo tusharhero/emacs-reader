@@ -71,6 +71,9 @@
   "The current page number of the document."
   (1+ (reader-dyn--current-doc-pagenumber)))
 
+(defvar-local reader-current-doc-theme 'light
+  "The current theme of the document")
+
 ;; We queue some commands because the user is expected to use the
 ;; commands repeatedly, such as by simply spamming a key. If we don't
 ;; queue the commands, Emacs may start skipping intermediate commands.
@@ -736,7 +739,9 @@ Keybindings:
   :lighter " Dark"
   (when (eq major-mode 'reader-mode)
     (if reader-dark-mode
-	(reader-dyn--set-dark-theme)
+	(progn
+	  (reader-dyn--set-dark-theme)
+	  (setq reader-current-doc-theme 'dark))
       (reader-dyn--redisplay-doc))
     (reader-doc-scale-page reader-current-doc-scale-value)))
 
