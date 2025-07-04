@@ -13,3 +13,4 @@ are to be recorded here.
   default fitting (fit to height or fit to width).
 - Add a new command, =reader-reset-size=, to reset scaling to 1.0.
 - Fix scrolling when =pixel-scroll-precision-mode= is enabled.
+- Fix =revert-buffer= to respect the theme, page and scale of the document.
