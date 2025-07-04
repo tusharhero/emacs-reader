@@ -743,11 +743,10 @@ Keybindings:
   "Toggle dark-mode for current reader document."
   :lighter " Dark"
   (when (eq major-mode 'reader-mode)
-    (if reader-dark-mode
-	(progn
-	  (reader-dyn--set-dark-theme)
-	  (setq reader-current-doc-theme 'dark))
-      (reader-dyn--redisplay-doc))
+    (cond (reader-dark-mode
+	   (reader-dyn--set-dark-theme)
+	   (setq reader-current-doc-theme 'dark))
+	  ((reader-dyn--redisplay-doc)))
     (reader-doc-scale-page reader-current-doc-scale-value)))
 
 (define-globalized-minor-mode reader-global-dark-mode reader-dark-mode reader-dark-mode)
@@ -755,11 +754,10 @@ Keybindings:
 (define-minor-mode reader-presentation-mode
   "Toggle presentation view for current reader document."
   :lighter ""
-  (if reader-presentation-mode
-      (progn
-        (setq-local mode-line-format nil)
-        (reader-fit-to-height))
-    (kill-local-variable 'mode-line-format)))
+  (cond (reader-presentation-mode
+	 (setq-local mode-line-format nil)
+	 (reader-fit-to-height))
+	((kill-local-variable 'mode-line-format))))
 
 ;; see `reader-saveplace' for details.
 ;;;###autoload
