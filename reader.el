@@ -589,6 +589,8 @@ Intended for use in `kill-buffer-hook'."
   "Refresh the buffer document with file on disk.
 
 It reloads the entire document while preserving the previous state.
+The args IGNORE-AUTO, NOCONFIRM and PRESERVE-MODES are ignored and are
+simply to satisfy the template for `revert-buffer-function'.
 This function is replaced as `revert-buffer-function' for `reader-mode' buffers."
   (interactive)
   (when buffer-file-name
