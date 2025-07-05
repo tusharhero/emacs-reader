@@ -20,6 +20,11 @@
 OS_NAME := $(shell uname)
 HAVE_GUIX := $(shell command -v guix >/dev/null 2>&1 && echo yes || echo no)
 HAVE_NIX  := $(shell command -v nix >/dev/null 2>&1 && echo yes || echo no)
+ifneq ($(filter MINGW%, $(OS_NAME)),)
+  HAVE_MINGW64 := yes
+else
+  HAVE_MINGW64 := no
+endif
 USE_PKGCONFIG := yes
 
 ifeq ($(HAVE_GUIX),yes)
@@ -31,11 +36,13 @@ else ifeq ($(HAVE_NIX),yes)
 else ifeq ($(OS_NAME),Darwin)
   $(info macOS detected: skipping pkg-config and using Homebrew for MuPDF paths.)
   USE_PKGCONFIG := no
+else ifeq ($(HAVE_MINGW64), yes)
+  $(info MinGW64 detected: assuming dll is located in $(MINGW_PREFIX)/bin.)
 endif
 
 ifeq ($(OS_NAME),Darwin)
   SO := dylib
-else ifneq ($(filter MINGW%, $(OS_NAME)),)
+else ifeq ($(HAVE_MINGW64),yes)
   SO := dll
 else
   SO := so
@@ -49,6 +56,9 @@ LDFLAGS :=
 ifeq ($(OS_NAME),Darwin)
   CFLAGS += -DMACOS
   LDFLAGS += -dynamiclib
+else ifeq ($(HAVE_MINGW64),yes)
+  CFLAGS += -DWIN32 -pthread
+  LDFLAGS += -shared -lpthread -L$$MINGW_PREFIX/bin
 else
   CFLAGS += -DLINUX -pthread
   LDFLAGS += -shared -lpthread
