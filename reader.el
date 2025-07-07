@@ -636,8 +636,8 @@ buffer is not in `reader-mode'."
   "S-<wheel-up>" #'reader-mwheel-scroll-left
   "S-<wheel-down>" #'reader-mwheel-scroll-right
 
-  "C-v"      #'reader-scroll-up-screenful
-  "M-v"      #'reader-scroll-down-screenful
+  "C-v"      #'reader-scroll-down-screenful
+  "M-v"      #'reader-scroll-up-screenful
   "<remap> <scroll-down-command>" #'reader-scroll-up-screenful
   "<remap> <scroll-up-command>" #'reader-scroll-down-screenful
 
