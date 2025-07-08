@@ -25,6 +25,8 @@
 
 #define EMACS_NIL env->intern(env, "nil")
 #define EMACS_T env->intern(env, "t")
+#define EMACS_CURR_WIN                                                         \
+	env->funcall(env, env->intern(env, "selected-window"), 0, NULL);
 
 bool
 elisp_2_c_str(emacs_env *env, emacs_value value, char **buffer, size_t *size);
@@ -43,6 +45,12 @@ DocState *
 init_doc_state_ptr(emacs_env *env);
 DocState *
 get_doc_state_ptr(emacs_env *env);
+EmacsWinState *
+init_win_state_ptr(emacs_env *env, DocState *doc_state);
+EmacsWinState *
+get_win_state_ptr(emacs_env *env);
+void
+reset_win_state(EmacsWinState *win_state);
 emacs_value
 get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 			void *data);
