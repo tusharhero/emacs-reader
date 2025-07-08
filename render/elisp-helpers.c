@@ -213,6 +213,21 @@ init_win_state_ptr(emacs_env *env, DocState *doc_state)
 	return win_state;
 }
 
+EmacsWinState *
+get_win_state_ptr(emacs_env *env)
+{
+	emacs_value curr_win = EMACS_CURR_WIN;
+	emacs_value ptr = env->funcall(
+	    env, env->intern(env, "window-parameter"), 2,
+	    (emacs_value[]){ curr_win, env->intern(env, "win-state") });
+	if (ptr == NULL)
+		emacs_message(
+		    env,
+		    "Current window doesn't have a pointer to EmacsWinState.");
+	EmacsWinState *win_state = env->get_user_ptr(env, ptr);
+	return win_state;
+}
+
 /**
  * get_current_page_number - Elisp-callable wrapper to fetch page number.
  * @env:    The Emacs environment pointer.
