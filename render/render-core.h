@@ -82,8 +82,6 @@ load_page_dl(DocState *state, CachedPage *cp);
 void *
 draw_page_thread(void *arg);
 void
-async_render(DocState *state, CachedPage *cp);
-void
 build_cache_window(DocState *state, int n);
 bool
 slide_cache_window_forward(DocState *state);
