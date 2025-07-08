@@ -66,6 +66,17 @@ typedef struct
 	int invert;
 } DocState;
 
+typedef struct
+{
+	DocState *doc_state;
+	float resolution;
+	CachedPage *cache_window[MAX_CACHE_SIZE];
+	int current_window_index;
+	CachedPage *current_cached_page;
+	int current_page_number;
+	int rotate;
+} EmacsWinState;
+
 int
 load_page_dl(DocState *state, CachedPage *cp);
 void *
