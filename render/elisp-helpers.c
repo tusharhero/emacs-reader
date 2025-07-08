@@ -199,6 +199,20 @@ get_doc_state_ptr(emacs_env *env)
 	return state;
 }
 
+EmacsWinState *
+init_win_state_ptr(emacs_env *env, DocState *doc_state)
+{
+	EmacsWinState *win_state = malloc((sizeof(EmacsWinState)));
+	win_state->doc_state = doc_state;
+	// Create a user pointer and expose it to Emacs as a window parameter
+	emacs_value user_ptr = env->make_user_ptr(env, NULL, win_state);
+	emacs_value curr_win = EMACS_CURR_WIN;
+	env->funcall(env, env->intern(env, "set-window-parameter"), 3,
+		     (emacs_value[]){ curr_win, env->intern(env, "win-state"),
+				      user_ptr });
+	return win_state;
+}
+
 /**
  * get_current_page_number - Elisp-callable wrapper to fetch page number.
  * @env:    The Emacs environment pointer.
