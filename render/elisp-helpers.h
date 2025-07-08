@@ -40,6 +40,8 @@ data2elisp_image(emacs_env *env, DocState *state, char *img_data,
 		 size_t img_size);
 
 DocState *
+init_doc_state_ptr(emacs_env *env);
+DocState *
 get_doc_state_ptr(emacs_env *env);
 emacs_value
 get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,

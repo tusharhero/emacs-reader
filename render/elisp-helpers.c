@@ -161,6 +161,27 @@ data2elisp_image(emacs_env *env, DocState *state, char *img_data,
 }
 
 /**
+ * init_doc_state_ptr - Initialize the DocState and expose it to Elisp.
+ * @env:    The Emacs environment pointer.
+ *
+ * Return: A pointer to the current `docstate` (or null if the symbol is unbound
+ * or not a valid user pointer.).
+ */
+
+DocState *
+init_doc_state_ptr(emacs_env *env)
+{
+	DocState *state = malloc(sizeof(DocState));
+	// Create a user pointer and expose it to Emacs in a buffer-local
+	emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
+	emacs_value doc_state_ptr_sym
+	    = env->intern(env, "reader-current-doc-state-ptr");
+	env->funcall(env, env->intern(env, "set"), 2,
+		     (emacs_value[]){ doc_state_ptr_sym, user_ptr });
+	return state;
+}
+
+/**
  * get_doc_state_ptr - Retrieve the DocState pointer stored in Elisp.
  * @env:    The Emacs environment pointer.
  *

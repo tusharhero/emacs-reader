@@ -404,7 +404,8 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)data;
 	size_t str_length = 0;
-	DocState *state = malloc(sizeof(DocState));
+
+	DocState *state = init_doc_state_ptr(env);
 
 	if (!state)
 	{
@@ -456,13 +457,6 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 
 	display_img_to_overlay(env, state, cp->img_data, cp->img_size,
 			       current_doc_overlay);
-
-	// Create a user pointer and expose it to Emacs in a buffer-local
-	emacs_value user_ptr = env->make_user_ptr(env, NULL, state);
-	emacs_value doc_state_ptr_sym
-	    = env->intern(env, "reader-current-doc-state-ptr");
-	env->funcall(env, env->intern(env, "set"), 2,
-		     (emacs_value[]){ doc_state_ptr_sym, user_ptr });
 
 	return EMACS_T;
 }
