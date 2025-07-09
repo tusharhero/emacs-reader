@@ -262,10 +262,10 @@ build_cache_window(DocState *doc_state, EmacsWinState *win_state, int n)
  */
 
 bool
-slide_cache_window_forward(DocState *state)
+slide_cache_window_forward(DocState *doc_state, EmacsWinState *win_state)
 {
-	int n = ++state->current_page_number;
-	int pagecount = state->pagecount;
+	int n = ++win_state->current_page_number;
+	int pagecount = doc_state->pagecount;
 
 	if (n >= pagecount)
 	{
@@ -280,41 +280,43 @@ slide_cache_window_forward(DocState *state)
 	    && n + MAX_CACHE_WINDOW_SIZE < pagecount)
 	{
 		// Free the leftmost page in the cache window
-		if (state->cache_window[0] != NULL
-		    && state->cache_window[0]->status == PAGE_STATUS_READY)
+		if (win_state->cache_window[0] != NULL
+		    && win_state->cache_window[0]->status == PAGE_STATUS_READY)
 		{
-			free_cached_page(state, state->cache_window[0]);
+			free_cached_page(doc_state, win_state->cache_window[0]);
 		}
-		memmove(&state->cache_window[0], &state->cache_window[1],
-			sizeof(state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
+		memmove(
+		    &win_state->cache_window[0], &win_state->cache_window[1],
+		    sizeof(win_state->cache_window[0]) * (MAX_CACHE_SIZE - 1));
 
 		CachedPage *cp
-		    = state->cached_pages_pool[n + MAX_CACHE_WINDOW_SIZE];
-		state->cache_window[MAX_CACHE_SIZE - 1] = cp;
+		    = doc_state->cached_pages_pool[n + MAX_CACHE_WINDOW_SIZE];
+		win_state->cache_window[MAX_CACHE_SIZE - 1] = cp;
 		if (cp->status == PAGE_STATUS_EMPTY)
 		{
-			load_page_dl(state, cp);
+			load_page_dl(doc_state, cp);
 			DrawThreadArgs *draw_args
 			    = malloc(sizeof(DrawThreadArgs));
-			draw_args->state = state;
+			draw_args->doc_state = doc_state;
+			draw_args->win_state = win_state;
 			draw_args->cp = cp;
 			submit_job(draw_page_thread, draw_args, &g_thread_pool);
 		}
-		state->current_window_index = MAX_CACHE_WINDOW_SIZE;
+		win_state->current_window_index = MAX_CACHE_WINDOW_SIZE;
 	}
 	else
 	{
-		build_cache_window(state, n);
+		build_cache_window(doc_state, win_state, n);
 	}
 
 	// Wait for the current page's cache to be ready if it isn't
-	while (state->cache_window[state->current_window_index]->status
+	while (win_state->cache_window[win_state->current_window_index]->status
 	       != PAGE_STATUS_READY)
-		fprintf(
-		    stderr, "Waiting for page %d to be ready\n",
-		    state->cache_window[state->current_window_index]->page_num);
-	state->current_cached_page
-	    = state->cache_window[state->current_window_index];
+		fprintf(stderr, "Waiting for page %d to be ready\n",
+			win_state->cache_window[win_state->current_window_index]
+			    ->page_num);
+	win_state->current_cached_page
+	    = win_state->cache_window[win_state->current_window_index];
 
 	return true;
 }
