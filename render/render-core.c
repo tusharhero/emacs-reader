@@ -818,27 +818,30 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 {
 	(void)nargs;
 	(void)data;
-	DocState *state = get_doc_state_ptr(env);
+	DocState *doc_state = get_doc_state_ptr(env);
+	EmacsWinState *win_state = get_win_state_ptr(env);
 	float scale_factor = env->extract_float(env, args[0]);
 
-	if (state)
+	if (doc_state && win_state)
 	{
 		emacs_value current_doc_overlay = get_current_doc_overlay(env);
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
-		draw_args->state = state;
-		draw_args->cp = state->current_cached_page;
+		draw_args->doc_state = doc_state;
+		draw_args->win_state = win_state;
+		draw_args->cp = win_state->current_cached_page;
 		double new_res = fz_clamp(scale_factor * 72, MINRES, MAXRES);
-		state->resolution = new_res;
+		win_state->resolution = new_res;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 
-		pthread_mutex_lock(&state->current_cached_page->mutex);
-		pthread_cond_wait(&state->current_cached_page->cond,
-				  &state->current_cached_page->mutex);
-		pthread_mutex_unlock(&state->current_cached_page->mutex);
+		pthread_mutex_lock(&win_state->current_cached_page->mutex);
+		pthread_cond_wait(&win_state->current_cached_page->cond,
+				  &win_state->current_cached_page->mutex);
+		pthread_mutex_unlock(&win_state->current_cached_page->mutex);
 
-		display_img_to_overlay(
-		    env, state, state->current_cached_page->img_data,
-		    state->current_cached_page->img_size, current_doc_overlay);
+		display_img_to_overlay(env, win_state,
+				       win_state->current_cached_page->img_data,
+				       win_state->current_cached_page->img_size,
+				       current_doc_overlay);
 	}
 	else
 	{
