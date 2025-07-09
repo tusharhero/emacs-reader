@@ -29,9 +29,9 @@ pthread_mutex_t g_mupdf_mutex[FZ_LOCK_MAX];
  */
 
 int
-doc_page_width(DocState *state)
+doc_page_width(EmacsWinState *win_state)
 {
-	CachedPage *cp = state->current_cached_page;
+	CachedPage *cp = win_state->current_cached_page;
 	int width = cp->imgw;
 	return width;
 }
@@ -43,9 +43,9 @@ doc_page_width(DocState *state)
  */
 
 int
-doc_page_height(DocState *state)
+doc_page_height(EmacsWinState *win_state)
 {
-	CachedPage *cp = state->current_cached_page;
+	CachedPage *cp = win_state->current_cached_page;
 	int height = cp->imgh;
 	return height;
 }
