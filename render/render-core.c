@@ -628,30 +628,33 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)args;
 	(void)data;
 
-	DocState *state = get_doc_state_ptr(env);
+	DocState *doc_state = get_doc_state_ptr(env);
+	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
-	if (state)
+	if (doc_state && win_state)
 	{
-		if (state->current_page_number == 0)
+		if (win_state->current_page_number == 0)
 		{
 			emacs_message(env, "Already first page!");
 			return EMACS_NIL;
 		}
 
 		CachedPage *prev_cp
-		    = state->cache_window[state->current_window_index - 1];
+		    = win_state
+			  ->cache_window[win_state->current_window_index - 1];
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
-		draw_args->state = state;
+		draw_args->doc_state = doc_state;
+		draw_args->win_state = win_state;
 		draw_args->cp = prev_cp;
 		submit_job(draw_page_thread, draw_args, &g_thread_pool);
 
 		pthread_mutex_lock(&prev_cp->mutex);
 		pthread_cond_wait(&prev_cp->cond, &prev_cp->mutex);
 		pthread_mutex_unlock(&prev_cp->mutex);
-		display_img_to_overlay(env, state, prev_cp->img_data,
+		display_img_to_overlay(env, win_state, prev_cp->img_data,
 				       prev_cp->img_size, current_doc_overlay);
-		slide_cache_window_backward(state);
+		slide_cache_window_backward(doc_state, win_state);
 	}
 	else
 	{
