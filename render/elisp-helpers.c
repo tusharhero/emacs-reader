@@ -139,12 +139,13 @@ register_module_func(emacs_env *env,
  */
 
 emacs_value
-data2elisp_image(emacs_env *env, DocState *state, char *img_data,
+data2elisp_image(emacs_env *env, EmacsWinState *win_state, char *img_data,
 		 size_t img_size)
 {
-	emacs_value image_width = env->make_integer(env, doc_page_width(state));
+	emacs_value image_width
+	    = env->make_integer(env, doc_page_width(win_state));
 	emacs_value image_height
-	    = env->make_integer(env, doc_page_height(state));
+	    = env->make_integer(env, doc_page_height(win_state));
 	emacs_value img_data_string
 	    = env->make_unibyte_string(env, img_data, img_size);
 	emacs_value image_args[7] = {
