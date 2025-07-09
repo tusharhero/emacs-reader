@@ -328,9 +328,12 @@ init_overlay(emacs_env *env)
 	emacs_value overlay
 	    = env->funcall(env, env->intern(env, "make-overlay"), 2,
 			   (emacs_value[]){ start, end });
+	emacs_value curr_win = EMACS_CURR_WIN;
+	env->funcall(
+	    env, env->intern(env, "overlay-put"), 3,
+	    (emacs_value[]){ overlay, env->intern(env, "window"), curr_win });
 	emacs_value current_overlay_sym
 	    = env->intern(env, "reader-current-doc-overlay");
-
 	env->funcall(env, env->intern(env, "set"), 2,
 		     (emacs_value[]){ current_overlay_sym, overlay });
 }
