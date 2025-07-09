@@ -726,21 +726,23 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)args;
 	(void)data;
 
-	DocState *state = get_doc_state_ptr(env);
+	DocState *doc_state = get_doc_state_ptr(env);
+	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
-	if (state)
+	if (doc_state && win_state)
 	{
-		if (state->current_page_number == state->pagecount - 1)
+		if (win_state->current_page_number == doc_state->pagecount - 1)
 		{
 			emacs_message(env, "Already the last page!");
 			return EMACS_NIL;
 		}
 
-		state->current_page_number = state->pagecount - 1;
-		build_cache_window(state, state->current_page_number);
-		CachedPage *last_cp = state->current_cached_page;
-		display_img_to_overlay(env, state, last_cp->img_data,
+		win_state->current_page_number = doc_state->pagecount - 1;
+		build_cache_window(doc_state, win_state,
+				   win_state->current_page_number);
+		CachedPage *last_cp = win_state->current_cached_page;
+		display_img_to_overlay(env, win_state, last_cp->img_data,
 				       last_cp->img_size, current_doc_overlay);
 	}
 	else
