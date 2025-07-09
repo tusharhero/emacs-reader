@@ -770,17 +770,20 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)data;
 	int page_number = env->extract_integer(env, args[0]);
-	DocState *state = get_doc_state_ptr(env);
+	DocState *doc_state = get_doc_state_ptr(env);
+	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
-	if (state)
+	if (doc_state && win_state)
 	{
-		if (page_number >= 0 && page_number <= (state->pagecount - 1))
+		if (page_number >= 0
+		    && page_number <= (doc_state->pagecount - 1))
 		{
-			state->current_page_number = page_number;
-			build_cache_window(state, state->current_page_number);
-			CachedPage *cp = state->current_cached_page;
-			display_img_to_overlay(env, state, cp->img_data,
+			win_state->current_page_number = page_number;
+			build_cache_window(doc_state, win_state,
+					   win_state->current_page_number);
+			CachedPage *cp = win_state->current_cached_page;
+			display_img_to_overlay(env, win_state, cp->img_data,
 					       cp->img_size,
 					       current_doc_overlay);
 		}
