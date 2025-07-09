@@ -82,11 +82,11 @@ load_page_dl(DocState *state, CachedPage *cp);
 void *
 draw_page_thread(void *arg);
 void
-build_cache_window(DocState *state, int n);
+build_cache_window(DocState *doc_state, EmacsWinState *win_state, int n);
 bool
-slide_cache_window_forward(DocState *state);
+slide_cache_window_forward(DocState *state, EmacsWinState *win_state);
 bool
-slide_cache_window_backward(DocState *state);
+slide_cache_window_backward(DocState *state, EmacsWinState *win_state);
 
 // Emacs module functions
 emacs_value
