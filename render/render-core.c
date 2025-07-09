@@ -86,13 +86,14 @@ draw_page_thread(void *arg)
 	fz_matrix ctm;
 
 	DrawThreadArgs *args = (DrawThreadArgs *)arg;
-	DocState *state = args->state;
+	DocState *doc_state = args->doc_state;
+	EmacsWinState *win_state = args->win_state;
 	CachedPage *cp = args->cp;
 
-	fz_context *ctx = fz_clone_context(state->ctx);
+	fz_context *ctx = fz_clone_context(doc_state->ctx);
 
-	ctm = fz_transform_page(state->page_bbox, state->resolution,
-				state->rotate);
+	ctm = fz_transform_page(doc_state->page_bbox, win_state->resolution,
+				win_state->rotate);
 	cp->imgh = 0;
 	cp->imgw = 0;
 
@@ -105,7 +106,7 @@ draw_page_thread(void *arg)
 		}
 		cp->pixmap = fz_new_pixmap_from_display_list(
 		    ctx, cp->display_list, ctm, fz_device_rgb(ctx), 0);
-		if (state->invert)
+		if (doc_state->invert)
 		{
 			fz_invert_pixmap_luminance(ctx, cp->pixmap);
 			fz_gamma_pixmap(ctx, cp->pixmap, 1 / 1.4f);

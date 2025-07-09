@@ -47,7 +47,8 @@ typedef struct
 
 typedef struct
 {
-	DocState *state;
+	DocState *doc_state;
+	EmacsWinState *win_state;
 	CachedPage *cp;
 } DrawThreadArgs;
 
