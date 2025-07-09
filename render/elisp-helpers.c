@@ -232,7 +232,7 @@ void
 reset_win_state(EmacsWinState *win_state)
 {
 	*win_state = (EmacsWinState){
-		.resolution = 0.0,
+		.resolution = 72.0,
 		.rotate = 0,
 		.current_page_number = 0,
 		.current_window_index = 0,
