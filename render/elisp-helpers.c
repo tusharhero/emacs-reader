@@ -261,11 +261,11 @@ get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)data;
 	(void)args;
 
-	DocState *state = get_doc_state_ptr(env);
-	if (state)
+	EmacsWinState *win_state = get_win_state_ptr(env);
+	if (win_state)
 	{
 		emacs_value page_number
-		    = env->make_integer(env, state->current_page_number);
+		    = env->make_integer(env, win_state->current_page_number);
 		return page_number;
 	}
 	else
