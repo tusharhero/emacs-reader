@@ -898,6 +898,32 @@ emacs_doc_rotate(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	return EMACS_T;
 }
 
+emacs_value
+emacs_doc_window_open(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		      void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
+	DocState *doc_state = get_doc_state_ptr(env);
+	init_win_state_ptr(env, doc_state);
+	return EMACS_T;
+}
+
+emacs_value
+emacs_doc_window_close(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		       void *data)
+{
+	(void)nargs;
+	(void)args;
+	(void)data;
+	DocState *doc_state = get_doc_state_ptr(env);
+	EmacsWinState *win_state = get_win_state_ptr(env);
+	if (win_state)
+		free(win_state);
+	return EMACS_T;
+}
+
 // Entrypoint for the dynamic module
 int
 emacs_module_init(struct emacs_runtime *runtime)
@@ -1001,6 +1027,13 @@ emacs_module_init(struct emacs_runtime *runtime)
 
 	register_module_func(env, emacs_doc_rotate, "reader-dyn--rotate-doc", 1,
 			     1, "Rotates the page by the given DEGREE.");
+
+	register_module_func(
+	    env, emacs_doc_window_open, "reader-dyn--window-create", 0, 0,
+	    "Function to initialize window parameters for EmacsWinState.");
+	register_module_func(env, emacs_doc_window_close,
+			     "reader-dyn--window-close", 0, 0,
+			     "Function to free EmacsWinState.");
 
 	// Register buffer-local variables.
 	permanent_buffer_local_var(env, "reader-current-doc-pagecount");
