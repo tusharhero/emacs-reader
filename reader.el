@@ -34,6 +34,7 @@
 (require 'image)
 (require 'image-mode)
 (require 'render-core)
+(require 'cl-lib)
 
 (defgroup reader nil
   "Group for Reader’s customizations."
@@ -58,6 +59,9 @@
 
 (defvar-local reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
+
+(defvar-local reader-current-doc-windows '()
+  "List of windows that have the current document opened")
 
 ;; Setting of `auto-mode-list' fails if not autoloaded.
 ;;;###autoload
@@ -615,6 +619,35 @@ buffer is not in `reader-mode'."
       (reader-dyn--load-doc file)
     (message "No file associated with buffer.")))
 
+(defun reader-detect-window-changes ()
+  "Detect creation and closing of `reader-mode' windows for the current document.
+
+It checks the changes to `reader-current-doc-windows' against `get-buffer-window-list'.
+It is hooked to `window-configuration-change-hook' to keep detecting as needed."
+
+  (when (derived-mode-p 'reader-mode)
+    (let* ((current     (current-buffer))
+           (new-windows (get-buffer-window-list current nil t))
+           (added       (cl-set-difference new-windows reader-current-doc-windows))
+           (removed     (cl-set-difference reader-current-doc-windows new-windows)))
+      (dolist (win added)
+	(reader-create-window-function win))
+      (dolist (win removed)
+	(reader-close-window-function win))
+      (setq reader-current-doc-windows new-windows))))
+
+(defun reader-create-window-function (&optional window)
+  "Function to be invoked when creating a new window for the current document."
+  (let* ((page (reader-current-pagenumber)))
+    (reader-dyn--window-create)
+    (overlay-put reader-current-doc-overlay 'window window)
+    ;; (reader-goto-page page)
+    ))
+
+(defun reader-close-window-function (&optional window)
+  "Function to be invoked when closing an existing window of the current document."
+  (reader-dyn--window-close))
+
 ;; We explicitly bind default keys because relying on the rebinding
 ;; mechanism can lead to them not being bound at all if users have
 ;; overridden the defaults with other commands.
@@ -727,7 +760,9 @@ Keybindings:
   (run-hooks 'reader-mode-hook)
 
   (funcall reader-default-fit)
-  (add-hook 'window-size-change-functions #'reader--center-page nil t))
+  (add-hook 'window-size-change-functions #'reader--center-page nil t)
+  (add-hook 'window-configuration-change-hook #'reader-detect-window-changes)
+  )
 
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
