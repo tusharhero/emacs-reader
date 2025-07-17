@@ -111,7 +111,7 @@ OBJS := $(SRCS:%.c=%.o)
 all: $(LIB_NAME)
 
 $(LIB_NAME): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
