@@ -413,8 +413,10 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 	size_t str_length = 0;
 
+	emacs_value curr_win = EMACS_CURR_WIN;
+	emacs_value current_doc_overlay = init_overlay(env, curr_win);
 	DocState *doc_state = init_doc_state_ptr(env);
-	EmacsWinState *win_state = init_win_state_ptr(env, doc_state);
+	EmacsWinState *win_state = init_win_state_ptr(env, doc_state, curr_win);
 
 	if (!doc_state || !win_state)
 	{
