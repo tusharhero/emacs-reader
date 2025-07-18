@@ -1028,17 +1028,16 @@ emacs_module_init(struct emacs_runtime *runtime)
 			     1, "Rotates the page by the given DEGREE.");
 
 	register_module_func(
-	    env, emacs_doc_window_open, "reader-dyn--window-create", 0, 0,
+	    env, emacs_doc_window_create, "reader-dyn--window-create", 1, 1,
 	    "Function to initialize window parameters for EmacsWinState.");
 	register_module_func(env, emacs_doc_window_close,
-			     "reader-dyn--window-close", 0, 0,
+			     "reader-dyn--window-close", 1, 1,
 			     "Function to free EmacsWinState.");
 
 	// Register buffer-local variables.
 	permanent_buffer_local_var(env, "reader-current-doc-pagecount");
 	permanent_buffer_local_var(env, "reader-current-doc-render-status");
 	permanent_buffer_local_var(env, "reader-current-doc-state-ptr");
-	permanent_buffer_local_var(env, "reader-current-doc-overlay");
 	permanent_buffer_local_var(env, "reader-current-doc-outline");
 
 	// Provide the current dynamic module as a feature to Emacs
