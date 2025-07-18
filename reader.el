@@ -763,8 +763,7 @@ Keybindings:
 
   (funcall reader-default-fit)
   (add-hook 'window-size-change-functions #'reader--center-page nil t)
-  (add-hook 'window-configuration-change-hook #'reader-detect-window-changes)
-  )
+  (add-hook 'window-configuration-change-hook #'reader-detect-window-changes nil t))
 
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
