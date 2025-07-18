@@ -92,6 +92,12 @@ slide_cache_window_backward(DocState *state, EmacsWinState *win_state);
 emacs_value
 emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value
+emacs_doc_window_create(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+			void *data);
+emacs_value
+emacs_doc_window_close(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+		       void *data);
+emacs_value
 emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
 emacs_value
 emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data);
