@@ -620,19 +620,20 @@ buffer is not in `reader-mode'."
       (reader-dyn--load-doc file)
     (message "No file associated with buffer.")))
 
-(defun reader-detect-window-changes ()
-  "Detect creation and closing of reader-mode' windows for the current document.
+(defun reader--manage-window-overlays ()
+  "Manage the creation and deletion of window overlays as needed.
 
-It checks the changes to reader-current-doc-windows' against get-buffer-window-list'.
-It is hooked to window-configuration-change-hook' to keep detecting as needed."
-  (let* ((overlays (car (overlay-lists)))
-	 (windows (get-buffer-window-list (current-buffer) nil t)))
-    (mapcar #'reader-window-close-function overlays)
-    (mapcar #'reader-window-create-function windows)))
+It is hooked to `window-configuration-change-hook' to keep detecting."
+  (let ((overlays (car (overlay-lists)))
+	(windows (get-buffer-window-list (current-buffer) nil t)))
+    (mapcar #'reader--window-close-function overlays)
+    (mapcar #'reader--window-create-function windows)))
 
-(defun reader-window-create-function (window)
+(defun reader--window-create-function (window)
+  "Create window overlay for WINDOW."
   (unless (window-parameter window 'overlay)
-    (let ((last-win-page (window-parameter (old-selected-window) 'page))) ;; the page left by the last opened window
+    ;; the page left by the last opened window
+    (let ((last-win-page (window-parameter (old-selected-window) 'page)))
       (reader-dyn--window-create window)
       (if last-win-page
 	  (progn
@@ -641,7 +642,8 @@ It is hooked to window-configuration-change-hook' to keep detecting as needed."
 	      (reader-goto-page last-win-page)))
 	(message "last window (%S) didn't have page param" (old-selected-window))))))
 
-(defun reader-window-close-function (overlay)
+(defun reader--window-close-function (overlay)
+  "Properly close the window belonging to OVERLAY."
   (let ((window (overlay-get overlay 'window)))
     (unless (window-valid-p window)
       (reader-dyn--window-close overlay))))
@@ -759,7 +761,7 @@ Keybindings:
 
   (funcall reader-default-fit)
   (add-hook 'window-size-change-functions #'reader--center-page nil t)
-  (add-hook 'window-configuration-change-hook #'reader-detect-window-changes nil t))
+  (add-hook 'window-configuration-change-hook #'reader--manage-window-overlays nil t))
 
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
