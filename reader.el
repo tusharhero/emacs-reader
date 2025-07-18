@@ -67,13 +67,13 @@
 					 "odt" "ods" "odp" "odg")
   "File formats supported by the document reader.")
 
-(defun reader-current-doc-overlay ()
-  "Current document's window parameter for overlay that is to be operated on."
-  (window-parameter (selected-window) 'overlay))
+(defun reader-current-doc-overlay (&optional window)
+  "Current window (or if specified, WINDOW) parameter for overlay that is to be operated on."
+  (window-parameter (or window (selected-window)) 'overlay))
 
-(defun reader-current-doc-pagenumber ()
-  "Current document's window parameter for the pagenumber."
-  (window-parameter (selected-window) 'page))
+(defun reader-current-doc-pagenumber (&optional window)
+  "Page number of WINDOW (defaults to current window)."
+  (window-parameter (or window (selected-window)) 'page))
 
 ;; We queue some commands because the user is expected to use the
 ;; commands repeatedly, such as by simply spamming a key. If we don't
@@ -186,9 +186,9 @@ other file format will simply not show up as a candidate."
   (reader-dyn--goto-page (- n 1)) ; MuPDF does 0-indexing
   (reader--center-page))
 
-(defun reader--get-current-doc-image-size ()
-  "Get the dimensions of the current page's image."
-  (let* ((cdr-image (cdr (overlay-get (reader-current-doc-overlay) 'display)))
+(defun reader--get-current-doc-image-size (&optional window)
+  "Get the dimensions of the current window (or if specified WINDOW) page."
+  (let* ((cdr-image (cdr (overlay-get (reader-current-doc-overlay window) 'display)))
 	 (width (plist-get cdr-image :width))
 	 (height (plist-get cdr-image :height)))
     (cons width height)))
@@ -260,7 +260,7 @@ maximum vertical scroll possible without doing that.
 
 If PIXELS-P is non-nil, VSCROLL is considered to be in pixels.
 Also see `set-window-vscroll'."
-  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
+  (let* ((image-height (cdr (reader--get-current-doc-image-size window)))
 	 (pixel-window-height (window-pixel-height window))
 	 (window-height (window-body-height window))
 	 (pixel-per-col (/ pixel-window-height window-height))
@@ -275,19 +275,21 @@ Also see `set-window-vscroll'."
 ;; Most of the scrolling functions here exist because of our handling
 ;; of centering in `reader--center-page'.
 
-(defun reader--get-prefix-width ()
-  "Get the line prefix width set by `reader--center-page'."
+(defun reader--get-prefix-width (&optional window)
+  "Get the line prefix width set by `reader--center-page'.
+
+For WINDOW (or current window if not specified)."
   (car
    (plist-get
-    (cdr (overlay-get (reader-current-doc-overlay) 'line-prefix))
+    (cdr (overlay-get (reader-current-doc-overlay window) 'line-prefix))
     :width)))
 
 (defun reader--right-most-window-hscroll (window)
   "Get the maximum horizontal scroll value for WINDOW.
 
 This position is at the rightmost point."
-  (let* ((image-width (car (reader--get-current-doc-image-size)))
-	 (line-prefix-width (reader--get-prefix-width))
+  (let* ((image-width (car (reader--get-current-doc-image-size window)))
+	 (line-prefix-width (reader--get-prefix-width window))
 	 (pixel-window-width (window-pixel-width window))
 	 (max-ncol (round (/ (max line-prefix-width
 				  (- image-width pixel-window-width))
@@ -302,7 +304,7 @@ horizontal scroll possible without doing that. If UNCONSTRAINED is
 non-nil, it allows setting NCOL even if it makes the page disappear.
 
 See also `set-window-hscroll'."
-  (let* ((line-prefix-width (reader--get-prefix-width))
+  (let* ((line-prefix-width (reader--get-prefix-width window))
 	 (pixel-per-col (reader--get-pixel-per-col window))
 	 (calibrated-ncol (round (- (/ line-prefix-width pixel-per-col) ncol)))
 	 (max-ncol (reader--right-most-window-hscroll window))
@@ -319,7 +321,7 @@ WINDOW must be a live window and defaults to the selected one.
 This correctly handles the prefix width set by reader documents and does
 not return the actual horizontal scroll value; for that, see
 `window-hscroll'."
-  (let* ((line-prefix-width (reader--get-prefix-width))
+  (let* ((line-prefix-width (reader--get-prefix-width window))
 	 (pixel-per-col (reader--get-pixel-per-col window))
 	 (hscroll (round (- (/ line-prefix-width pixel-per-col) (window-hscroll window)))))
     hscroll))
@@ -333,15 +335,15 @@ not return the actual horizontal scroll value; for that, see
 If WINDOW is omitted defaults to current window."
   (with-current-buffer (window-buffer window)
     (when (and (eq major-mode 'reader-mode)
-	       (reader-current-doc-overlay))
+	       (reader-current-doc-overlay window))
       (let* ((windows (get-buffer-window-list))
 	     (max-window-width
 	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
-	     (doc-image-width (car (reader--get-current-doc-image-size)))
+	     (doc-image-width (car (reader--get-current-doc-image-size window)))
 	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
 	     (overlay-offset `(space :width (,max-left-offset))))
 	;; Add prefix so that the page is at the leftmost point of the widest window.
-	(overlay-put (reader-current-doc-overlay) 'line-prefix overlay-offset)
+	(overlay-put (reader-current-doc-overlay window) 'line-prefix overlay-offset)
 	;; scroll every window back to the center of the doc
 	(mapcar (lambda (window)
 		  (let* ((pixel-window-width (window-pixel-width window))
@@ -399,7 +401,7 @@ Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+  (when-let* (((< (window-pixel-width window) (car (reader--get-current-doc-image-size window))))
 	      (prev-scroll (reader--window-hscroll window))
 	      (hscroll (+ prev-scroll amount)))
     (- (reader--set-window-hscroll window hscroll) prev-scroll)))
@@ -411,7 +413,7 @@ Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size window))))
 	      (prev-scroll (reader--window-hscroll window))
 	      (hscroll (- prev-scroll amount)))
     (- prev-scroll (reader--set-window-hscroll window hscroll))))
@@ -422,7 +424,7 @@ Optionally specify the WINDOW, defaults to current window."
 Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size window)))
     (reader--set-window-hscroll window 0)))
 
 (defun reader-scroll-right-most (&optional window)
@@ -431,7 +433,7 @@ Optionally specify the WINDOW, defaults to current window."
 Only scrolls when the document page width is larger then the window width.
 Optionally specify the WINDOW, defaults to current window."
   (interactive)
-  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size window)))
     ;; We use `set-window-hscroll' here because we need to go the right
     ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
     (set-window-hscroll window (reader--right-most-window-hscroll window))))
@@ -442,9 +444,9 @@ Optionally specify the WINDOW, defaults to current window."
 Optionally specify the WINDOW, defaults to current window."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((and (= 0 (reader-scroll-up amount))
+  (when-let* (((and (= 0 (reader-scroll-up amount window))
 		    (reader--non-queue-previous-page))) ; if succeeds
-	      (image-height (cdr (reader--get-current-doc-image-size)))
+	      (image-height (cdr (reader--get-current-doc-image-size window)))
 	      (pixel-window-height (window-pixel-height window))
 	      (bottom-most-scroll-pixel
 	       (- image-height pixel-window-height)))
