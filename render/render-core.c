@@ -601,6 +601,7 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		display_img_to_overlay(env, win_state, next_cp->img_data,
 				       next_cp->img_size, current_doc_overlay);
 		slide_cache_window_forward(doc_state, win_state);
+		set_current_page_number(env, win_state->current_page_number);
 		return EMACS_T;
 	}
 	else
@@ -654,6 +655,7 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		display_img_to_overlay(env, win_state, prev_cp->img_data,
 				       prev_cp->img_size, current_doc_overlay);
 		slide_cache_window_backward(doc_state, win_state);
+		set_current_page_number(env, win_state->current_page_number);
 	}
 	else
 	{
@@ -693,6 +695,7 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		}
 
 		win_state->current_page_number = 0;
+		set_current_page_number(env, win_state->current_page_number);
 		build_cache_window(doc_state, win_state,
 				   win_state->current_page_number);
 		CachedPage *first_cp = win_state->current_cached_page;
@@ -736,6 +739,7 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		}
 
 		win_state->current_page_number = doc_state->pagecount - 1;
+		set_current_page_number(env, win_state->current_page_number);
 		build_cache_window(doc_state, win_state,
 				   win_state->current_page_number);
 		CachedPage *last_cp = win_state->current_cached_page;
@@ -777,6 +781,8 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		    && page_number <= (doc_state->pagecount - 1))
 		{
 			win_state->current_page_number = page_number;
+			set_current_page_number(env,
+						win_state->current_page_number);
 			build_cache_window(doc_state, win_state,
 					   win_state->current_page_number);
 			CachedPage *cp = win_state->current_cached_page;
