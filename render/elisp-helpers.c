@@ -335,11 +335,10 @@ emacs_value
 get_current_doc_overlay(emacs_env *env)
 {
 
-	emacs_value current_overlay_sym
-	    = env->intern(env, "reader-current-doc-overlay");
+	emacs_value curr_win = EMACS_CURR_WIN;
 	emacs_value current_overlay = env->funcall(
-	    env, env->intern(env, "symbol-value"), 1, &current_overlay_sym);
-
+	    env, env->intern(env, "window-parameter"), 2,
+	    (emacs_value[]){ curr_win, env->intern(env, "overlay") });
 	return current_overlay;
 }
 

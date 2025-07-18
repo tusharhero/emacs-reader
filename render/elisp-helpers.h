@@ -48,15 +48,17 @@ get_doc_state_ptr(emacs_env *env);
 EmacsWinState *
 init_win_state_ptr(emacs_env *env, DocState *doc_state, emacs_value window);
 EmacsWinState *
-get_win_state_ptr(emacs_env *env);
+get_win_state_ptr(emacs_env *env, emacs_value overlay);
 void
 reset_win_state(EmacsWinState *win_state);
+void
+set_current_page_number(emacs_env *env, int page);
 void
 set_current_render_status(emacs_env *env);
 void
 set_current_pagecount(emacs_env *env, DocState *state);
-void
-init_overlay(emacs_env *env);
+emacs_value
+init_overlay(emacs_env *env, emacs_value window);
 emacs_value
 get_current_doc_overlay(emacs_env *env);
 void
