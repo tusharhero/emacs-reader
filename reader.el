@@ -188,7 +188,7 @@ other file format will simply not show up as a candidate."
 
 (defun reader--get-current-doc-image-size ()
   "Get the dimensions of the current page's image."
-  (let* ((cdr-image (cdr (overlay-get reader-current-doc-overlay 'display)))
+  (let* ((cdr-image (cdr (overlay-get (reader-current-doc-overlay) 'display)))
 	 (width (plist-get cdr-image :width))
 	 (height (plist-get cdr-image :height)))
     (cons width height)))
@@ -279,7 +279,7 @@ Also see `set-window-vscroll'."
   "Get the line prefix width set by `reader--center-page'."
   (car
    (plist-get
-    (cdr (overlay-get reader-current-doc-overlay 'line-prefix))
+    (cdr (overlay-get (reader-current-doc-overlay) 'line-prefix))
     :width)))
 
 (defun reader--right-most-window-hscroll (window)
@@ -340,7 +340,7 @@ If WINDOW is omitted defaults to current window."
 	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
 	     (overlay-offset `(space :width (,max-left-offset))))
 	;; Add prefix so that the page is at the leftmost point of the widest window.
-	(overlay-put reader-current-doc-overlay 'line-prefix overlay-offset)
+	(overlay-put (reader-current-doc-overlay) 'line-prefix overlay-offset)
 	;; scroll every window back to the center of the doc
 	(mapcar (lambda (window)
 		  (let* ((pixel-window-width (window-pixel-width window))
@@ -598,13 +598,13 @@ simply to satisfy the template for `revert-buffer-function'.
 This function is replaced as `revert-buffer-function' for `reader-mode' buffers."
   (interactive)
   (when buffer-file-name
-    (let ((page (reader-current-pagenumber))
+    (let ((page (reader-current-doc-pagenumber))
 	  (scale reader-current-doc-scale-value)
 	  (theme reader-current-doc-theme))
       (remove-overlays)
       (reader--render-buffer)
       (if reader-dark-mode
-	(reader-dark-mode 1))
+	  (reader-dark-mode 1))
       (reader-doc-scale-page scale)
       (reader-goto-page page)
       (reader--center-page))))
@@ -767,7 +767,7 @@ Keybindings:
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
   (setq-local mode-line-position
-              '(" P" (:eval (number-to-string (reader-current-pagenumber)))
+	      '(" P" (:eval (number-to-string (reader-current-doc-pagenumber)))
                 "/" (:eval (number-to-string reader-current-doc-pagecount)))))
 
 (add-hook 'reader-mode-hook #'reader-mode-line)
