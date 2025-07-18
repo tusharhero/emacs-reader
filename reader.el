@@ -635,12 +635,12 @@ It is hooked to `window-configuration-change-hook' to keep detecting."
     ;; the page left by the last opened window
     (let ((last-win-page (window-parameter (old-selected-window) 'page)))
       (reader-dyn--window-create window)
-      (if last-win-page
-	  (progn
-	    (set-window-parameter window 'page last-win-page)
-	    (with-selected-window window
-	      (reader-goto-page last-win-page)))
-	(message "last window (%S) didn't have page param" (old-selected-window))))))
+      (cond (last-win-page
+	     (set-window-parameter window 'page last-win-page)
+	     (with-selected-window window
+	       (reader-goto-page last-win-page)))
+	    ;; defaulting to first page.
+	    ((reader-goto-page 1))))))
 
 (defun reader--window-close-function (overlay)
   "Properly close the window belonging to OVERLAY."
