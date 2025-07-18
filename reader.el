@@ -67,9 +67,13 @@
 					 "odt" "ods" "odp" "odg")
   "File formats supported by the document reader.")
 
-(defun reader-current-pagenumber ()
-  "The current page number of the document."
-  (1+ (reader-dyn--current-doc-pagenumber)))
+(defun reader-current-doc-overlay ()
+  "Current document's window parameter for overlay that is to be operated on."
+  (window-parameter (selected-window) 'overlay))
+
+(defun reader-current-doc-pagenumber ()
+  "Current document's window parameter for the pagenumber."
+  (window-parameter (selected-window) 'page))
 
 ;; We queue some commands because the user is expected to use the
 ;; commands repeatedly, such as by simply spamming a key. If we don't
