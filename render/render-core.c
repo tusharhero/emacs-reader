@@ -457,9 +457,8 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	build_cache_window(doc_state, win_state,
 			   win_state->current_page_number);
 	set_current_pagecount(env, doc_state);
+	set_current_page_number(env, win_state->current_page_number);
 	set_current_render_status(env);
-	init_overlay(env);
-	emacs_value current_doc_overlay = get_current_doc_overlay(env);
 
 	CachedPage *cp = win_state->current_cached_page;
 
