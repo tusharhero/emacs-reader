@@ -648,6 +648,21 @@ It is hooked to `window-configuration-change-hook' to keep detecting as needed."
 (defun reader-close-window-function (&optional window)
   "Function to be invoked when closing an existing window of the current document."
   (reader-dyn--window-close))
+(defun reader-window-create-function (window)
+  (unless (window-parameter window 'overlay)
+    (let ((last-win-page (window-parameter (old-selected-window) 'page))) ;; the page left by the last opened window
+      (reader-dyn--window-create window)
+      (if last-win-page
+	  (progn
+	    (set-window-parameter window 'page last-win-page)
+	    (with-selected-window window
+	      (reader-goto-page last-win-page)))
+	(message "last window (%S) didn't have page param" (old-selected-window))))))
+
+(defun reader-window-close-function (overlay)
+  (let ((window (overlay-get overlay 'window)))
+    (unless (window-valid-p window)
+      (reader-dyn--window-close overlay))))
 
 ;; We explicitly bind default keys because relying on the rebinding
 ;; mechanism can lead to them not being bound at all if users have
