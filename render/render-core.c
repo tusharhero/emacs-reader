@@ -496,8 +496,8 @@ emacs_redisplay_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)data;
 
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 
 	if (doc_state && win_state)
 	{
@@ -571,10 +571,9 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)args;
 	(void)data;
-
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 
 	if (doc_state && win_state)
 	{
@@ -628,10 +627,9 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)args;
 	(void)data;
-
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 
 	if (doc_state && win_state)
 	{
@@ -681,10 +679,9 @@ emacs_first_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)args;
 	(void)data;
-
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 
 	if (doc_state && win_state)
 	{
@@ -726,10 +723,9 @@ emacs_last_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)args;
 	(void)data;
-
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 
 	if (doc_state && win_state)
 	{
@@ -772,8 +768,8 @@ emacs_goto_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 	int page_number = env->extract_integer(env, args[0]);
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 
 	if (doc_state && win_state)
 	{
@@ -820,12 +816,12 @@ emacs_doc_scale_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)nargs;
 	(void)data;
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 	float scale_factor = env->extract_float(env, args[0]);
 
 	if (doc_state && win_state)
 	{
-		emacs_value current_doc_overlay = get_current_doc_overlay(env);
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->doc_state = doc_state;
 		draw_args->win_state = win_state;
@@ -870,12 +866,12 @@ emacs_doc_rotate(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)nargs;
 	(void)data;
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
+	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 	int rotation_deg = env->extract_integer(env, args[0]);
 	if (doc_state && win_state)
 	{
 		win_state->rotate += rotation_deg;
-		emacs_value current_doc_overlay = get_current_doc_overlay(env);
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->doc_state = doc_state;
 		draw_args->win_state = win_state;
