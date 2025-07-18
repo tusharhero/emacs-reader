@@ -621,33 +621,19 @@ buffer is not in `reader-mode'."
     (message "No file associated with buffer.")))
 
 (defun reader-detect-window-changes ()
-  "Detect creation and closing of `reader-mode' windows for the current document.
+  "Detect creation and closing of reader-mode' windows for the current document.
 
-It checks the changes to `reader-current-doc-windows' against `get-buffer-window-list'.
-It is hooked to `window-configuration-change-hook' to keep detecting as needed."
+It checks the changes to reader-current-doc-windows' against get-buffer-window-list'.
+It is hooked to window-configuration-change-hook' to keep detecting as needed."
+  (let* ((overlays (car (overlay-lists)))
+	 (windows (get-buffer-window-list (current-buffer) nil t)))
+    (mapcar (lambda (overlay)
+	      (reader-window-close-function overlay))
+	    overlays)
+    (mapcar (lambda (window)
+	      (reader-window-create-function window))
+	    windows)))
 
-  (when (derived-mode-p 'reader-mode)
-    (let* ((current     (current-buffer))
-           (new-windows (get-buffer-window-list current nil t))
-           (added       (cl-set-difference new-windows reader-current-doc-windows))
-           (removed     (cl-set-difference reader-current-doc-windows new-windows)))
-      (dolist (win added)
-	(reader-create-window-function win))
-      (dolist (win removed)
-	(reader-close-window-function win))
-      (setq reader-current-doc-windows new-windows))))
-
-(defun reader-create-window-function (&optional window)
-  "Function to be invoked when creating a new window for the current document."
-  (let* ((page (reader-current-pagenumber)))
-    (reader-dyn--window-create)
-    (overlay-put reader-current-doc-overlay 'window window)
-    ;; (reader-goto-page page)
-    ))
-
-(defun reader-close-window-function (&optional window)
-  "Function to be invoked when closing an existing window of the current document."
-  (reader-dyn--window-close))
 (defun reader-window-create-function (window)
   (unless (window-parameter window 'overlay)
     (let ((last-win-page (window-parameter (old-selected-window) 'page))) ;; the page left by the last opened window
