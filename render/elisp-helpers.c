@@ -248,6 +248,17 @@ reset_win_state(EmacsWinState *win_state)
 	};
 }
 
+void
+set_current_page_number(emacs_env *env, int page)
+{
+	page += 1; // Exposed number shouldn't be 0-indexed
+	emacs_value curr_win = EMACS_CURR_WIN;
+	env->funcall(env, env->intern(env, "set-window-parameter"), 3,
+		     (emacs_value[]){ curr_win, env->intern(env, "page"),
+				      env->make_integer(env, page) });
+	fprintf(stderr, "set_current_page_number: %d\n", page);
+}
+
 /**
  * get_current_page_number - Elisp-callable wrapper to fetch page number.
  * @env:    The Emacs environment pointer.
