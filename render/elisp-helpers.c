@@ -303,8 +303,8 @@ set_current_pagecount(emacs_env *env, DocState *state)
  * Elisp variable `reader-current-doc-overlay` for later use.
  */
 
-void
-init_overlay(emacs_env *env)
+emacs_value
+init_overlay(emacs_env *env, emacs_value window)
 {
 	emacs_value start
 	    = env->funcall(env, env->intern(env, "point-min"), 0, NULL);
@@ -313,19 +313,19 @@ init_overlay(emacs_env *env)
 	emacs_value overlay
 	    = env->funcall(env, env->intern(env, "make-overlay"), 2,
 			   (emacs_value[]){ start, end });
-	emacs_value curr_win = EMACS_CURR_WIN;
 	env->funcall(
 	    env, env->intern(env, "overlay-put"), 3,
-	    (emacs_value[]){ overlay, env->intern(env, "window"), curr_win });
-	emacs_value current_overlay_sym
-	    = env->intern(env, "reader-current-doc-overlay");
-	env->funcall(env, env->intern(env, "set"), 2,
-		     (emacs_value[]){ current_overlay_sym, overlay });
+	    (emacs_value[]){ overlay, env->intern(env, "window"), window });
+	env->funcall(
+	    env, env->intern(env, "set-window-parameter"), 3,
+	    (emacs_value[]){ window, env->intern(env, "overlay"), overlay });
+
+	return overlay;
 }
 
 /**
  * get_current_doc_overlay - Retrieve the stored overlay object for the
- * document.
+ * document as a window parameter.
  * @env:    The Emacs environment pointer.
  *
  * Return: The Elisp overlay object, or an unbound value if not set.
