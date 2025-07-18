@@ -332,27 +332,20 @@ not return the actual horizontal scroll value; for that, see
 (defun reader--center-page (&optional window)
   "Center the document with respect to WINDOW.
 
-If WINDOW is omitted defaults to current window."
-  (with-current-buffer (window-buffer window)
-    (when (and (eq major-mode 'reader-mode)
-	       (reader-current-doc-overlay window))
-      (let* ((windows (get-buffer-window-list))
-	     (max-window-width
-	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
-	     (doc-image-width (car (reader--get-current-doc-image-size window)))
-	     (max-left-offset (max 0 (- max-window-width doc-image-width)))
-	     (overlay-offset `(space :width (,max-left-offset))))
-	;; Add prefix so that the page is at the leftmost point of the widest window.
-	(overlay-put (reader-current-doc-overlay window) 'line-prefix overlay-offset)
-	;; scroll every window back to the center of the doc
-	(mapcar (lambda (window)
-		  (let* ((pixel-window-width (window-pixel-width window))
-			 (pixel-per-col (reader--get-pixel-per-col window))
-			 (doc-left-offset (- pixel-window-width doc-image-width))
-			 (doc-center-offset (/ doc-left-offset 2))
-			 (scroll-offset (round (/ doc-center-offset pixel-per-col))))
-		    (reader--set-window-hscroll window scroll-offset t)))
-		windows)))))
+If WINDOW is omitted defaults to selected window."
+  (let* ((overlay (reader-current-doc-overlay window))
+	 (window-width (window-body-width window t))
+	 (doc-image-width (car (reader--get-current-doc-image-size window)))
+	 (max-left-offset (- window-width doc-image-width))
+	 (overlay-offset `(space :width (,max-left-offset)))
+	 (pixel-per-col (reader--get-pixel-per-col window))
+	 (doc-left-offset (- window-width doc-image-width))
+	 (doc-center-offset (/ doc-left-offset 2))
+	 (scroll-offset (round (/ doc-center-offset pixel-per-col))))
+    ;; Add prefix so that the page is at the leftmost point of the window.
+    (overlay-put (reader-current-doc-overlay window) 'line-prefix overlay-offset)
+    ;; scroll window back to the center of the doc
+    (reader--set-window-hscroll window scroll-offset t)))
 
 (defun reader-scroll-up (&optional amount window)
   "Scroll up the current page by AMOUNT (1 by default).
