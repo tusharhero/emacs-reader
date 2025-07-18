@@ -201,26 +201,33 @@ get_doc_state_ptr(emacs_env *env)
 }
 
 EmacsWinState *
-init_win_state_ptr(emacs_env *env, DocState *doc_state)
+init_win_state_ptr(emacs_env *env, DocState *doc_state, emacs_value window)
 {
 	EmacsWinState *win_state = malloc((sizeof(EmacsWinState)));
+	reset_win_state(win_state);
 	win_state->doc_state = doc_state;
-	// Create a user pointer and expose it to Emacs as a window parameter
-	emacs_value user_ptr = env->make_user_ptr(env, NULL, win_state);
-	emacs_value curr_win = EMACS_CURR_WIN;
-	env->funcall(env, env->intern(env, "set-window-parameter"), 3,
-		     (emacs_value[]){ curr_win, env->intern(env, "win-state"),
-				      user_ptr });
+	// Create a user pointer
+	emacs_value win_state_usr_ptr
+	    = env->make_user_ptr(env, NULL, win_state);
+
+	// Get the overlay window parameter
+	emacs_value overlay = env->funcall(
+	    env, env->intern(env, "window-parameter"), 2,
+	    (emacs_value[]){ window, env->intern(env, "overlay") });
+
+	// Set the overlay property for the EmacsWinState user pointer
+	env->funcall(env, env->intern(env, "overlay-put"), 3,
+		     (emacs_value[]){ overlay, env->intern(env, "win-state"),
+				      win_state_usr_ptr });
 	return win_state;
 }
 
 EmacsWinState *
-get_win_state_ptr(emacs_env *env)
+get_win_state_ptr(emacs_env *env, emacs_value overlay)
 {
-	emacs_value curr_win = EMACS_CURR_WIN;
 	emacs_value ptr = env->funcall(
-	    env, env->intern(env, "window-parameter"), 2,
-	    (emacs_value[]){ curr_win, env->intern(env, "win-state") });
+	    env, env->intern(env, "overlay-get"), 2,
+	    (emacs_value[]){ overlay, env->intern(env, "win-state") });
 	if (ptr == NULL)
 		emacs_message(
 		    env,
