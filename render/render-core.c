@@ -902,14 +902,15 @@ emacs_doc_rotate(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 }
 
 emacs_value
-emacs_doc_window_open(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-		      void *data)
+emacs_doc_window_create(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
+			void *data)
 {
 	(void)nargs;
-	(void)args;
 	(void)data;
+	emacs_value win = args[0];
 	DocState *doc_state = get_doc_state_ptr(env);
-	init_win_state_ptr(env, doc_state);
+	init_overlay(env, win);
+	init_win_state_ptr(env, doc_state, win);
 	return EMACS_T;
 }
 
