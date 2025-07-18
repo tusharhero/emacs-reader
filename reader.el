@@ -627,12 +627,8 @@ It checks the changes to reader-current-doc-windows' against get-buffer-window-l
 It is hooked to window-configuration-change-hook' to keep detecting as needed."
   (let* ((overlays (car (overlay-lists)))
 	 (windows (get-buffer-window-list (current-buffer) nil t)))
-    (mapcar (lambda (overlay)
-	      (reader-window-close-function overlay))
-	    overlays)
-    (mapcar (lambda (window)
-	      (reader-window-create-function window))
-	    windows)))
+    (mapcar #'reader-window-close-function overlays)
+    (mapcar #'reader-window-create-function windows)))
 
 (defun reader-window-create-function (window)
   (unless (window-parameter window 'overlay)
