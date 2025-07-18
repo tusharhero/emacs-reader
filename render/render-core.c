@@ -1007,12 +1007,6 @@ emacs_module_init(struct emacs_runtime *runtime)
 	    "argument");
 
 	register_module_func(
-	    env, get_current_page_number, "reader-dyn--current-doc-pagenumber",
-	    0, 0,
-	    "Returns the current page number the document is at "
-	    "from DocState as an Elisp value.");
-
-	register_module_func(
 	    env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,
 	    "Scales the current page of the document by a given FACTOR. It "
 	    "multiplies the FACTOR with the :width, :height and :scale "

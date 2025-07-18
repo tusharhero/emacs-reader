@@ -260,39 +260,6 @@ set_current_page_number(emacs_env *env, int page)
 }
 
 /**
- * get_current_page_number - Elisp-callable wrapper to fetch page number.
- * @env:    The Emacs environment pointer.
- * @nargs:  Number of arguments passed by Elisp (ignored).
- * @args:   Argument values passed by Elisp (ignored).
- * @data:   Callback data (ignored).
- *
- * Intended to be registered as an interactive Elisp primitive.
- *
- * Return: An Elisp integer representing the current page number.
- */
-
-emacs_value
-get_current_page_number(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
-			void *data)
-{
-	(void)nargs;
-	(void)data;
-	(void)args;
-
-	EmacsWinState *win_state = get_win_state_ptr(env);
-	if (win_state)
-	{
-		emacs_value page_number
-		    = env->make_integer(env, win_state->current_page_number);
-		return page_number;
-	}
-	else
-	{
-		return EMACS_NIL;
-	}
-}
-
-/**
  * set_current_render_status - Mark the buffer’s render status as true.
  * @env:    The Emacs environment pointer.
  *
