@@ -34,7 +34,6 @@
 (require 'image)
 (require 'image-mode)
 (require 'render-core)
-(require 'cl-lib)
 
 (defgroup reader nil
   "Group for Reader’s customizations."
@@ -59,9 +58,6 @@
 
 (defvar-local reader-current-doc-scale-value 1.0
   "The amount of scaling for the current document. Defaults to 1.0.")
-
-(defvar-local reader-current-doc-windows '()
-  "List of windows that have the current document opened")
 
 ;; Setting of `auto-mode-list' fails if not autoloaded.
 ;;;###autoload
