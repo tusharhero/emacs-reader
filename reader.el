@@ -332,7 +332,8 @@ not return the actual horizontal scroll value; for that, see
 
 If WINDOW is omitted defaults to current window."
   (with-current-buffer (window-buffer window)
-    (when (eq major-mode 'reader-mode)
+    (when (and (eq major-mode 'reader-mode)
+	       (reader-current-doc-overlay))
       (let* ((windows (get-buffer-window-list))
 	     (max-window-width
 	      (apply #'max (mapcar (lambda (window) (window-body-width window t)) windows)))
