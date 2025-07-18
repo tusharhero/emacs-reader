@@ -41,8 +41,8 @@ emacs_set_dark_theme(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)nargs;
 	(void)args;
 	DocState *doc_state = get_doc_state_ptr(env);
-	EmacsWinState *win_state = get_win_state_ptr(env);
 	emacs_value current_doc_overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, current_doc_overlay);
 	if (doc_state && win_state)
 	{
 		doc_state->invert ^= 1;
