@@ -256,7 +256,10 @@ set_current_page_number(emacs_env *env, int page)
 	env->funcall(env, env->intern(env, "set-window-parameter"), 3,
 		     (emacs_value[]){ curr_win, env->intern(env, "page"),
 				      env->make_integer(env, page) });
-	fprintf(stderr, "set_current_page_number: %d\n", page);
+	env->funcall(env, env->intern(env, "set"), 2,
+		     (emacs_value[]){
+			 env->intern(env, "reader--recent-pagenumber-fallback"),
+			 env->make_integer(env, page) });
 }
 
 /**

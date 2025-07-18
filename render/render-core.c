@@ -1039,6 +1039,7 @@ emacs_module_init(struct emacs_runtime *runtime)
 	permanent_buffer_local_var(env, "reader-current-doc-render-status");
 	permanent_buffer_local_var(env, "reader-current-doc-state-ptr");
 	permanent_buffer_local_var(env, "reader-current-doc-outline");
+	permanent_buffer_local_var(env, "reader--recent-pagenumber-fallback");
 
 	// Provide the current dynamic module as a feature to Emacs
 	provide(env, "render-core");

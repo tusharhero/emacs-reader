@@ -640,7 +640,7 @@ It is hooked to `window-configuration-change-hook' to keep detecting."
 	     (with-selected-window window
 	       (reader-goto-page last-win-page)))
 	    ;; defaulting to first page.
-	    ((reader-goto-page 1))))))
+	    ((reader-goto-page reader--recent-pagenumber-fallback))))))
 
 (defun reader--window-close-function (overlay)
   "Properly close the window belonging to OVERLAY."
