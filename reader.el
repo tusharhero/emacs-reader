@@ -224,26 +224,30 @@ Optionally scale it by the SCALING-FACTOR."
   (reader-doc-scale-page 1.0)
   (reader--center-page))
 
-(defun reader-fit-to-height ()
-  "Scale the current page to fit its height perfectly within the window."
+(defun reader-fit-to-height (&optional window)
+  "Scale the current page to fit its height.
+
+WINDOW defaults to selected window if not specified."
   (interactive)
-  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
-	 (pixel-window-height (window-pixel-height))
+  (let* ((image-height (cdr (reader--get-current-doc-image-size window)))
+	 (pixel-window-height (window-pixel-height window))
 	 (unscaled-height (/ image-height reader-current-doc-scale-value))
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
     (reader-doc-scale-page scaling-factor)
-    (reader--center-page)
-    (reader--set-window-vscroll nil 0)))
+    (reader--center-page window)
+    (reader--set-window-vscroll window 0)))
 
-(defun reader-fit-to-width ()
-  "Scale the current page to fit its width perfectly within the window."
+(defun reader-fit-to-width (&optional window)
+  "Scale the current page to fit its width.
+
+WINDOW defaults to selected window if not specified."
   (interactive)
-  (let* ((image-width (car (reader--get-current-doc-image-size)))
-	 (pixel-window-width (window-pixel-width))
+  (let* ((image-width (car (reader--get-current-doc-image-size window)))
+	 (pixel-window-width (window-pixel-width window))
 	 (unscaled-width (/ image-width reader-current-doc-scale-value))
 	 (scaling-factor (/ pixel-window-width unscaled-width)))
     (reader-doc-scale-page scaling-factor)
-    (reader--center-page)))
+    (reader--center-page window)))
 
 (defun reader--get-pixel-per-col (&optional window)
   "Get the no of pixels per column for WINDOW."
