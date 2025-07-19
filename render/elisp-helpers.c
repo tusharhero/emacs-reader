@@ -231,7 +231,7 @@ get_win_state_ptr(emacs_env *env, emacs_value overlay)
 	if (ptr == NULL)
 		emacs_message(
 		    env,
-		    "Current window doesn't have a pointer to EmacsWinState.");
+		    "Selected window doesn't have a pointer to EmacsWinState.");
 	EmacsWinState *win_state = env->get_user_ptr(env, ptr);
 	return win_state;
 }

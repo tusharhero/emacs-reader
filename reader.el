@@ -68,11 +68,11 @@
   "File formats supported by the document reader.")
 
 (defun reader-current-doc-overlay (&optional window)
-  "Current window (or if specified, WINDOW) parameter for overlay that is to be operated on."
+  "Selected window (or if specified, WINDOW) parameter for overlay that is to be operated on."
   (window-parameter (or window (selected-window)) 'overlay))
 
 (defun reader-current-doc-pagenumber (&optional window)
-  "Page number of WINDOW (defaults to current window)."
+  "Page number of WINDOW (defaults to selected window)."
   (window-parameter (or window (selected-window)) 'page))
 
 ;; We queue some commands because the user is expected to use the
@@ -187,7 +187,7 @@ other file format will simply not show up as a candidate."
   (reader--center-page))
 
 (defun reader--get-current-doc-image-size (&optional window)
-  "Get the dimensions of the current window (or if specified WINDOW) page."
+  "Get the dimensions of the selected window (or if specified WINDOW) page."
   (let* ((cdr-image (cdr (overlay-get (reader-current-doc-overlay window) 'display)))
 	 (width (plist-get cdr-image :width))
 	 (height (plist-get cdr-image :height)))
@@ -282,7 +282,7 @@ Also see `set-window-vscroll'."
 (defun reader--get-prefix-width (&optional window)
   "Get the line prefix width set by `reader--center-page'.
 
-For WINDOW (or current window if not specified)."
+For WINDOW (or selected window if not specified)."
   (car
    (plist-get
     (cdr (overlay-get (reader-current-doc-overlay window) 'line-prefix))
@@ -354,7 +354,7 @@ If WINDOW is omitted defaults to selected window."
 (defun reader-scroll-up (&optional amount window)
   "Scroll up the current page by AMOUNT (1 by default).
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive "p")
   (or amount (setq amount 1))
   (let* ((prev-scroll (window-vscroll window))
@@ -364,7 +364,7 @@ Optionally specify the WINDOW, defaults to current window."
 (defun reader-scroll-down (&optional amount window)
   "Scroll down the current page by AMOUNT (1 by default).
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive "p")
   (or amount (setq amount 1))
   (let* ((prev-scroll (window-vscroll window))
@@ -374,7 +374,7 @@ Optionally specify the WINDOW, defaults to current window."
 (defun reader-scroll-up-screenful (&optional window)
   "Scroll up the current page by a screenful.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive)
   (let ((amount (- (window-body-height window)
 		   next-screen-context-lines)))
@@ -384,7 +384,7 @@ Optionally specify the WINDOW, defaults to current window."
 (defun reader-scroll-down-screenful (&optional window)
   "Scroll down the current page by a screenful.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive)
   (let ((amount (- (window-body-height window)
 		   next-screen-context-lines)))
@@ -395,7 +395,7 @@ Optionally specify the WINDOW, defaults to current window."
   "Scroll to the left of the current page by AMOUNT (or 1).
 
 Only scrolls when the document page width is larger then the window width.
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((< (window-pixel-width window) (car (reader--get-current-doc-image-size window))))
@@ -407,7 +407,7 @@ Optionally specify the WINDOW, defaults to current window."
   "Scroll to the right of the current page by AMOUNT (or 1).
 
 Only scrolls when the document page width is larger then the window width.
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size window))))
@@ -419,7 +419,7 @@ Optionally specify the WINDOW, defaults to current window."
   "Scroll to the left most point of the current page.
 
 Only scrolls when the document page width is larger then the window width.
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive)
   (when (< (window-pixel-width) (car (reader--get-current-doc-image-size window)))
     (reader--set-window-hscroll window 0)))
@@ -428,7 +428,7 @@ Optionally specify the WINDOW, defaults to current window."
   "Scroll to the right most point of the current page.
 
 Only scrolls when the document page width is larger then the window width.
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive)
   (when (< (window-pixel-width) (car (reader--get-current-doc-image-size window)))
     ;; We use `set-window-hscroll' here because we need to go the right
@@ -438,7 +438,7 @@ Optionally specify the WINDOW, defaults to current window."
 (reader--define-queue-command scroll-up-or-prev-page (&optional amount window)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((and (= 0 (reader-scroll-up amount window))
@@ -452,7 +452,7 @@ Optionally specify the WINDOW, defaults to current window."
 (reader--define-queue-command scroll-down-or-next-page (&optional amount window)
   "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive "p")
   (or amount (setq amount 1))
   (when (and (= 0 (reader-scroll-down amount window))
@@ -462,7 +462,7 @@ Optionally specify the WINDOW, defaults to current window."
 (reader--define-queue-command scroll-up-screenful-or-prev-page (&optional window)
   "Scroll up the current page by screenful, otherwise switch to the previous page.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive)
   (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
@@ -471,7 +471,7 @@ Optionally specify the WINDOW, defaults to current window."
 (reader--define-queue-command scroll-down-screenful-or-next-page (&optional window)
   "Scroll down the current page by screenful, otherwise switch to the next page.
 
-Optionally specify the WINDOW, defaults to current window."
+Optionally specify the WINDOW, defaults to selected window."
   (interactive)
   (let ((scroll (- (window-body-height window)
 		   next-screen-context-lines)))
