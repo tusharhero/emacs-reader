@@ -340,7 +340,7 @@ If WINDOW is omitted defaults to selected window."
   (let* ((overlay (reader-current-doc-overlay window))
 	 (window-width (window-body-width window t))
 	 (doc-image-width (car (reader--get-current-doc-image-size window)))
-	 (max-left-offset (- window-width doc-image-width))
+	 (max-left-offset (max 0 (- window-width doc-image-width)))
 	 (overlay-offset `(space :width (,max-left-offset)))
 	 (pixel-per-col (reader--get-pixel-per-col window))
 	 (doc-left-offset (- window-width doc-image-width))
