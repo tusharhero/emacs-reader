@@ -637,7 +637,8 @@ It is hooked to `window-configuration-change-hook' to keep detecting."
       (cond (last-win-page
 	     (set-window-parameter window 'page last-win-page)
 	     (with-selected-window window
-	       (reader-goto-page last-win-page)))
+	       (reader-goto-page last-win-page)
+	       (reader-doc-scale-page reader-current-doc-scale-value)))
 	    ((reader-goto-page reader--recent-pagenumber-fallback))))))
 
 (defun reader--window-close-function (overlay)
