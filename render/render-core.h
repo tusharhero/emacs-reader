@@ -52,17 +52,11 @@ typedef struct
 	fz_context *ctx;
 	fz_locks_context locks;
 	fz_document *doc;
-	float resolution;
 	CachedPage **cached_pages_pool;
-	CachedPage *cache_window[MAX_CACHE_SIZE];
-	int current_window_index;
-	CachedPage *current_cached_page;
 	char *path;
 	int pagecount;
-	int current_page_number;
 	fz_rect page_bbox;
 	fz_outline *outline;
-	int rotate;
 	int invert;
 } DocState;
 
