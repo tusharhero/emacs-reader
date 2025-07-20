@@ -65,10 +65,6 @@ reset_doc_state(DocState *state)
                       .locks = NULL,
                       .doc = NULL,
                       .cached_pages_pool = NULL,
-                      .cache_window = NULL,
-                      .current_window_index = 0,
-                      .current_cached_page = NULL,
-                      .current_page_number = 0,
                       .page_bbox =
                           {
                               .x0 = 0.0f,
@@ -77,8 +73,6 @@ reset_doc_state(DocState *state)
 		      .path = NULL,
 		      .pagecount = 0,
                       .outline = NULL,
-                      .resolution = 72,
-                      .rotate = 0,
 		      .invert = 0};
 }
 
