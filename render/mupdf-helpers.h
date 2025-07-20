@@ -43,7 +43,7 @@ reset_doc_state(DocState *state);
 void
 free_cached_page(DocState *state, CachedPage *cp);
 void
-free_cache_window(DocState *state);
+free_cache_window(DocState *doc_state, EmacsWinState *win_state);
 void
 free_cached_pages_pool(DocState *state);
 
