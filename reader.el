@@ -603,8 +603,7 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
   (interactive)
   (when buffer-file-name
     (let ((page (reader-current-doc-pagenumber))
-	  (scale reader-current-doc-scale-value)
-	  (theme reader-current-doc-theme))
+	  (scale reader-current-doc-scale-value))
       (remove-overlays)
       (reader--render-buffer)
       (if reader-dark-mode
