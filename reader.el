@@ -489,7 +489,8 @@ See also `reader-non-queue-scroll-up-or-prev-page'."
 		   ('triple-wheel-up 3)))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader--non-queue-scroll-up-or-prev-page amount scrolled-window))))
+      (with-selected-window scrolled-window
+	(reader--non-queue-scroll-up-or-prev-page amount scrolled-window)))))
 
 (reader--define-queue-command mwheel-scroll-down (event)
   "Scroll down or switch to the next page, but also handle mouse EVENT.
@@ -503,7 +504,8 @@ See also `reader--non-queue-scroll-down-or-next-page'."
 		   ('triple-wheel-down 3)))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader--non-queue-scroll-down-or-next-page amount scrolled-window))))
+      (with-selected-window scrolled-window
+	(reader--non-queue-scroll-down-or-next-page amount scrolled-window)))))
 
 (defun reader-mwheel-scroll-left (event)
   "Scroll to the left, but also handle mouse EVENT.
@@ -517,7 +519,8 @@ See also `reader-scroll-left'."
 		   ('S-triple-wheel-up 3)))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader-scroll-left amount scrolled-window))))
+      (with-selected-window scrolled-window
+	(reader-scroll-left amount scrolled-window)))))
 
 (defun reader-mwheel-scroll-right (event)
   "Scroll to the right, but also handle mouse EVENT.
@@ -531,7 +534,8 @@ See also `reader-scroll-right'."
 		   ('S-triple-wheel-down 3)))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader-scroll-right amount scrolled-window))))
+      (with-selected-window scrolled-window
+	(reader-scroll-right amount scrolled-window)))))
 
 (defun reader-mwheel-enlarge-size (event)
   "Enlarge the current page, but also handle mouse EVENT.
