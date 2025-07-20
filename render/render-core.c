@@ -590,6 +590,11 @@ emacs_next_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		CachedPage *next_cp
 		    = win_state
 			  ->cache_window[win_state->current_window_index + 1];
+
+		if (next_cp->status != PAGE_STATUS_READY)
+			build_cache_window(doc_state, win_state,
+					   win_state->current_page_number);
+
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->doc_state = doc_state;
 		draw_args->win_state = win_state;
@@ -645,6 +650,11 @@ emacs_prev_page(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 		CachedPage *prev_cp
 		    = win_state
 			  ->cache_window[win_state->current_window_index - 1];
+
+		if (prev_cp->status != PAGE_STATUS_READY)
+			build_cache_window(doc_state, win_state,
+					   win_state->current_page_number);
+
 		DrawThreadArgs *draw_args = malloc(sizeof(DrawThreadArgs));
 		draw_args->doc_state = doc_state;
 		draw_args->win_state = win_state;
