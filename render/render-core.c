@@ -545,7 +545,9 @@ emacs_close_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	(void)data;
 
 	DocState *state = get_doc_state_ptr(env);
-	free_cache_window(state);
+	emacs_value overlay = get_current_doc_overlay(env);
+	EmacsWinState *win_state = get_win_state_ptr(env, overlay);
+	free_cache_window(state, win_state);
 	free_cached_pages_pool(state);
 	fz_drop_outline(state->ctx, state->outline);
 	fz_drop_document(state->ctx, state->doc);
