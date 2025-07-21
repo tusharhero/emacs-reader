@@ -26,7 +26,7 @@
   "Create a bookmark reader doc record."
   (append (bookmark-make-record-default nil t 1)
           (list (cons 'page (reader-current-doc-pagenumber))
-		(cons 'scale reader-current-doc-scale-value)
+		(cons 'scale (reader-current-doc-scale-value))
 		(cons 'hscroll (window-hscroll))
 		(cons 'vscroll (window-vscroll))
 		'(handler . reader-bookmark-jump))))

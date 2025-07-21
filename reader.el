@@ -55,8 +55,8 @@
   :type '(radio (function-item reader-fit-to-height)
 		(function-item reader-fit-to-width)))
 
-(defvar-local reader-current-doc-scale-value 1.0
-  "The amount of scaling for the current document. Defaults to 1.0.")
+(defvar-local reader--recent-scale-fallback 1.0
+  "Previous scaling factor applied to the document.")
 
 ;; Setting of `auto-mode-list' fails if not autoloaded.
 ;;;###autoload
@@ -73,6 +73,10 @@
 (defun reader-current-doc-pagenumber (&optional window)
   "Page number of WINDOW (defaults to selected window)."
   (window-parameter (or window (selected-window)) 'page))
+
+(defun reader-current-doc-scale-value (&optional window)
+  "Scaling factor of WINDOW (defaults to selected window)."
+  (or (window-parameter (or window (selected-window)) 'scale) reader--recent-scale-fallback))
 
 ;; We queue some commands because the user is expected to use the
 ;; commands repeatedly, such as by simply spamming a key. If we don't
@@ -193,36 +197,41 @@ other file format will simply not show up as a candidate."
 	 (height (plist-get cdr-image :height)))
     (cons width height)))
 
-(defun reader-doc-scale-page (factor)
+(defun reader-doc-scale-page (factor &optional window)
   "Scales the page by a given FACTOR.
 
-It also updates `reader-current-doc-scale-value' to reflect the new scale."
+It also updates `reader--recent-scale-fallback' and `scale' property of
+WINDOW (or selected window if not specified) to reflect the new scale."
   (reader-dyn--scale-page factor)
-  (setq reader-current-doc-scale-value factor))
+  (setq reader--recent-scale-fallback factor)
+  (set-window-parameter window 'scale factor))
 
-(defun reader-enlarge-size (&optional scaling-factor)
+(defun reader-enlarge-size (&optional scaling-factor window)
   "Enlarge the size of the current page by the `reader-enlarge-factor'.
 
-Optionally scale it by the SCALING-FACTOR."
+Optionally scale it by the SCALING-FACTOR. Scales on WINDOW (or selected
+window if not specified)."
   (interactive (list (float
-		      (* reader-current-doc-scale-value reader-enlarge-factor))))
-  (reader-doc-scale-page scaling-factor)
-  (reader--center-page))
+		      (* (reader-current-doc-scale-value) reader-enlarge-factor))))
+  (reader-doc-scale-page scaling-factor window)
+  (reader--center-page window))
 
-(defun reader-shrink-size (&optional scaling-factor)
+(defun reader-shrink-size (&optional scaling-factor window)
   "Shrink the size of the current page by the `reader-shrink-factor'.
 
-Optionally scale it by the SCALING-FACTOR."
+Optionally scale it by the SCALING-FACTOR. Scales on WINDOW (or selected
+window if not specified)."
   (interactive (list (float
-		      (* reader-current-doc-scale-value reader-shrink-factor))))
-  (reader-doc-scale-page scaling-factor)
-  (reader--center-page))
+		      (* (reader-current-doc-scale-value) reader-shrink-factor))))
+  (reader-doc-scale-page scaling-factor window)
+  (reader--center-page window))
 
-(defun reader-reset-size ()
-  "Reset the size of the current page to 1.0."
-  (interactive)
-  (reader-doc-scale-page 1.0)
-  (reader--center-page))
+(defun reader-reset-size (&optional window)
+  "Reset the size of the current page to 1.0.
+
+Scales on WINDOW (or selected window if not specified)."
+  (reader-doc-scale-page 1.0 window)
+  (reader--center-page window))
 
 (defun reader-fit-to-height (&optional window)
   "Scale the current page to fit its height.
@@ -231,9 +240,9 @@ WINDOW defaults to selected window if not specified."
   (interactive)
   (let* ((image-height (cdr (reader--get-current-doc-image-size window)))
 	 (pixel-window-height (window-pixel-height window))
-	 (unscaled-height (/ image-height reader-current-doc-scale-value))
+	 (unscaled-height (/ image-height (reader-current-doc-scale-value window)))
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
-    (reader-doc-scale-page scaling-factor)
+    (reader-doc-scale-page scaling-factor window)
     (reader--center-page window)
     (reader--set-window-vscroll window 0)))
 
@@ -244,9 +253,9 @@ WINDOW defaults to selected window if not specified."
   (interactive)
   (let* ((image-width (car (reader--get-current-doc-image-size window)))
 	 (pixel-window-width (window-pixel-width window))
-	 (unscaled-width (/ image-width reader-current-doc-scale-value))
+	 (unscaled-width (/ image-width (reader-current-doc-scale-value window)))
 	 (scaling-factor (/ pixel-window-width unscaled-width)))
-    (reader-doc-scale-page scaling-factor)
+    (reader-doc-scale-page scaling-factor window)
     (reader--center-page window)))
 
 (defun reader--get-pixel-per-col (&optional window)
@@ -556,7 +565,7 @@ See also `reader-enlarge-size'."
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
       (reader-enlarge-size
-       (* scaling-factor reader-current-doc-scale-value)))))
+       (* scaling-factor (reader-current-doc-scale-value window))))))
 
 (defun reader-mwheel-shrink-size (event)
   "Shrink the current page, but also handle mouse EVENT.
@@ -571,7 +580,7 @@ See also `reader-shrink-size'."
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
       (reader-shrink-size
-       (* scaling-factor reader-current-doc-scale-value)))))
+       (* scaling-factor (reader-current-doc-scale-value window))))))
 
 (defun reader-rotate-clockwise ()
   "Rotate all pages of the current document by 90 degrees, clockwise."
@@ -609,7 +618,7 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
   (interactive)
   (when buffer-file-name
     (let ((page (reader-current-doc-pagenumber))
-	  (scale reader-current-doc-scale-value))
+	  (scale (reader-current-doc-scale-value window)))
       (remove-overlays)
       (reader--render-buffer)
       (if reader-dark-mode
@@ -634,6 +643,7 @@ buffer is not in `reader-mode'."
 ;; The window knows (as a window parameter):
 ;; * Which overlay it belongs to.
 ;; * Which page number it's currently displaying.
+;; * Which the current scale.
 ;;
 ;; The overlay knows (as an overlay property):
 ;; * Which window it belongs to.
@@ -654,16 +664,17 @@ It is hooked to `window-configuration-change-hook' to keep detecting."
 (defun reader--window-create-function (window)
   "Create window overlay for WINDOW."
   (unless (window-parameter window 'overlay)
-    ;; the page left by the last opened window
-    (let ((last-win-page (window-parameter (old-selected-window) 'page)))
+    (let ((last-win-page (window-parameter (old-selected-window) 'page))
+	  (last-win-scale (window-parameter (old-selected-window) 'scale)))
       (reader-dyn--window-create window)
-      (cond (last-win-page
-	     (set-window-parameter window 'page last-win-page)
-	     (with-selected-window window
-	       (reader-goto-page last-win-page)
-	       (reader-doc-scale-page reader-current-doc-scale-value)
-	       (reader--center-page)))
-	    ((reader-goto-page reader--recent-pagenumber-fallback))))))
+      (set-window-parameter window 'page last-win-page)
+      (with-selected-window window
+	(reader-goto-page (or last-win-page
+			      reader--recent-pagenumber-fallback))
+	(reader-doc-scale-page (or last-win-scale
+				   reader--recent-scale-fallback)
+			       window)
+	(reader--center-page window)))))
 
 (defun reader--window-close-function (overlay)
   "Properly close the window belonging to OVERLAY."
@@ -802,7 +813,7 @@ Keybindings:
     (if reader-dark-mode
 	(reader-dyn--set-dark-theme)
       (reader-dyn--redisplay-doc))
-    (reader-doc-scale-page reader-current-doc-scale-value)))
+    (reader-doc-scale-page (reader-current-doc-scale-value))))
 
 (define-globalized-minor-mode reader-global-dark-mode reader-dark-mode reader-dark-mode)
 
