@@ -32,7 +32,6 @@
 ;;; Code:
 
 (require 'image)
-(require 'image-mode)
 (require 'render-core)
 
 (defgroup reader nil
