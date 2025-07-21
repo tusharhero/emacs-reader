@@ -477,6 +477,12 @@ Optionally specify the WINDOW, defaults to selected window."
 		   next-screen-context-lines)))
     (reader--non-queue-scroll-down-or-next-page scroll window)))
 
+;; In these functions, we must have both `with-current-buffer' and
+;; `with-selected-window', even though they are provided as an
+;; argument to the function wrapped around by it. This is unavoidable
+;; because otherwise it does not work when the mouse is scrolled over
+;; a window other than the one selected.
+
 (reader--define-queue-command mwheel-scroll-up (event)
   "Scroll up or switch to the previous page, but also handle mouse EVENT.
 
