@@ -84,10 +84,11 @@
 
 (defun reader--process-command-queue ()
   "Process the next command in the queue, ensuring UI updates."
-  (when-let* ((cmd (pop reader--command-queue)))
+  (when-let* ((cmd (pop reader--command-queue))
+	      (delay 0.01))
     (funcall cmd)
     (redisplay)
-    (run-with-idle-timer 0.01 nil #'reader--process-command-queue)))
+    (run-with-idle-timer delay nil #'reader--process-command-queue)))
 
 (defun reader--enqueue-command (cmd args)
   "Add CMD with ARGS to the queue and start processing if needed."
