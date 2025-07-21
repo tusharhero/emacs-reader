@@ -564,8 +564,9 @@ See also `reader-enlarge-size'."
 			   ('C-triple-wheel-up (+ reader-enlarge-factor 0.2))))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader-enlarge-size
-       (* scaling-factor (reader-current-doc-scale-value window))))))
+      (with-selected-window scrolled-window
+	(reader-enlarge-size
+	 (* scaling-factor (reader-current-doc-scale-value scrolled-window)))))))
 
 (defun reader-mwheel-shrink-size (event)
   "Shrink the current page, but also handle mouse EVENT.
@@ -579,8 +580,9 @@ See also `reader-shrink-size'."
 			   ('C-triple-wheel-down (- reader-shrink-factor 0.2))))
 	 (scrolled-window (car (cadr event))))
     (with-current-buffer (window-buffer scrolled-window)
-      (reader-shrink-size
-       (* scaling-factor (reader-current-doc-scale-value window))))))
+      (with-selected-window scrolled-window
+	(reader-shrink-size
+	 (* scaling-factor (reader-current-doc-scale-value scrolled-window)))))))
 
 (defun reader-rotate-clockwise ()
   "Rotate all pages of the current document by 90 degrees, clockwise."
