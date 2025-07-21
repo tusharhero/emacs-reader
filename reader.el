@@ -628,6 +628,20 @@ buffer is not in `reader-mode'."
       (reader-dyn--load-doc file)
     (message "No file associated with buffer.")))
 
+;; We have an overlay per window, since we (naturally) need to be able
+;; show different pages on different windows.
+;;
+;; The window knows (as a window parameter):
+;; * Which overlay it belongs to.
+;; * Which page number it's currently displaying.
+;;
+;; The overlay knows (as an overlay property):
+;; * Which window it belongs to.
+;; * user pointer to the underlying EmacsWinState from the native
+;; module.
+;;
+;; Window and overlay need to know each other for efficient lookup.
+
 (defun reader--manage-window-overlays ()
   "Manage the creation and deletion of window overlays as needed.
 
