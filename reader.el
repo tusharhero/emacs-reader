@@ -76,7 +76,7 @@
 
 (defun reader-current-doc-scale-value (&optional window)
   "Scaling factor of WINDOW (defaults to selected window)."
-  (or (window-parameter (or window (selected-window)) 'scale) reader--recent-scale-fallback))
+  (or (window-parameter window 'scale) reader--recent-scale-fallback))
 
 ;; We queue some commands because the user is expected to use the
 ;; commands repeatedly, such as by simply spamming a key. If we don't
