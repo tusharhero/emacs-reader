@@ -157,17 +157,15 @@ other file format will simply not show up as a candidate."
 (reader--define-queue-command next-page ()
   "Go to the next page of the document."
   (interactive)
-  (let ((status (reader-dyn--next-page)))
-    (when status
-      (force-mode-line-update t))
+  (if-let* ((status (reader-dyn--next-page)))
+      (force-mode-line-update t)
     status))
 
 (reader--define-queue-command previous-page ()
   "Go to the previous page of the document."
   (interactive)
-  (let ((status (reader-dyn--prev-page)))
-    (when status
-      (force-mode-line-update t))
+  (if-let* ((status (reader-dyn--prev-page)))
+      (force-mode-line-update t)
     status))
 
 (defun reader-first-page ()
