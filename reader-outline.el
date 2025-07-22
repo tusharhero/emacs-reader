@@ -57,6 +57,9 @@ Just wraps `reader-goto-page' for imenu compatibility."
 (defvar-local reader-outline--doc-buffername nil
   "Name of the document buffer whose outline was generated.")
 
+(defvar-local reader-outline--doc-window nil
+  "The window from where the outline was generated.")
+
 ;;;###autoload
 (defun reader-outline-show ()
   "Show the document outline in a separate buffer.
@@ -105,7 +108,9 @@ Each heading title is its own clickable button."
 (defun reader-outline-select-doc-window ()
   "Display and switch to the original document's window."
   (interactive)
-  (select-window (display-buffer reader-outline--doc-buffername)))
+  (select-window (if (window-valid-p reader-outline--doc-window)
+		     reader-outline--doc-window
+		   (display-buffer reader-outline--doc-buffername))))
 
 (defvar-keymap reader-outline-mode-map
   :doc "Keymap for `reader-outline-mode'"
@@ -125,11 +130,14 @@ Each heading title is its own clickable button."
 (defun reader-outline-goto-entry (button)
   "Shared logic to jump to an outline BUTTON."
   (let* ((page (button-get button 'reader-page))
-         (src  (button-get button 'reader-source-buffer)))
-    (unless (and (numberp page) (buffer-live-p src))
+         (buffer  (button-get button 'reader-source-buffer))
+	 (window (if (window-valid-p reader-outline--doc-window)
+		     reader-outline--doc-window
+		   (display-buffer buffer))))
+    (unless (and (numberp page) (buffer-live-p buffer))
       (user-error "Invalid outline entry: no page or buffer info"))
-    (select-window (display-buffer src))
-    (reader-goto-page (1+ page))))
+    (select-window window)
+    (reader-goto-page (1+ page) window)))
 
 (defun reader--outline-button-action (button)
   "Jump to the page associated with BUTTON."
