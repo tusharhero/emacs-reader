@@ -666,16 +666,15 @@ It is hooked to `window-configuration-change-hook' to keep detecting."
 (defun reader--window-create-function (window)
   "Create window overlay for WINDOW."
   (unless (window-parameter window 'overlay)
-    (let ((last-win-page (window-parameter (old-selected-window) 'page))
-	  (last-win-scale (window-parameter (old-selected-window) 'scale)))
+    (let* ((last-win-page (window-parameter (old-selected-window) 'page))
+	   (last-win-scale (window-parameter (old-selected-window) 'scale))
+	   (page (or last-win-page reader--recent-pagenumber-fallback))
+	   (scale (or last-win-scale reader--recent-scale-fallback)))
       (reader-dyn--window-create window)
       (set-window-parameter window 'page last-win-page)
       (with-selected-window window
-	(reader-goto-page (or last-win-page
-			      reader--recent-pagenumber-fallback))
-	(reader-doc-scale-page (or last-win-scale
-				   reader--recent-scale-fallback)
-			       window)
+	(reader-goto-page page)
+	(reader-doc-scale-page scale window)
 	(reader--center-page window)))))
 
 (defun reader--window-close-function (overlay)
