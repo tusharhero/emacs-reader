@@ -79,12 +79,12 @@ document it was created from."
 		  (inhibit-read-only t))
         (reader-outline-mode)
 	(setq reader-outline--doc-buffername (buffer-name source-buffer))
-        (reader--outline-insert-outline outline-data 1 source-buffer)
+        (reader--outline-insert-outline outline-data 1)
 	(goto-char (point-min))))
     (pop-to-buffer bufname)))
 
-(defun reader--outline-insert-outline (outline level source-buffer)
-  "Recursively insert OUTLINE from SOURCE-BUFFER entries at LEVEL.
+(defun reader--outline-insert-outline (outline level)
+  "Recursively insert OUTLINE entries at LEVEL.
 
 Each heading title is its own clickable button."
   (dolist (entry outline)
@@ -97,20 +97,19 @@ Each heading title is its own clickable button."
       (insert-text-button
        title
        'reader-page page
-       'reader-source-buffer source-buffer
-       'action #'reader--outline-button-action
+       'action #'reader-outline-goto-entry
        'follow-link t
        'help-echo "Jump to section.")
       (insert "\n")
       (if children
-          (reader--outline-insert-outline children (1+ level) source-buffer)))))
+          (reader--outline-insert-outline children (1+ level))))))
 
 (defun reader-outline-select-doc-window ()
   "Display and switch to the original document's window."
   (interactive)
   (select-window (if (window-valid-p reader-outline--doc-window)
 		     reader-outline--doc-window
-		   (display-buffer reader-outline--doc-buffername))))
+		   (get-buffer-window reader-outline--doc-buffername))))
 
 (defvar-keymap reader-outline-mode-map
   :doc "Keymap for `reader-outline-mode'"
@@ -129,19 +128,11 @@ Each heading title is its own clickable button."
 
 (defun reader-outline-goto-entry (button)
   "Shared logic to jump to an outline BUTTON."
-  (let* ((page (button-get button 'reader-page))
-         (buffer  (button-get button 'reader-source-buffer))
-	 (window (if (window-valid-p reader-outline--doc-window)
-		     reader-outline--doc-window
-		   (display-buffer buffer))))
-    (unless (and (numberp page) (buffer-live-p buffer))
-      (user-error "Invalid outline entry: no page or buffer info"))
-    (select-window window)
+  (let ((page (button-get button 'reader-page)))
+    (unless (numberp page)
+      (user-error "Invalid outline entry: no page info"))
+    (reader-outline-select-doc-window)
     (reader-goto-page (1+ page) window)))
-
-(defun reader--outline-button-action (button)
-  "Jump to the page associated with BUTTON."
-  (reader-outline-goto-entry button))
 
 (defun reader-outline-visit-page ()
   "Jump to the page at point in the associated reader buffer."
