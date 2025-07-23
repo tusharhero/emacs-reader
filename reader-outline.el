@@ -50,7 +50,7 @@
   "Switch to PAGE, ignores the NAME argument.
 
 Just wraps `reader-goto-page' for imenu compatibility."
-  (reader-goto-page (1+ page)))
+  (reader-goto-page page))
 
 ;;; Outline
 
@@ -89,7 +89,7 @@ document it was created from."
 Each heading title is its own clickable button."
   (dolist (entry outline)
     (let ((title (plist-get entry :title))
-          (page  (plist-get entry :page))
+          (page  (1+ (plist-get entry :page))) ; MuPDF does 0-indexing
           (children (plist-get entry :children)))
       ;; This cannot be part of label (title) because that will
       ;; obscure the outline TAB bindings with button bindings.
