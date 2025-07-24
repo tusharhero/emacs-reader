@@ -2,6 +2,11 @@
 See =(info "(standards) NEWS File")=. User facing changes per release
 are to be recorded here.
 
+* Version 0.3.2
+- Fix reader-outline when original source buffer is killed.
+- Correct keybindings for C-v/M-v.
+- Enhance build system on GNU/Linux and MS Windows.
+
 * Version 0.3.1
 - Start NEWS file.
 - Fix MS Windows build.
