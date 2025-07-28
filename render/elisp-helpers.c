@@ -148,15 +148,20 @@ data2elisp_image(emacs_env *env, EmacsWinState *win_state, char *img_data,
 	    = env->make_integer(env, doc_page_height(win_state));
 	emacs_value img_data_string
 	    = env->make_unibyte_string(env, img_data, img_size);
-	emacs_value image_args[7] = {
-		img_data_string,       env->intern(env, "pbm"),
-		env->intern(env, "t"), env->intern(env, ":width"),
-		image_width,	       env->intern(env, ":height"),
+	emacs_value image_args[9]
+	    = { img_data_string,
+		env->intern(env, "pbm"),
+		env->intern(env, "t"),
+		env->intern(env, ":width"),
+		image_width,
+		env->intern(env, ":height"),
 		image_height,
-	};
+		env->intern(env,
+			    ":scale"), // Never really used, only a placeholder
+		env->make_integer(env, 1) };
 
 	emacs_value image_data = env->funcall(
-	    env, env->intern(env, "create-image"), 7, image_args);
+	    env, env->intern(env, "create-image"), 9, image_args);
 
 	return image_data;
 }
