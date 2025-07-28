@@ -230,7 +230,7 @@ window."
   (reader--center-page))
 
 (defun reader-fit-to-height ()
-  "Scale the current page in the selected-window to fit its height."
+  "Scale the current page in the selected window to fit its height."
   (interactive)
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
 	 (pixel-window-height (window-pixel-height))
@@ -241,7 +241,7 @@ window."
     (reader--set-window-vscroll nil 0)))
 
 (defun reader-fit-to-width ()
-  "Scale the current page in the selected-window to fit its width."
+  "Scale the current page in the selected window to fit its width."
   (interactive)
   (let* ((image-width (car (reader--get-current-doc-image-size)))
 	 (pixel-window-width (window-pixel-width))
@@ -615,7 +615,7 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
 ;; The window knows (as a window parameter):
 ;; * Which overlay it belongs to.
 ;; * Which page number it's currently displaying.
-;; * Which the current scale.
+;; * What the current scale is.
 ;;
 ;; The overlay knows (as an overlay property):
 ;; * Which window it belongs to.
