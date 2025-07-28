@@ -72,6 +72,7 @@ reset_doc_state(DocState *state)
                           },
 		      .path = NULL,
 		      .pagecount = 0,
+		      .frame_scale = 1,
                       .outline = NULL,
 		      .invert = 0};
 }

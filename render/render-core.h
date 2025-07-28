@@ -57,13 +57,14 @@ typedef struct
 	int pagecount;
 	fz_rect page_bbox;
 	fz_outline *outline;
+	float frame_scale; // Emacs' frame-scale-factor
 	int invert;
 } DocState;
 
 typedef struct
 {
 	DocState *doc_state;
-	float resolution;
+	float resolution; // In terms of DPI (72, 144 etc.)
 	CachedPage *cache_window[MAX_CACHE_SIZE];
 	int current_window_index;
 	CachedPage *current_cached_page;
