@@ -608,7 +608,8 @@ It is to be called while a document’s buffer is already opened and the
 buffer is not in `reader-mode'."
   (interactive)
   (if-let* ((file (buffer-file-name (current-buffer))))
-      (reader-dyn--load-doc file)
+      (when (file-exists-p file)
+	(reader-dyn--load-doc file))
     (message "No file associated with buffer.")))
 
 ;; We have an overlay per window, since we (naturally) need to be able
