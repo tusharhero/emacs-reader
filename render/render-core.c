@@ -111,8 +111,10 @@ draw_page_thread(void *arg)
 			fz_invert_pixmap_luminance(ctx, cp->pixmap);
 			fz_gamma_pixmap(ctx, cp->pixmap, 1 / 1.4f);
 		}
-		cp->imgh = fz_pixmap_height(ctx, cp->pixmap);
-		cp->imgw = fz_pixmap_width(ctx, cp->pixmap);
+		cp->imgh = fz_pixmap_height(ctx, cp->pixmap)
+			   / doc_state->frame_scale;
+		cp->imgw
+		    = fz_pixmap_width(ctx, cp->pixmap) / doc_state->frame_scale;
 	}
 	fz_catch(ctx) cp->status = PAGE_STATUS_ERROR;
 
@@ -459,6 +461,7 @@ emacs_load_doc(emacs_env *env, ptrdiff_t nargs, emacs_value *args, void *data)
 	set_current_pagecount(env, doc_state);
 	set_current_page_number(env, win_state->current_page_number);
 	set_current_render_status(env);
+	doc_state->frame_scale = get_frame_scale_factor(env);
 
 	CachedPage *cp = win_state->current_cached_page;
 
