@@ -961,25 +961,8 @@ emacs_module_init(struct emacs_runtime *runtime)
 
 	// Registrations for the required functions and variables
 
-	register_module_func(
-	    env, emacs_load_doc, "reader-dyn--load-doc", 1, 1,
-	    "Loads a DOC to be rendered in Emacs.  It is wrapped around the "
-	    "Elisp "
-	    "function `reader-open-doc'. The function does the following:\n 1. "
-	    "Allocates and resets a new DocState\n 2. Attempts to open the "
-	    "document "
-	    "through the internal (non-registered) `load_mupdf_doc'.\n 3. "
-	    "Exposes "
-	    "the total page count to Elisp\n 4. Create a bufer-local "
-	    "overlay "
-	    "through `init_overlay'\n 5. Calls the main `render_page' function "
-	    "to "
-	    "render the current page and its adjacent ones.\n 6. Converts the "
-	    "raw PPM data to "
-	    "an Emacs image object and displays it in the overlay through "
-	    "`overlay-put'.\n 7. Wraps the C pointer for DocState as an user "
-	    "pointer "
-	    "and stores it in `reader-current-doc-state-ptr'.");
+	register_module_func(env, emacs_load_doc, "reader-dyn--load-doc", 1, 1,
+			     "Loads a DOC to be rendered in Emacs.");
 
 	register_module_func(
 	    env, emacs_redisplay_doc, "reader-dyn--redisplay-doc", 0, 0,
@@ -990,68 +973,41 @@ emacs_module_init(struct emacs_runtime *runtime)
 			     "artifacts related to the current document.");
 	register_module_func(
 	    env, emacs_next_page, "reader-dyn--next-page", 0, 0,
-	    "Loads and renders the next page of the document.  It is wrapped "
-	    "around "
-	    "the Elisp function `reader-next-page'.  Since DocState stores PPM "
-	    "data "
-	    "for the previous and next page, all this does is render the data "
-	    "for "
-	    "the next page that was rendered and stored in memory previously.");
+	    "Loads and renders the next page of the document.");
 
 	register_module_func(
 	    env, emacs_prev_page, "reader-dyn--prev-page", 0, 0,
-	    "Loads and renders the previous page of the document.  It is "
-	    "wrapped "
-	    "around the Elisp function `reader-prev-page'.  Since DocState "
-	    "stores "
-	    "image data for the previous and next page, all this does is "
-	    "render "
-	    "the "
-	    "data for the previous page that was rendered and stored in memory "
-	    "previously.");
+	    "Loads and renders the previous page of the document.");
 
-	register_module_func(env, emacs_first_page, "reader-dyn--first-page", 0,
-			     0,
-			     "Loads and renders the first page of the "
-			     "document. It is wrapped around "
-			     "`reader-first-page'. It calls `render_pages' "
-			     "with 0 as the argument, "
-			     "since MuPDF does 0-indexing.");
+	register_module_func(
+	    env, emacs_first_page, "reader-dyn--first-page", 0, 0,
+	    "Loads and renders the first page of the document.");
 
 	register_module_func(
 	    env, emacs_last_page, "reader-dyn--last-page", 0, 0,
-	    "Loads and renders the last page of the document. It is "
-	    "wrapped around `reader-last-page'. It calls "
-	    "`render_pages' with (pagecount - 1) as the argument");
+	    "Loads and renders the last page of the document.");
 
-	register_module_func(
-	    env, emacs_goto_page, "reader-dyn--goto-page", 1, 1,
-	    "Loads and renders the N page number. It is wrapped around "
-	    "`reader-goto-page'. It calls `render_pages' with N - 1 as the "
-	    "argument");
+	register_module_func(env, emacs_goto_page, "reader-dyn--goto-page", 1,
+			     1, "Loads and renders the N page number.");
 
 	register_module_func(
 	    env, emacs_doc_scale_page, "reader-dyn--scale-page", 1, 1,
-	    "Scales the current page of the document by a given FACTOR. It "
-	    "multiplies the FACTOR with the :width, :height and :scale "
-	    "properties of "
-	    "the image, and then renders the scaled image through "
-	    "`overlay-put'.");
+	    "Scales the current page of the document by a given FACTOR.");
 
 	register_module_func(env, emacs_set_dark_theme,
 			     "reader-dyn--set-dark-theme", 0, 0,
 			     "Sets the current document to have a dark theme. "
-			     "It simply inverts the pixmap.");
+			     "It simply inverts the colors.");
 
 	register_module_func(env, emacs_doc_rotate, "reader-dyn--rotate-doc", 1,
 			     1, "Rotates the page by the given DEGREE.");
 
 	register_module_func(
 	    env, emacs_doc_window_create, "reader-dyn--window-create", 1, 1,
-	    "Function to initialize window parameters for EmacsWinState.");
+	    "Initializes window parameters for EmacsWinState.");
 	register_module_func(env, emacs_doc_window_close,
 			     "reader-dyn--window-close", 1, 1,
-			     "Function to free EmacsWinState.");
+			     "Frees EmacsWinState.");
 
 	// Register buffer-local variables.
 	permanent_buffer_local_var(env, "reader-current-doc-pagecount");
