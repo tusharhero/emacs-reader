@@ -202,7 +202,7 @@ It also updates `reader--recent-scale-fallback' and `scale' property of
 selected window to reflect the new scale."
   (reader-dyn--scale-page factor)
   (setq reader--recent-scale-fallback factor)
-  (set-window-parameter (selected-window) 'scale factor))
+  (set-window-parameter nil 'scale factor))
 
 (defun reader-enlarge-size (&optional scaling-factor)
   "Enlarge the size of the current page by the `reader-enlarge-factor'.
@@ -232,20 +232,20 @@ window."
 (defun reader-fit-to-height ()
   "Scale the current page in the selected-window to fit its height."
   (interactive)
-  (let* ((image-height (cdr (reader--get-current-doc-image-size (selected-window))))
-	 (pixel-window-height (window-pixel-height (selected-window)))
-	 (unscaled-height (/ image-height (reader-current-doc-scale-value (selected-window))))
+  (let* ((image-height (cdr (reader--get-current-doc-image-size)))
+	 (pixel-window-height (window-pixel-height))
+	 (unscaled-height (/ image-height (reader-current-doc-scale-value)))
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)
-    (reader--set-window-vscroll (selected-window) 0)))
+    (reader--set-window-vscroll nil 0)))
 
 (defun reader-fit-to-width ()
   "Scale the current page in the selected-window to fit its width."
   (interactive)
-  (let* ((image-width (car (reader--get-current-doc-image-size (selected-window))))
-	 (pixel-window-width (window-pixel-width (selected-window)))
-	 (unscaled-width (/ image-width (reader-current-doc-scale-value (selected-window))))
+  (let* ((image-width (car (reader--get-current-doc-image-size)))
+	 (pixel-window-width (window-pixel-width))
+	 (unscaled-width (/ image-width (reader-current-doc-scale-value)))
 	 (scaling-factor (/ pixel-window-width unscaled-width)))
     (reader-doc-scale-page scaling-factor)
     (reader--center-page)))
@@ -356,22 +356,22 @@ If WINDOW is omitted defaults to selected window."
   "Scroll up the current page by AMOUNT (1 by default)."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((prev-scroll (window-vscroll (selected-window)))
+  (let* ((prev-scroll (window-vscroll))
 	 (vscroll (- prev-scroll amount)))
-    (- prev-scroll (reader--set-window-vscroll (selected-window) vscroll))))
+    (- prev-scroll (reader--set-window-vscroll nil vscroll))))
 
 (defun reader-scroll-down (&optional amount)
   "Scroll down the current page by AMOUNT (1 by default)."
   (interactive "p")
   (or amount (setq amount 1))
-  (let* ((prev-scroll (window-vscroll (selected-window)))
+  (let* ((prev-scroll (window-vscroll))
 	 (vscroll (+ prev-scroll amount)))
-    (- (reader--set-window-vscroll (selected-window) vscroll) prev-scroll)))
+    (- (reader--set-window-vscroll nil vscroll) prev-scroll)))
 
 (defun reader-scroll-up-screenful ()
   "Scroll up the current page by a screenful."
   (interactive)
-  (let ((amount (- (window-body-height (selected-window))
+  (let ((amount (- (window-body-height)
 		   next-screen-context-lines)))
     (when (= 0 (reader-scroll-up amount))
       (message "Beginning of page"))))
@@ -379,7 +379,7 @@ If WINDOW is omitted defaults to selected window."
 (defun reader-scroll-down-screenful ()
   "Scroll down the current page by a screenful."
   (interactive)
-  (let ((amount (- (window-body-height (selected-window))
+  (let ((amount (- (window-body-height)
 		   next-screen-context-lines)))
     (when (= 0 (reader-scroll-down amount))
       (message "End of page"))))
@@ -390,10 +390,10 @@ If WINDOW is omitted defaults to selected window."
 Only scrolls when the document page width is larger then the window width."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((< (window-pixel-width (selected-window)) (car (reader--get-current-doc-image-size (selected-window)))))
-	      (prev-scroll (reader--window-hscroll (selected-window)))
+  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+	      (prev-scroll (reader--window-hscroll))
 	      (hscroll (+ prev-scroll amount)))
-    (- (reader--set-window-hscroll (select-window) hscroll) prev-scroll)))
+    (- (reader--set-window-hscroll nil hscroll) prev-scroll)))
 
 (defun reader-scroll-right (&optional amount)
   "Scroll to the right of the current page by AMOUNT (or 1).
@@ -402,27 +402,27 @@ Only scrolls when the document page width is larger then the window width."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size (select-window)))))
-	      (prev-scroll (reader--window-hscroll (selected-window)))
+	      (prev-scroll (reader--window-hscroll))
 	      (hscroll (- prev-scroll amount)))
-    (- prev-scroll (reader--set-window-hscroll (selected-window) hscroll))))
+    (- prev-scroll (reader--set-window-hscroll nil hscroll))))
 
 (defun reader-scroll-left-most ()
   "Scroll to the left most point of the current page.
 
 Only scrolls when the document page width is larger then the window width."
   (interactive)
-  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size (selected-window))))
-    (reader--set-window-hscroll (selected-window) 0)))
+  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+    (reader--set-window-hscroll nil 0)))
 
 (defun reader-scroll-right-most ()
   "Scroll to the right most point of the current page.
 
 Only scrolls when the document page width is larger then the window width."
   (interactive)
-  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size (selected-window))))
+  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
     ;; We use `set-window-hscroll' here because we need to go the right
     ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
-    (set-window-hscroll window (reader--right-most-window-hscroll (selected-window)))))
+    (set-window-hscroll window (reader--right-most-window-hscroll))))
 
 (reader--define-queue-command scroll-up-or-prev-page (&optional amount)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page."
@@ -430,11 +430,11 @@ Only scrolls when the document page width is larger then the window width."
   (or amount (setq amount 1))
   (when-let* (((and (= 0 (reader-scroll-up amount))
 		    (reader--non-queue-previous-page))) ; if succeeds
-	      (image-height (cdr (reader--get-current-doc-image-size (selected-window))))
-	      (pixel-window-height (window-pixel-height (selected-window)))
+	      (image-height (cdr (reader--get-current-doc-image-size)))
+	      (pixel-window-height (window-pixel-height))
 	      (bottom-most-scroll-pixel
 	       (- image-height pixel-window-height)))
-    (reader--set-window-vscroll (selected-window) bottom-most-scroll-pixel t)))
+    (reader--set-window-vscroll nil bottom-most-scroll-pixel t)))
 
 (reader--define-queue-command scroll-down-or-next-page (&optional amount)
   "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page."
@@ -442,19 +442,19 @@ Only scrolls when the document page width is larger then the window width."
   (or amount (setq amount 1))
   (when (and (= 0 (reader-scroll-down amount))
 	     (reader--non-queue-next-page)) ; if succeeds
-    (reader--set-window-vscroll (selected-window) 0)))
+    (reader--set-window-vscroll nil 0)))
 
 (reader--define-queue-command scroll-up-screenful-or-prev-page ()
   "Scroll up the current page by screenful, otherwise switch to the previous page."
   (interactive)
-  (let ((scroll (- (window-body-height (selected-window))
+  (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
     (reader--non-queue-scroll-up-or-prev-page scroll)))
 
 (reader--define-queue-command scroll-down-screenful-or-next-page ()
   "Scroll down the current page by screenful, otherwise switch to the next page."
   (interactive)
-  (let ((scroll (- (window-body-height (selected-window))
+  (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
     (reader--non-queue-scroll-down-or-next-page scroll)))
 
