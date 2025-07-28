@@ -485,3 +485,11 @@ outline2plist(emacs_env *env, fz_outline *node)
 			     outline_plist });
 	return outline_plist;
 }
+
+float
+get_frame_scale_factor(emacs_env *env)
+{
+	emacs_value factor = env->funcall(
+	    env, env->intern(env, "frame-scale-factor"), 0, NULL);
+	return env->extract_float(env, factor);
+}

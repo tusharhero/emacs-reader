@@ -61,6 +61,8 @@ emacs_value
 init_overlay(emacs_env *env, emacs_value window);
 emacs_value
 get_current_doc_overlay(emacs_env *env);
+float
+get_frame_scale_factor(emacs_env *env);
 void
 emacs_message(emacs_env *env, char *str);
 void
