@@ -319,7 +319,7 @@ See also `set-window-hscroll'."
     (set-window-hscroll window ncol)
     (reader--window-hscroll window)))
 
-(defun reader--window-hscroll (window)
+(defun reader--window-hscroll (&optional window)
   "Return the number of columns by which WINDOW is scrolled from left margin.
 WINDOW must be a live window and defaults to the selected one.
 
@@ -401,7 +401,7 @@ Only scrolls when the document page width is larger then the window width."
 Only scrolls when the document page width is larger then the window width."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size (select-window)))))
+  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
 	      (prev-scroll (reader--window-hscroll))
 	      (hscroll (- prev-scroll amount)))
     (- prev-scroll (reader--set-window-hscroll nil hscroll))))
@@ -458,12 +458,6 @@ Only scrolls when the document page width is larger then the window width."
 		   next-screen-context-lines)))
     (reader--non-queue-scroll-down-or-next-page scroll)))
 
-;; In these functions, we must have both `with-current-buffer' and
-;; `with-selected-window', even though they are provided as an
-;; argument to the function wrapped around by it. This is unavoidable
-;; because otherwise it does not work when the mouse is scrolled over
-;; a window other than the one selected.
-
 (reader--define-queue-command mwheel-scroll-up (event)
   "Scroll up or switch to the previous page, but also handle mouse EVENT.
 
@@ -475,9 +469,8 @@ See also `reader-non-queue-scroll-up-or-prev-page'."
 		   ('double-wheel-up 2)
 		   ('triple-wheel-up 3)))
 	 (scrolled-window (car (cadr event))))
-    (with-current-buffer (window-buffer scrolled-window)
-      (with-selected-window scrolled-window
-	(reader--non-queue-scroll-up-or-prev-page amount)))))
+    (with-selected-window scrolled-window
+      (reader--non-queue-scroll-up-or-prev-page amount))))
 
 (reader--define-queue-command mwheel-scroll-down (event)
   "Scroll down or switch to the next page, but also handle mouse EVENT.
@@ -490,9 +483,8 @@ See also `reader--non-queue-scroll-down-or-next-page'."
 		   ('double-wheel-down 2)
 		   ('triple-wheel-down 3)))
 	 (scrolled-window (car (cadr event))))
-    (with-current-buffer (window-buffer scrolled-window)
-      (with-selected-window scrolled-window
-	(reader--non-queue-scroll-down-or-next-page amount)))))
+    (with-selected-window scrolled-window
+      (reader--non-queue-scroll-down-or-next-page amount))))
 
 (defun reader-mwheel-scroll-left (event)
   "Scroll to the left, but also handle mouse EVENT.
@@ -505,9 +497,8 @@ See also `reader-scroll-left'."
 		   ('S-double-wheel-up 2)
 		   ('S-triple-wheel-up 3)))
 	 (scrolled-window (car (cadr event))))
-    (with-current-buffer (window-buffer scrolled-window)
-      (with-selected-window scrolled-window
-	(reader-scroll-left amount scrolled-window)))))
+    (with-selected-window scrolled-window
+      (reader-scroll-left amount))))
 
 (defun reader-mwheel-scroll-right (event)
   "Scroll to the right, but also handle mouse EVENT.
@@ -520,9 +511,8 @@ See also `reader-scroll-right'."
 		   ('S-double-wheel-down 2)
 		   ('S-triple-wheel-down 3)))
 	 (scrolled-window (car (cadr event))))
-    (with-current-buffer (window-buffer scrolled-window)
-      (with-selected-window scrolled-window
-	(reader-scroll-right amount scrolled-window)))))
+    (with-selected-window scrolled-window
+      (reader-scroll-right amount))))
 
 (defun reader-mwheel-enlarge-size (event)
   "Enlarge the current page, but also handle mouse EVENT.
@@ -535,10 +525,9 @@ See also `reader-enlarge-size'."
 			   ('C-double-wheel-up (+ reader-enlarge-factor 0.1))
 			   ('C-triple-wheel-up (+ reader-enlarge-factor 0.2))))
 	 (scrolled-window (car (cadr event))))
-    (with-current-buffer (window-buffer scrolled-window)
-      (with-selected-window scrolled-window
-	(reader-enlarge-size
-	 (* scaling-factor (reader-current-doc-scale-value scrolled-window)))))))
+    (with-selected-window scrolled-window
+      (reader-enlarge-size
+       (* scaling-factor (reader-current-doc-scale-value))))))
 
 (defun reader-mwheel-shrink-size (event)
   "Shrink the current page, but also handle mouse EVENT.
@@ -551,10 +540,9 @@ See also `reader-shrink-size'."
 			   ('C-double-wheel-down (- reader-shrink-factor 0.1))
 			   ('C-triple-wheel-down (- reader-shrink-factor 0.2))))
 	 (scrolled-window (car (cadr event))))
-    (with-current-buffer (window-buffer scrolled-window)
-      (with-selected-window scrolled-window
-	(reader-shrink-size
-	 (* scaling-factor (reader-current-doc-scale-value scrolled-window)))))))
+    (with-selected-window scrolled-window
+      (reader-shrink-size
+       (* scaling-factor (reader-current-doc-scale-value))))))
 
 (defun reader-rotate-clockwise ()
   "Rotate all pages of the current document by 90 degrees, clockwise."
