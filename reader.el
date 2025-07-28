@@ -602,10 +602,7 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
       (reader--center-page))))
 
 (defun reader--render-buffer ()
-  "Render the document file current buffer is associated with.
-
-It is to be called while a document’s buffer is already opened and the
-buffer is not in `reader-mode'."
+  "Render the document file current buffer is associated with."
   (interactive)
   (if-let* ((file (buffer-file-name (current-buffer))))
       (when (file-exists-p file)
@@ -770,6 +767,22 @@ Keybindings:
   (funcall reader-default-fit)
   (add-hook 'window-size-change-functions #'reader--center-page nil t)
   (add-hook 'window-configuration-change-hook #'reader--manage-window-overlays nil t))
+
+;;; Check whether the document file is valid before entering reader-mode
+;;; kill the buffer if the file is invalid
+(advice-add
+ 'reader-mode
+ :before-while
+ (lambda (&rest _)
+   (if (and buffer-file-name
+            (file-exists-p buffer-file-name)
+            (file-regular-p buffer-file-name)
+            (file-readable-p buffer-file-name))
+       t
+     (message "Reader did not open the document: %s is not a valid file"
+              (or buffer-file-name "<no file>"))
+     (kill-buffer (current-buffer))
+     nil)))
 
 (defun reader-mode-line ()
   "Set custom mode-line interface when reading documents."
