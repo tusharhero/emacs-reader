@@ -940,7 +940,6 @@ emacs_doc_window_close(emacs_env *env, ptrdiff_t nargs, emacs_value *args,
 	(void)nargs;
 	(void)data;
 	emacs_value overlay = args[0];
-	DocState *doc_state = get_doc_state_ptr(env);
 	EmacsWinState *win_state = get_win_state_ptr(env, overlay);
 	if (win_state)
 		free(win_state);
