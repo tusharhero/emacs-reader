@@ -226,6 +226,7 @@ window."
 
 (defun reader-reset-size ()
   "Reset the size of the current page to 1.0."
+  (interactive)
   (reader-doc-scale-page 1.0)
   (reader--center-page))
 
