@@ -370,7 +370,9 @@ WINDOW must be a valid window and defaults to the selected one."
     (reader--set-window-hscroll window scroll-offset t)))
 
 (defun reader-scroll-up (&optional amount)
-  "Scroll up the current page by AMOUNT (1 by default)."
+  "Scroll up the current page by AMOUNT.
+
+AMOUNT defaults to 1."
   (interactive "p")
   (or amount (setq amount 1))
   (let* ((prev-scroll (window-vscroll))
@@ -378,7 +380,9 @@ WINDOW must be a valid window and defaults to the selected one."
     (- prev-scroll (reader--set-window-vscroll nil vscroll))))
 
 (defun reader-scroll-down (&optional amount)
-  "Scroll down the current page by AMOUNT (1 by default)."
+  "Scroll down the current page by AMOUNT.
+
+AMOUNT defaults to 1."
   (interactive "p")
   (or amount (setq amount 1))
   (let* ((prev-scroll (window-vscroll))
@@ -402,7 +406,9 @@ WINDOW must be a valid window and defaults to the selected one."
       (message "End of page"))))
 
 (defun reader-scroll-left (&optional amount)
-  "Scroll to the left of the current page by AMOUNT (or 1).
+  "Scroll to the left of the current page by AMOUNT.
+
+AMOUNT defaults to 1.
 
 Only scrolls when the document page width is larger then the window width."
   (interactive "p")
@@ -442,7 +448,9 @@ Only scrolls when the document page width is larger then the window width."
     (set-window-hscroll nil (reader--right-most-window-hscroll))))
 
 (reader--define-queue-command scroll-up-or-prev-page (&optional amount)
-  "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page."
+  "Scroll up the current page by AMOUNT, otherwise switch to the previous page.
+
+AMOUNT defaults to 1."
   (interactive "p")
   (or amount (setq amount 1))
   (when-let* (((and (= 0 (reader-scroll-up amount))
@@ -454,7 +462,9 @@ Only scrolls when the document page width is larger then the window width."
     (reader--set-window-vscroll nil bottom-most-scroll-pixel t)))
 
 (reader--define-queue-command scroll-down-or-next-page (&optional amount)
-  "Scroll down the current page by AMOUNT (or 1), otherwise switch to the next page."
+  "Scroll down the current page by AMOUNT, otherwise switch to the next page.
+
+AMOUNT defaults to 1."
   (interactive "p")
   (or amount (setq amount 1))
   (when (and (= 0 (reader-scroll-down amount))
