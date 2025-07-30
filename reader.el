@@ -351,8 +351,7 @@ not return the actual horizontal scroll value; for that, see
   "Center the document with respect to WINDOW.
 
 WINDOW must be a valid window and defaults to the selected one."
-  (let* ((overlay (reader-current-doc-overlay window))
-	 (window-width (window-body-width window t))
+  (let* ((window-width (window-body-width window t))
 	 (doc-image-width (car (reader--get-current-doc-image-size window)))
 	 (max-left-offset (max 0 (- window-width doc-image-width)))
 	 (overlay-offset `(space :width (,max-left-offset)))
