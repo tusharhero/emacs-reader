@@ -67,15 +67,21 @@
   "File formats supported by the document reader.")
 
 (defun reader-current-doc-overlay (&optional window)
-  "Selected window (or if specified, WINDOW) parameter for overlay that is to be operated on."
+  "Overlay parameter for WINDOW.
+
+WINDOW must be a valid window and defaults to the selected one."
   (window-parameter (or window (selected-window)) 'overlay))
 
 (defun reader-current-doc-pagenumber (&optional window)
-  "Page number of WINDOW (defaults to selected window)."
+  "Page number of WINDOW.
+
+WINDOW must be a valid window and defaults to the selected one."
   (window-parameter (or window (selected-window)) 'page))
 
 (defun reader-current-doc-scale-value (&optional window)
-  "Scaling factor of WINDOW (defaults to selected window)."
+  "Scaling factor of WINDOW.
+
+WINDOW must be a valid window and defaults to the selected one."
   (or (window-parameter window 'scale) reader--recent-scale-fallback))
 
 ;; We queue some commands because the user is expected to use the
@@ -189,7 +195,9 @@ other file format will simply not show up as a candidate."
   (reader--center-page))
 
 (defun reader--get-current-doc-image-size (&optional window)
-  "Get the dimensions of the selected window (or if specified WINDOW) page."
+  "Get the dimensions of the page in WINDOW.
+
+WINDOW must be a valid window and defaults to the selected one."
   (let* ((cdr-image (cdr (overlay-get (reader-current-doc-overlay window) 'display)))
 	 (width (plist-get cdr-image :width))
 	 (height (plist-get cdr-image :height)))
@@ -252,7 +260,9 @@ window."
     (reader--center-page)))
 
 (defun reader--get-pixel-per-col (&optional window)
-  "Get the no of pixels per column for WINDOW."
+  "Get the no of pixels per column for WINDOW.
+
+WINDOW must be a valid window and defaults to the selected one."
   (/ (window-pixel-width window) (window-body-width window)))
 
 ;; We need to do this because scrolling is possible in one direction
@@ -284,7 +294,7 @@ Also see `set-window-vscroll'."
 (defun reader--get-prefix-width (&optional window)
   "Get the line prefix width set by `reader--center-page'.
 
-For WINDOW (or selected window if not specified)."
+WINDOW must be a valid window and defaults to the selected one."
   (car
    (plist-get
     (cdr (overlay-get (reader-current-doc-overlay window) 'line-prefix))
@@ -322,6 +332,7 @@ See also `set-window-hscroll'."
 
 (defun reader--window-hscroll (&optional window)
   "Return the number of columns by which WINDOW is scrolled from left margin.
+
 WINDOW must be a live window and defaults to the selected one.
 
 This correctly handles the prefix width set by reader documents and does
@@ -338,7 +349,7 @@ not return the actual horizontal scroll value; for that, see
 (defun reader--center-page (&optional window)
   "Center the document with respect to WINDOW.
 
-If WINDOW is omitted defaults to selected window."
+WINDOW must be a valid window and defaults to the selected one."
   (let* ((overlay (reader-current-doc-overlay window))
 	 (window-width (window-body-width window t))
 	 (doc-image-width (car (reader--get-current-doc-image-size window)))
