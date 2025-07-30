@@ -389,16 +389,16 @@ AMOUNT defaults to 1."
 	 (vscroll (+ prev-scroll amount)))
     (- (reader--set-window-vscroll nil vscroll) prev-scroll)))
 
-(defun reader-scroll-up-screenful ()
-  "Scroll up the current page by a screenful."
+(defun reader-scroll-up-screen ()
+  "Scroll up the current page by a screen."
   (interactive)
   (let ((amount (- (window-body-height)
 		   next-screen-context-lines)))
     (when (= 0 (reader-scroll-up amount))
       (message "Beginning of page"))))
 
-(defun reader-scroll-down-screenful ()
-  "Scroll down the current page by a screenful."
+(defun reader-scroll-down-screen ()
+  "Scroll down the current page by a screen."
   (interactive)
   (let ((amount (- (window-body-height)
 		   next-screen-context-lines)))
@@ -471,15 +471,15 @@ AMOUNT defaults to 1."
 	     (reader--non-queue-next-page)) ; if succeeds
     (reader--set-window-vscroll nil 0)))
 
-(reader--define-queue-command scroll-up-screenful-or-prev-page ()
-  "Scroll up the current page by screenful, otherwise switch to the previous page."
+(reader--define-queue-command scroll-up-screen-or-prev-page ()
+  "Scroll up the current page by screen, otherwise switch to the previous page."
   (interactive)
   (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
     (reader--non-queue-scroll-up-or-prev-page scroll)))
 
-(reader--define-queue-command scroll-down-screenful-or-next-page ()
-  "Scroll down the current page by screenful, otherwise switch to the next page."
+(reader--define-queue-command scroll-down-screen-or-next-page ()
+  "Scroll down the current page by screen, otherwise switch to the next page."
   (interactive)
   (let ((scroll (- (window-body-height)
 		   next-screen-context-lines)))
@@ -691,14 +691,14 @@ It is hooked to `window-configuration-change-hook' to keep detecting."
   "S-<wheel-up>" #'reader-mwheel-scroll-left
   "S-<wheel-down>" #'reader-mwheel-scroll-right
 
-  "C-v"      #'reader-scroll-down-screenful
-  "M-v"      #'reader-scroll-up-screenful
-  "<remap> <scroll-down-command>" #'reader-scroll-up-screenful
-  "<remap> <scroll-up-command>" #'reader-scroll-down-screenful
+  "C-v"      #'reader-scroll-down-screen
+  "M-v"      #'reader-scroll-up-screen
+  "<remap> <scroll-down-command>" #'reader-scroll-up-screen
+  "<remap> <scroll-up-command>" #'reader-scroll-down-screen
 
-  "SPC"     #'reader-scroll-down-screenful-or-next-page
-  "DEL"     #'reader-scroll-up-screenful-or-prev-page
-  "S-SPC"   #'reader-scroll-up-screenful-or-prev-page
+  "SPC"     #'reader-scroll-down-screen-or-next-page
+  "DEL"     #'reader-scroll-up-screen-or-prev-page
+  "S-SPC"   #'reader-scroll-up-screen-or-prev-page
 
   "C-f"     #'reader-scroll-right
   "C-b"     #'reader-scroll-left
