@@ -630,8 +630,8 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
 It is hooked to `window-configuration-change-hook' to keep detecting."
   (let ((overlays (car (overlay-lists)))
 	(windows (get-buffer-window-list (current-buffer) nil t)))
-    (mapcar #'reader--window-close-function overlays)
-    (mapcar #'reader--window-create-function windows)))
+    (mapc #'reader--window-close-function overlays)
+    (mapc #'reader--window-create-function windows)))
 
 (defun reader--window-create-function (window)
   "Create window overlay for WINDOW."
