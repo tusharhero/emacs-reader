@@ -131,7 +131,7 @@ The reader-NAME command is simply a wrapper around
 This is the actual function.
 See `%s' for the interactive version."
 		  docstring queue-function-name)
-	 ,(add-to-list 'body 'progn))
+	 ,(push 'progn body))
 
        (defun ,(intern queue-function-name) ,arglist
 	 ,(format "%s
@@ -141,7 +141,7 @@ See `%s' for the actual definition."
 		  docstring non-queue-function-name)
 	 ,interactive
 	 (reader--enqueue-command #',(intern non-queue-function-name)
-				  ,(remq '&optional (add-to-list 'arglist 'list)))))))
+				  ,(remq '&optional (push 'list arglist)))))))
 
 ;;;###autoload
 (defun reader-open-doc (document)
