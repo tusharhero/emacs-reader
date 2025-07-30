@@ -53,7 +53,9 @@ idilip (Codeberg user):
 
 - implemented a basic presentation mode in reader.el for v0.3.0 (PR #100)
 
+Yuwei Tian <ibluefocus@outlook.com> (Codeberg user galeo):
 
+- fixed =reader-reset-size= interactive function in reader.el (PR #124).
 
 * highlighting settings
 # Local Variables:
