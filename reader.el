@@ -110,11 +110,14 @@ WINDOW must be a valid window and defaults to the selected one."
   "Define NAME as a reader command.
 Also define a necessary non-queue function.
 
-Much like `defun', except that ARGLIST, DOCSTRING, and INTERACTIVE are required.
+Much like `defun', except that ARGLIST, DOCSTRING, and INTERACTIVE are
+required.
 
-The reader--non-queue-NAME function is simply defined as a function with body BODY.
-The reader-NAME command is simply a wrapper around `reader--enqueue-command' with
-reader--non-queue-NAME as the argument."
+The reader--non-queue-NAME function is simply defined as a function with
+body BODY.
+
+The reader-NAME command is simply a wrapper around
+`reader--enqueue-command' with reader--non-queue-NAME as the argument."
   (declare (indent defun)
 	   (doc-string 3))
   (let* ((name (symbol-name name))
@@ -125,14 +128,16 @@ reader--non-queue-NAME as the argument."
        (defun ,(intern non-queue-function-name) ,arglist
 	 ,(format "%s
 
-This is the actual function, see `%s' for the interactive version."
+This is the actual function.
+See `%s' for the interactive version."
 		  docstring queue-function-name)
 	 ,(add-to-list 'body 'progn))
 
        (defun ,(intern queue-function-name) ,arglist
 	 ,(format "%s
 
-This is the queuing function, see `%s' for the actual definition."
+This is the queuing function.
+See `%s' for the actual definition."
 		  docstring non-queue-function-name)
 	 ,interactive
 	 (reader--enqueue-command #',(intern non-queue-function-name)
