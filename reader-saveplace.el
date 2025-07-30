@@ -23,7 +23,7 @@
 ;; operations on an element assuming it's a list, and this leads to
 ;; issues when we try to use it like a bookmark.
 
-;;; Acknowledgements:
+;;; Acknowledgments:
 
 ;; `saveplace-pdf-view' by Nicolai Singh <nicolaisingh@pm.me> was used
 ;; for reference.
