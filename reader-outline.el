@@ -46,9 +46,10 @@
     (error "Document lacks a proper outline!")))
 
 ;;;###autoload
-(defun reader--outline-imenu-goto (name page)
-  "Switch to PAGE, ignores the NAME argument.
+(defun reader--outline-imenu-goto (_name page)
+  "Switch to PAGE.
 
+Ignores the _NAME argument.
 Just wraps `reader-goto-page' for imenu compatibility."
   (reader-goto-page page))
 

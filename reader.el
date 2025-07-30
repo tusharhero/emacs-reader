@@ -597,12 +597,14 @@ Intended for use in `kill-buffer-hook'."
   (when (yes-or-no-p "Are you sure you want to close the current document?")
     (kill-buffer (current-buffer))))
 
-(defun reader-refresh-doc-buffer (&optional ignore-auto noconfirm preserve-modes)
+(defun reader-refresh-doc-buffer (&optional _ignore-auto _noconfirm _preserve-modes)
   "Refresh the buffer document with file on disk.
 
 It reloads the entire document while preserving the previous state.
-The args IGNORE-AUTO, NOCONFIRM and PRESERVE-MODES are ignored and are
-simply to satisfy the template for `revert-buffer-function'.
+
+The arguments are ignored and are simply to satisfy the template for
+`revert-buffer-function'.
+
 This function is replaced as `revert-buffer-function' for `reader-mode' buffers."
   (interactive)
   (when buffer-file-name
