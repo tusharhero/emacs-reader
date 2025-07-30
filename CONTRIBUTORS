@@ -13,31 +13,13 @@ Divya Ranjan Pattanaik <divya@subvertising.org>:
 - wrote README.org
 
 Tushar <tusharhero@sdf.org>:
-
-- changed the reader-center-page in reader.el to accommodate edge
-  cases.
-- fixed several errors in centering and scrolling in reader.el for the
-  v0.2.0 release
-- added bookmark and saveplace feature for v0.2.2
-- fixed autoloading issues
-- refactored reader.el significantly for readability and extensibility
-- refactored mouse wheel scrolling in reader.el
-- refactored the page centering logic in reader.el for v0.2.6
-- implemented the elisp side reader-dark-mode
-- refactored reader's keymap in reader.el
-- refactored the scrolling logic in reader.el for v0.2.7
-- cleaned up older documentation and handled renaming in PR #98
-- refactored the command queuening mechanism in PR #98
-- added mwheel functionality to new scaling mechanism in PR #98
-- added development environment configurations in PR #98
-- refactored button interface of reader-outline.el
-- renaming functions properly in reader-outline.el and newer reader.el functions.
-- updated docstrings in both C and Elisp modules for v0.3.0
+- changed and added to README.org
 - added guix system configurations in test/vm/x11.scm and
   test/vm/wayland.scm.
-- updated README.org for clarification, typos, also added some
-  sections to it.
-- fixed reader-outline.el when original source buffer is killed.
+- wrote reader-bookmark.el.
+- changed or added to reader.el, reader-saveplace.el, and reader-outline.el
+- changed or added to elisp-helpers.c, and render-core.c.
+- updated docstrings in both C and Elisp modules for v0.3.0
 
 prom (Codeberg user):
 - fixed and updated support for MS Windows in the Makefile.
