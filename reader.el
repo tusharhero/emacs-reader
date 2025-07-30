@@ -300,10 +300,11 @@ WINDOW must be a valid window and defaults to the selected one."
     (cdr (overlay-get (reader-current-doc-overlay window) 'line-prefix))
     :width)))
 
-(defun reader--right-most-window-hscroll (window)
+(defun reader--right-most-window-hscroll (&optional window)
   "Get the maximum horizontal scroll value for WINDOW.
 
-This position is at the rightmost point."
+This position is at the rightmost point.
+WINDOW must be a valid window and defaults to the selected one."
   (let* ((image-width (car (reader--get-current-doc-image-size window)))
 	 (line-prefix-width (reader--get-prefix-width window))
 	 (pixel-window-width (window-pixel-width window))
@@ -434,7 +435,7 @@ Only scrolls when the document page width is larger then the window width."
   (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
     ;; We use `set-window-hscroll' here because we need to go the right
     ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
-    (set-window-hscroll window (reader--right-most-window-hscroll))))
+    (set-window-hscroll nil (reader--right-most-window-hscroll))))
 
 (reader--define-queue-command scroll-up-or-prev-page (&optional amount)
   "Scroll up the current page by AMOUNT (or 1), otherwise switch to the previous page."
@@ -592,7 +593,7 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
   (interactive)
   (when buffer-file-name
     (let ((page (reader-current-doc-pagenumber))
-	  (scale (reader-current-doc-scale-value window)))
+	  (scale (reader-current-doc-scale-value)))
       (remove-overlays)
       (reader--render-buffer)
       (if reader-dark-mode

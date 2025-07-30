@@ -132,7 +132,7 @@ Each heading title is its own clickable button."
     (unless (numberp page)
       (user-error "Invalid outline entry: no page info"))
     (reader-outline-select-doc-window)
-    (reader-goto-page page window)))
+    (reader-goto-page page)))
 
 (defun reader-outline-visit-page ()
   "Jump to the page at point in the associated reader buffer."
