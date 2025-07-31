@@ -152,13 +152,13 @@ You can also utilize =use-package= to do the same,
     :load-path "/path/to/emacs-reader")
 #+end_src
 
-To test emacs-reader in a default Emacs config, use something like:
+To test emacs-reader in a default Emacs config, first generate the auto loads using =reader-dev-generate-autoloads=.
 #+begin_src shell
-  emacs -q -L . -l reader.el
+  emacs -q -L . -l emacs-reader-autoloads.el
 #+end_src
-This command adds the current directory to path, and loads =reader.el=.
+This command adds the current directory to path, and loads =emacs-reader-autoloads.el=.
 
-This will not work for testing auto loading though. You can try using =package-vc-install-from-checkout= to test that. [[https://codeberg.org/attachments/2555c252-0977-484e-b369-38b18a321a48][This video]] demonstrates how to do that.
+You can also try using =package-vc-install-from-checkout=, [[https://codeberg.org/attachments/2555c252-0977-484e-b369-38b18a321a48][this video]] demonstrates how to do that.
 
 * Key Bindings
 - =n= for going to next page
@@ -190,15 +190,9 @@ https://www.phimulambda.org/blog/emacs-dynamic-module.html
 
 * Live Streams
 
-I have been streaming the development of this package on [[https://tv.dyne.org/c/phimulambda/][my PeerTube channel: (phi (mu (lambda)))]]
+I have been streaming the development of this package on [[https://tv.dyne.org/c/phimulambda/][my PeerTube channel: (phi (mu (lambda)))]].
 
-Here are the recordings of the streams:
-
-- [[https://tv.dyne.org/w/8W8o4fWz94bMYVMUWExkX7][Part I: Introduction]]
-- [[https://tv.dyne.org/w/fmJnktiZMjrUKJU2s8Pxkq][Part II: Making Overlays Centered and Zoomable]]
-- [[https://tv.dyne.org/w/fsHrNnwYYnnYweArgtBHSe][Part III: Multi-Threading]]
-
-The streams happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the channel on Peertube or my [[https://mathstodon.xyz/@divyaranjan][Mastodon]] to be notified when I stream. You can also find some stream notes [[file:doc/][here]].
+[[https://tv.dyne.org/w/p/2A6UVt21hayJ3dVj5cU4yA][The streams]] happen on *Sundays, biweekly at around 5:30 PM UTC*. Follow the channel on Peertube or my [[https://mathstodon.xyz/@divyaranjan][Mastodon]] to be notified when I stream. You can also find some stream notes [[file:doc/][here]].
 
 If you wish to join the discussion for the package, you should join the IRC channel =#phi-mu-lambda= on [[https://libera.chat/][Libera]].
 
