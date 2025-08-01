@@ -613,7 +613,7 @@ This function is replaced as `revert-buffer-function' for `reader-mode' buffers.
 	  (scale (reader-current-doc-scale-value)))
       (remove-overlays)
       (reader--render-buffer)
-      (if reader-dark-mode
+      (if (bound-and-true-p reader-dark-mode)
 	  (reader-dark-mode 1))
       (reader-doc-scale-page scale)
       (reader-goto-page page)
@@ -774,6 +774,7 @@ Keybindings:
   (when (bound-and-true-p pixel-scroll-precision-mode)
     (setq-local pixel-scroll-precision-mode nil))
 
+  (declare-function reader-bookmark-make-record "reader-bookmark")
   (setq-local bookmark-make-record-function
 	      #'reader-bookmark-make-record)
 
