@@ -161,6 +161,7 @@ other file format will simply not show up as a candidate."
 				   (string-match-p regexp f))))))
 		 (list file)))
   (switch-to-buffer (create-file-buffer document))
+  (setq buffer-file-name document)
   (insert "\n")
   (reader-dyn--load-doc (expand-file-name document))
   (reader-mode))
