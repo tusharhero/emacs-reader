@@ -154,9 +154,9 @@ You can also utilize =use-package= to do the same,
 
 To test emacs-reader in a default Emacs config, first generate the auto loads using =reader-dev-generate-autoloads=.
 #+begin_src shell
-  emacs -q -L . -l emacs-reader-autoloads.el
+  emacs -q -L . -l reader-autoloads.el
 #+end_src
-This command adds the current directory to path, and loads =emacs-reader-autoloads.el=.
+This command adds the current directory to path, and loads =reader-autoloads.el=.
 
 You can also try using =package-vc-install-from-checkout=, [[https://codeberg.org/attachments/2555c252-0977-484e-b369-38b18a321a48][this video]] demonstrates how to do that.
 

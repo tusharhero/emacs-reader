@@ -5,4 +5,4 @@
 *.~undo-tree~
 TAGS
 /worktrees/
-emacs-reader-autoloads.el
+reader-autoloads.el

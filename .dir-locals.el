@@ -9,7 +9,7 @@
 		   (interactive)
 		   (let ((root (project-root (project-current))))
 		     (loaddefs-generate root
-					(file-name-concat root "emacs-reader-autoloads.el")))))))
+					(file-name-concat root "reader-autoloads.el")))))))
  (c-mode . ((eval . (eglot-ensure))
 	    (before-save-hook . (eglot-format-buffer))
 	    (indent-tabs-mode . t)
