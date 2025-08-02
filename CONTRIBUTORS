@@ -39,6 +39,10 @@ Yuwei Tian <ibluefocus@outlook.com> (Codeberg user galeo):
 
 - fixed =reader-reset-size= interactive function in reader.el (PR #124).
 
+yangyingchao <yang.yingchao@qq.com>:
+
+- fixed =reader-open-doc= (PR #125).
+
 * highlighting settings
 # Local Variables:
 # mode: org
