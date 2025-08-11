@@ -248,7 +248,7 @@ window."
   "Scale the current page in the selected window to fit its height."
   (interactive)
   (let* ((image-height (cdr (reader--get-current-doc-image-size)))
-	 (pixel-window-height (window-pixel-height))
+	 (pixel-window-height (window-body-height nil t))
 	 (unscaled-height (/ image-height (reader-current-doc-scale-value)))
 	 (scaling-factor (/ pixel-window-height unscaled-height)))
     (reader-doc-scale-page scaling-factor)
@@ -259,7 +259,7 @@ window."
   "Scale the current page in the selected window to fit its width."
   (interactive)
   (let* ((image-width (car (reader--get-current-doc-image-size)))
-	 (pixel-window-width (window-pixel-width))
+	 (pixel-window-width (window-body-width nil t))
 	 (unscaled-width (/ image-width (reader-current-doc-scale-value)))
 	 (scaling-factor (/ pixel-window-width unscaled-width)))
     (reader-doc-scale-page scaling-factor)
@@ -269,7 +269,7 @@ window."
   "Get the no of pixels per column for WINDOW.
 
 WINDOW must be a valid window and defaults to the selected one."
-  (/ (window-pixel-width window) (window-body-width window)))
+  (/ (window-body-width window t) (window-body-width window)))
 
 ;; We need to do this because scrolling is possible in one direction
 ;; (downwards) indefinitely.
@@ -283,7 +283,7 @@ maximum vertical scroll possible without doing that.
 If PIXELS-P is non-nil, VSCROLL is considered to be in pixels.
 Also see `set-window-vscroll'."
   (let* ((image-height (cdr (reader--get-current-doc-image-size window)))
-	 (pixel-window-height (window-pixel-height window))
+	 (pixel-window-height (window-body-height window t))
 	 (window-height (window-body-height window))
 	 (pixel-per-col (/ pixel-window-height window-height))
 	 (pixel-vscroll (* pixel-per-col vscroll))
@@ -313,7 +313,7 @@ This position is at the rightmost point.
 WINDOW must be a valid window and defaults to the selected one."
   (let* ((image-width (car (reader--get-current-doc-image-size window)))
 	 (line-prefix-width (reader--get-prefix-width window))
-	 (pixel-window-width (window-pixel-width window))
+	 (pixel-window-width (window-body-width window t))
 	 (max-ncol (round (/ (max line-prefix-width
 				  (- image-width pixel-window-width))
 			     (reader--get-pixel-per-col window)))))
@@ -414,7 +414,7 @@ AMOUNT defaults to 1.
 Only scrolls when the document page width is larger then the window width."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+  (when-let* (((< (window-body-width nil t) (car (reader--get-current-doc-image-size))))
 	      (prev-scroll (reader--window-hscroll))
 	      (hscroll (+ prev-scroll amount)))
     (- (reader--set-window-hscroll nil hscroll) prev-scroll)))
@@ -425,7 +425,7 @@ Only scrolls when the document page width is larger then the window width."
 Only scrolls when the document page width is larger then the window width."
   (interactive "p")
   (or amount (setq amount 1))
-  (when-let* (((< (window-pixel-width) (car (reader--get-current-doc-image-size))))
+  (when-let* (((< (window-body-width nil t) (car (reader--get-current-doc-image-size))))
 	      (prev-scroll (reader--window-hscroll))
 	      (hscroll (- prev-scroll amount)))
     (- prev-scroll (reader--set-window-hscroll nil hscroll))))
@@ -435,7 +435,7 @@ Only scrolls when the document page width is larger then the window width."
 
 Only scrolls when the document page width is larger then the window width."
   (interactive)
-  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+  (when (< (window-body-width nil t) (car (reader--get-current-doc-image-size)))
     (reader--set-window-hscroll nil 0)))
 
 (defun reader-scroll-right-most ()
@@ -443,7 +443,7 @@ Only scrolls when the document page width is larger then the window width."
 
 Only scrolls when the document page width is larger then the window width."
   (interactive)
-  (when (< (window-pixel-width) (car (reader--get-current-doc-image-size)))
+  (when (< (window-body-width nil t) (car (reader--get-current-doc-image-size)))
     ;; We use `set-window-hscroll' here because we need to go the right
     ;; most point directly, bypassing `'reader--set-window-hscroll' checks.
     (set-window-hscroll nil (reader--right-most-window-hscroll))))
@@ -457,7 +457,7 @@ AMOUNT defaults to 1."
   (when-let* (((and (= 0 (reader-scroll-up amount))
 		    (reader--non-queue-previous-page))) ; if succeeds
 	      (image-height (cdr (reader--get-current-doc-image-size)))
-	      (pixel-window-height (window-pixel-height))
+	      (pixel-window-height (window-body-height nil t))
 	      (bottom-most-scroll-pixel
 	       (- image-height pixel-window-height)))
     (reader--set-window-vscroll nil bottom-most-scroll-pixel t)))
